@@ -7,4 +7,25 @@
 
 # Abstract
 
-Cross-platform set of scripts to install MetaCall infrastructure.
+Cross-platform set of scripts to install MetaCall Core infrastructure.
+
+# Install
+
+The following scripts are provided in order to install MetaCall:
+- [install.sh](https://raw.githubusercontent.com/metacall/install/master/install.sh) `sh | UNIX`
+
+- [install.ps1](https://raw.githubusercontent.com/metacall/install/master/install.ps1) `PowerShell | Windows` (Not implemented yet)
+
+In order to install MetaCall in one line, curl or wget or powershell can be used:
+- `curl`:
+  ```sh
+  curl -sL https://raw.githubusercontent.com/metacall/install/master/install.sh | sh
+  ```
+- `wget`:
+  ```sh
+  wget -O - https://raw.githubusercontent.com/metacall/install/master/install.sh | sh
+  ```
+- `powershell`:
+  ```sh
+  powershell -exec bypass -c "(New-Object Net.WebClient).Proxy.Credentials=[Net.CredentialCache]::DefaultNetworkCredentials;iwr('https://raw.githubusercontent.com/metacall/install/master/install.ps1')|iex"
+  ```
