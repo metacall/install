@@ -97,12 +97,70 @@ dependencies() {
 	print "Checking system dependencies"
 
 	# Check if required programs are installed
-	programs_required tar grep tail awk rev cut
+	programs_required tar grep tail awk rev cut uname echo rm id
 
 	# Check if download programs are installed
 	programs_required_one curl wget
 
+	# Detect sudo or run with root
+	if ! program sudo && ! "$(id -u)" == "0"; then
+		err "You need either having sudo installed or running this script as root. Aborting installation."
+		exit 1
+	fi
+
 	success "Dependencies satisfied."
+}
+
+# Get operative system name
+operative_system() {
+	local os=$(uname)
+
+	# TODO: Implement other operative systems in metacall/distributable
+	case ${os} in
+		# Darwin)
+		# 	echo "osx"
+		# 	return
+		# 	;;
+		# FreeBSD)
+		# 	echo "freebsd"
+		# 	return
+		# 	;;
+		Linux)
+			echo "linux"
+			return
+			;;
+	esac
+
+	err "Operative System detected (${os}) is not supported." \
+		"  Please, refer to https://github.com/metacall/install/issues and create a new issue." \
+		"  Aborting installation."
+	exit 1
+}
+
+# Get architecture name
+architecture() {
+	local arch=$(uname -m)
+
+	# TODO: Implement other architectures in metacall/distributable
+	case ${arch} in
+		x86_64)
+			echo "amd64"
+			return
+			;;
+		# armv7l)
+		# 	echo "arm"
+		# 	return
+		# 	;;
+		# aarch64)
+		# 	echo "arm64"
+		# 	return
+		# 	;;
+	esac
+
+	err "Architecture detected (${arch}) is not supported." \
+		"  Please, refer to https://github.com/metacall/install/issues and create a new issue." \
+		"  Aborting installation."
+	exit 1
 }
 
 # Download tarball
@@ -131,6 +189,7 @@ download() {
 	fi
 
 	if "${fail}" == true; then
+		rm -rf ${tmp}
 		err "The tarball metacall-tarball-${os}-${arch}.tar.gz could not be downloaded." \
 			"  Please, refer to https://github.com/metacall/install/issues and create a new issue." \
 			"  Aborting installation."
@@ -140,18 +199,60 @@ download() {
 	success "Tarball downloaded."
 }
 
-# Show title
-title "MetaCall Self-Contained Binary Installer"
+# Extract the tarball (requires root or sudo)
+uncompress() {
+	local tmp="/tmp/metacall-tarball.tar.gz"
+	local cmd="tar xzf ${tmp} -C / && chmod -R 755 /gnu/store"
 
-# Check dependencies
-dependencies
+	print "Uncompress the tarball (needs sudo or root permissions)."
 
-# Detect operative system and architecture
+	if "$(id -u)" == "0"; then
+		/usr/bin/env bash -c "${cmd}"
+	else
+		sudo /usr/bin/env bash -c "${cmd}"
+	fi
 
-# print "$OSTYPE"
+	success "Tarball uncompressed successfully."
 
-# Download tarball
-download linux amd64
+	# Clean the tarball
+	print "Cleaning the tarball."
 
-# Extract
+	rm -rf ${tmp}
 
+	success "Tarball cleaned successfully."
+}
+
+# Install the CLI
+cli() {
+	print "Installing the Command Line Interface."
+
+	success "CLI successfully."
+}
+
+main() {
+	# Show title
+	title "MetaCall Self-Contained Binary Installer"
+
+	# Check dependencies
+	dependencies
+
+	# Detect operative system and architecture
+	print "Detecting Operative System and Architecture."
+
+	local os="$(operative_system)"
+	local arch="$(architecture)"
+
+	success "Operative System (${os}) and Architecture (${arch}) detected."
+
+	# Download tarball
+	download ${os} ${arch}
+
+	# Extract
+	uncompress
+
+	# Install CLI
+	cli
+}
+
+# Run main
+main
