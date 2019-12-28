@@ -173,9 +173,9 @@ download() {
 	print "Start to download the tarball."
 
 	if program curl; then
-		local tag_url=$(curl -k -Ls -o /dev/null -w %{url_effective} ${url})
+		local tag_url=$(curl -Ls -o /dev/null -w %{url_effective} ${url})
 	elif program wget; then
-		local tag_url=$(wget --no-check-certificate -O /dev/null ${url} 2>&1 | grep Location: | tail -n 1 | awk '{print $2}')
+		local tag_url=$(wget -O /dev/null ${url} 2>&1 | grep Location: | tail -n 1 | awk '{print $2}')
 	fi
 
 	local version=$(printf "${tag_url}" | rev | cut -d '/' -f1 | rev)
@@ -183,9 +183,9 @@ download() {
 	local fail=false
 
 	if program curl; then
-		curl -k --retry 10 -f --create-dirs -LS ${final_url} --output ${tmp} || fail=true
+		curl --retry 10 -f --create-dirs -LS ${final_url} --output ${tmp} || fail=true
 	elif program wget; then
-		wget --no-check-certificate --tries 10 -O ${tmp} ${final_url} || fail=true
+		wget --tries 10 -O ${tmp} ${final_url} || fail=true
 	fi
 
 	if "${fail}" == true; then
