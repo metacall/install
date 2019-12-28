@@ -97,7 +97,11 @@ dependencies() {
 	print "Checking system dependencies"
 
 	# Check if required programs are installed
-	programs_required tar grep tail awk rev cut uname echo rm id find head
+	programs_required tar grep tail awk rev cut uname echo rm id find head chmod
+
+	if [ $(id -u) -ne 0 ]; then
+		programs_required tee
+	fi
 
 	# Check if download programs are installed
 	programs_required_one curl wget
@@ -202,14 +206,15 @@ download() {
 # Extract the tarball (requires root or sudo)
 uncompress() {
 	local tmp="/tmp/metacall-tarball.tar.gz"
-	local cmd="tar xzf ${tmp} -C / && chmod -R 755 /gnu/store"
 
 	print "Uncompress the tarball (needs sudo or root permissions)."
 
 	if [ $(id -u) -eq 0 ]; then
-		/usr/bin/env bash -c "${cmd}"
+		tar xzf ${tmp} -C /
+		chmod -R 755 /gnu/store
 	else
-		sudo /usr/bin/env bash -c "${cmd}"
+		sudo tar xzf ${tmp} -C /
+		sudo chmod -R 755 /gnu/store
 	fi
 
 	success "Tarball uncompressed successfully."
@@ -234,8 +239,8 @@ cli() {
 		echo "${cli}/metacallcli \$@" >> /bin/metacall
 		chmod 755 /bin/metacall
 	else
-		sudo echo "#!/usr/bin/env bash" >> /bin/metacall
-		sudo echo "${cli}/metacallcli \$@" >> /bin/metacall
+		echo "#!/usr/bin/env bash" | sudo tee -a /bin/metacall > /dev/null
+		echo "${cli}/metacallcli \$@" | sudo tee -a /bin/metacall > /dev/null
 		sudo chmod 755 /bin/metacall
 	fi
 
