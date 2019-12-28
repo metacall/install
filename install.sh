@@ -239,7 +239,7 @@ cli() {
 		sudo chmod 755 /bin/metacall
 	fi
 
-	success "CLI successfully."
+	success "CLI installed successfully."
 }
 
 main() {
@@ -265,6 +265,9 @@ main() {
 
 	# Install CLI
 	cli
+
+	# Show information
+	success "MetaCall has been installed, run 'metacall' command for start the CLI."
 }
 
 # Run main
