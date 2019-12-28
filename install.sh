@@ -73,8 +73,8 @@ success() {
 # Check if a list of programs exist or aborts
 programs_required() {
 	for prog in "$@"; do
-		if ! program $prog; then
-			err "The program '$prog' is not found, it is required to run the installer. Aborting installation."
+		if ! program ${prog}; then
+			err "The program '${prog}' is not found, it is required to run the installer. Aborting installation."
 			exit 1
 		fi
 	done
@@ -83,7 +83,7 @@ programs_required() {
 # Check if at least one program exists in the list or aborts
 programs_required_one() {
 	for prog in "$@"; do
-		if program $prog; then
+		if program ${prog}; then
 			return
 		fi
 	done
@@ -103,7 +103,7 @@ dependencies() {
 	programs_required_one curl wget
 
 	# Detect sudo or run with root
-	if [ ! program sudo ] && [ $(id -u) -ne 0 ]; then
+	if ! program sudo && [ $(id -u) -ne 0 ]; then
 		err "You need either having sudo installed or running this script as root. Aborting installation."
 		exit 1
 	fi
@@ -173,9 +173,9 @@ download() {
 	print "Start to download the tarball."
 
 	if program curl; then
-		local tag_url=$(curl -Ls -o /dev/null -w %{url_effective} ${url})
+		local tag_url=$(curl -k -Ls -o /dev/null -w %{url_effective} ${url})
 	elif program wget; then
-		local tag_url=$(wget -O /dev/null ${url} 2>&1 | grep Location: | tail -n 1 | awk '{print $2}')
+		local tag_url=$(wget --no-check-certificate -O /dev/null ${url} 2>&1 | grep Location: | tail -n 1 | awk '{print $2}')
 	fi
 
 	local version=$(printf "${tag_url}" | rev | cut -d '/' -f1 | rev)
@@ -183,9 +183,9 @@ download() {
 	local fail=false
 
 	if program curl; then
-		curl --retry 10 -f --create-dirs -LS ${final_url} --output ${tmp} || fail=true
+		curl -k --retry 10 -f --create-dirs -LS ${final_url} --output ${tmp} || fail=true
 	elif program wget; then
-		wget --tries 10 -O ${tmp} ${final_url} || fail=true
+		wget --no-check-certificate --tries 10 -O ${tmp} ${final_url} || fail=true
 	fi
 
 	if "${fail}" == true; then
