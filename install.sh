@@ -103,7 +103,7 @@ dependencies() {
 	programs_required_one curl wget
 
 	# Detect sudo or run with root
-	if ! program sudo && ! "$(id -u)" == "0"; then
+	if [ ! program sudo ] && [ $(id -u) -ne 0 ]; then
 		err "You need either having sudo installed or running this script as root. Aborting installation."
 		exit 1
 	fi
@@ -206,7 +206,7 @@ uncompress() {
 
 	print "Uncompress the tarball (needs sudo or root permissions)."
 
-	if "$(id -u)" == "0"; then
+	if [ $(id -u) -eq 0 ]; then
 		/usr/bin/env bash -c "${cmd}"
 	else
 		sudo /usr/bin/env bash -c "${cmd}"
