@@ -97,7 +97,7 @@ dependencies() {
 	print "Checking system dependencies"
 
 	# Check if required programs are installed
-	programs_required tar grep tail awk rev cut uname echo rm id
+	programs_required tar grep tail awk rev cut uname echo rm id find head
 
 	# Check if download programs are installed
 	programs_required_one curl wget
@@ -224,7 +224,20 @@ uncompress() {
 
 # Install the CLI
 cli() {
-	print "Installing the Command Line Interface."
+	local cli="$(find /gnu/store/ -type d -name '*metacall*[^R]' | head -n 1)"
+
+	print "Installing the Command Line Interface (needs sudo or root permissions)."
+
+	# Write shell script pointing to MetaCall CLI
+	if [ $(id -u) -eq 0 ]; then
+		echo "#!/usr/bin/env bash" >> /bin/metacall
+		echo "${cli}/metacallcli $$@" >> /bin/metacall
+		chmod 755 /bin/metacall
+	else
+		sudo echo "#!/usr/bin/env bash" >> /bin/metacall
+		sudo echo "${cli}/metacallcli $$@" >> /bin/metacall
+		sudo chmod 755 /bin/metacall
+	fi
 
 	success "CLI successfully."
 }
