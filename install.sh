@@ -97,11 +97,7 @@ dependencies() {
 	print "Checking system dependencies"
 
 	# Check if required programs are installed
-	programs_required tar grep tail awk rev cut uname echo rm id find head chmod
-
-	if [ $(id -u) -ne 0 ]; then
-		programs_required tee
-	fi
+	programs_required tar grep tail awk rev cut uname echo rm id find head chmod ln
 
 	# Check if download programs are installed
 	programs_required_one curl wget
@@ -235,16 +231,12 @@ cli() {
 
 	# Write shell script pointing to MetaCall CLI
 	if [ $(id -u) -eq 0 ]; then
-		echo "#!/usr/bin/env bash" >> /bin/metacall
-		echo "${cli}/metacallcli \$@" >> /bin/metacall
-		chmod 755 /bin/metacall
+		ln -s ${cli}/metacallcli /bin/metacall
 	else
-		echo "#!/usr/bin/env bash" | sudo tee -a /bin/metacall > /dev/null
-		echo "${cli}/metacallcli \$@" | sudo tee -a /bin/metacall > /dev/null
-		sudo chmod 755 /bin/metacall
+		sudo ln -s ${cli}/metacallcli /bin/metacall
 	fi
 
-	success "CLI installed successfully."
+	success "CLI shortcut installed successfully."
 }
 
 main() {
