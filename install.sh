@@ -28,9 +28,6 @@ program() {
 	[ -t 1 ] && command -v $1 > /dev/null
 }
 
-# Define MetaCall default path
-export METACALL_PATH="${HOME}/.metacall"
-
 # Set up colors
 if program tput; then
 	ncolors=$(tput colors)
@@ -100,10 +97,20 @@ dependencies() {
 	print "Checking system dependencies"
 
 	# Check if required programs are installed
-	programs_required tar grep tail awk rev cut uname echo rm find head chmod ln
+	programs_required tar grep tail awk rev cut uname echo rm id find head chmod
+
+	if [ $(id -u) -ne 0 ]; then
+		programs_required tee
+	fi
 
 	# Check if download programs are installed
 	programs_required_one curl wget
+
+	# Detect sudo or run with root
+	if ! program sudo && [ $(id -u) -ne 0 ]; then
+		err "You need either having sudo installed or running this script as root. Aborting installation."
+		exit 1
+	fi
 
 	success "Dependencies satisfied."
 }
@@ -163,7 +170,7 @@ architecture() {
 # Download tarball
 download() {
 	local url="https://github.com/metacall/distributable/releases/latest"
-	local tmp="${METACALL_PATH}/metacall-tarball.tar.gz"
+	local tmp="/tmp/metacall-tarball.tar.gz"
 	local os="$1"
 	local arch="$2"
 
@@ -196,14 +203,19 @@ download() {
 	success "Tarball downloaded."
 }
 
-# Extract the tarball
+# Extract the tarball (requires root or sudo)
 uncompress() {
-	local tmp="${METACALL_PATH}/metacall-tarball.tar.gz"
+	local tmp="/tmp/metacall-tarball.tar.gz"
 
-	print "Uncompress the tarball."
+	print "Uncompress the tarball (needs sudo or root permissions)."
 
-	tar xzf ${tmp} -C ${METACALL_PATH}/
-	chmod -R 755 ${METACALL_PATH}/gnu/store
+	if [ $(id -u) -eq 0 ]; then
+		tar xzf ${tmp} -C /
+		chmod -R 755 /gnu/store
+	else
+		sudo tar xzf ${tmp} -C /
+		sudo chmod -R 755 /gnu/store
+	fi
 
 	success "Tarball uncompressed successfully."
 
@@ -217,24 +229,22 @@ uncompress() {
 
 # Install the CLI
 cli() {
-	local cli="$(find ${METACALL_PATH}/gnu/store/ -type d -name '*metacall*[^R]' | head -n 1)"
+	local cli="$(find /gnu/store/ -type d -name '*metacall*[^R]' | head -n 1)"
 
 	print "Installing the Command Line Interface shortcut (needs sudo or root permissions)."
 
-	# Detect sudo or run with root
-	if ! program sudo && [ program id && $(id -u) -ne 0 ]; then
-		err "You need either having sudo installed or running this script as root in order to install the CLI shortcut." \
-			"  To add manually the shortcut, run with root permissions the following command: ln -s ${cli}/metacallcli /bin/metacall"
+	# Write shell script pointing to MetaCall CLI
+	if [ $(id -u) -eq 0 ]; then
+		echo "#!/usr/bin/env bash" >> /bin/metacall
+		echo "${cli}/metacallcli \$@" >> /bin/metacall
+		chmod 755 /bin/metacall
 	else
-		# Write shell script pointing to MetaCall CLI
-		if [ $(id -u) -eq 0 ]; then
-			ln -s ${cli}/metacallcli /bin/metacall
-		else
-			sudo ln -s ${cli}/metacallcli /bin/metacall
-		fi
-
-		success "CLI shortcut installed successfully."
+		echo "#!/usr/bin/env bash" | sudo tee -a /bin/metacall > /dev/null
+		echo "${cli}/metacallcli \$@" | sudo tee -a /bin/metacall > /dev/null
+		sudo chmod 755 /bin/metacall
 	fi
+
+	success "CLI installed successfully."
 }
 
 main() {
@@ -251,9 +261,6 @@ main() {
 	local arch="$(architecture)"
 
 	success "Operative System (${os}) and Architecture (${arch}) detected."
-
-	# Create install path
-	mkdir -p ${METACALL_PATH}
 
 	# Download tarball
 	download ${os} ${arch}
