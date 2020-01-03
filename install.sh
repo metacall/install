@@ -20,12 +20,9 @@
 # Set mode
 set -eu -o pipefail
 
-# Expose stream 3 as a pipe to the standard output of itself
-exec 3>&1
-
 # Check if program exists
 program() {
-	[ -t 1 ] && command -v $1 >/dev/null 2>&1
+	command -v $1 >/dev/null 2>&1
 }
 
 # Set up colors
@@ -57,17 +54,17 @@ warning() {
 
 # Error message
 err() {
-	printf "%b\n" "${red:-}✘${normal:-} $@" >&2
+	printf "%b\n" "${red:-}✘${normal:-} $@"
 }
 
 # Print message
 print() {
-	printf "%b\n" "${normal:-}▷ $@" >&3
+	printf "%b\n" "${normal:-}▷ $@"
 }
 
 # Success message
 success() {
-	printf "%b\n" "${green:-}✔${normal:-} $@" >&3
+	printf "%b\n" "${green:-}✔${normal:-} $@"
 }
 
 # Check if a list of programs exist or aborts
