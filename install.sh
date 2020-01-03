@@ -25,7 +25,7 @@ exec 3>&1
 
 # Check if program exists
 program() {
-	[ -t 1 ] && command -v $1 > /dev/null
+	[ -t 1 ] && command -v $1 >/dev/null 2>&1
 }
 
 # Set up colors
