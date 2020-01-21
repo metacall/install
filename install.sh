@@ -237,7 +237,7 @@ cli() {
 		echo "export SERIAL_LIBRARY_PATH=\"${cli}/lib\"" >> /bin/metacall
 		echo "export DETOUR_LIBRARY_PATH=\"${cli}/lib\"" >> /bin/metacall
 		echo "export PORT_LIBRARY_PATH=\"${cli}/lib\"" >> /bin/metacall
-		echo "export CONFIGURATION_PATH=\"${cli}/share/metacall/configurations/global.json\"" >> /bin/metacall
+		echo "export CONFIGURATION_PATH=\"${cli}/configurations/global.json\"" >> /bin/metacall
 		echo "${cli}/metacallcli \$@" >> /bin/metacall
 		chmod 755 /bin/metacall
 	else
@@ -246,7 +246,7 @@ cli() {
 		echo "export SERIAL_LIBRARY_PATH=\"${cli}/lib\"" | sudo tee -a /bin/metacall > /dev/null
 		echo "export DETOUR_LIBRARY_PATH=\"${cli}/lib\"" | sudo tee -a /bin/metacall > /dev/null
 		echo "export PORT_LIBRARY_PATH=\"${cli}/lib\"" | sudo tee -a /bin/metacall > /dev/null
-		echo "export CONFIGURATION_PATH=\"${cli}/share/metacall/configurations/global.json\"" | sudo tee -a /bin/metacall > /dev/null
+		echo "export CONFIGURATION_PATH=\"${cli}/configurations/global.json\"" | sudo tee -a /bin/metacall > /dev/null
 		echo "${cli}/metacallcli \$@" | sudo tee -a /bin/metacall > /dev/null
 		sudo chmod 755 /bin/metacall
 	fi
