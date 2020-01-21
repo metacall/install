@@ -94,7 +94,11 @@ dependencies() {
 	print "Checking system dependencies"
 
 	# Check if required programs are installed
-	programs_required tar grep tail awk rev cut uname echo rm id find head chmod ln
+	programs_required tar grep tail awk rev cut uname echo rm id find head chmod
+
+	if [ $(id -u) -ne 0 ]; then
+		programs_required tee
+	fi
 
 	# Check if download programs are installed
 	programs_required_one curl wget
@@ -228,9 +232,23 @@ cli() {
 
 	# Write shell script pointing to MetaCall CLI
 	if [ $(id -u) -eq 0 ]; then
-		ln -s ${cli}/metacallcli /bin/metacall
+		echo "#!/usr/bin/env sh" &> /bin/metacall
+		echo "export LOADER_LIBRARY_PATH=\"${cli}/lib\"" >> /bin/metacall
+		echo "export SERIAL_LIBRARY_PATH=\"${cli}/lib\"" >> /bin/metacall
+		echo "export DETOUR_LIBRARY_PATH=\"${cli}/lib\"" >> /bin/metacall
+		echo "export PORT_LIBRARY_PATH=\"${cli}/lib\"" >> /bin/metacall
+		echo "export CONFIGURATION_PATH=\"${cli}/share/metacall/configurations/global.json\"" >> /bin/metacall
+		echo "${cli}/metacallcli \$@" >> /bin/metacall
+		chmod 755 /bin/metacall
 	else
-		sudo ln -s ${cli}/metacallcli /bin/metacall
+		echo "#!/usr/bin/env sh" | sudo tee /bin/metacall > /dev/null
+		echo "export LOADER_LIBRARY_PATH=\"${cli}/lib\"" | sudo tee -a /bin/metacall > /dev/null
+		echo "export SERIAL_LIBRARY_PATH=\"${cli}/lib\"" | sudo tee -a /bin/metacall > /dev/null
+		echo "export DETOUR_LIBRARY_PATH=\"${cli}/lib\"" | sudo tee -a /bin/metacall > /dev/null
+		echo "export PORT_LIBRARY_PATH=\"${cli}/lib\"" | sudo tee -a /bin/metacall > /dev/null
+		echo "export CONFIGURATION_PATH=\"${cli}/share/metacall/configurations/global.json\"" | sudo tee -a /bin/metacall > /dev/null
+		echo "${cli}/metacallcli \$@" | sudo tee -a /bin/metacall > /dev/null
+		sudo chmod 755 /bin/metacall
 	fi
 
 	success "CLI shortcut installed successfully."
