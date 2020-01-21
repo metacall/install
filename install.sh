@@ -238,6 +238,7 @@ cli() {
 		echo "export DETOUR_LIBRARY_PATH=\"${cli}/lib\"" >> /bin/metacall
 		echo "export PORT_LIBRARY_PATH=\"${cli}/lib\"" >> /bin/metacall
 		echo "export CONFIGURATION_PATH=\"${cli}/configurations/global.json\"" >> /bin/metacall
+		echo "export LOADER_SCRIPT_PATH=\"\${LOADER_SCRIPT_PATH:-`pwd`}\"" >> /bin/metacall
 		echo "${cli}/metacallcli \$@" >> /bin/metacall
 		chmod 755 /bin/metacall
 	else
@@ -247,6 +248,7 @@ cli() {
 		echo "export DETOUR_LIBRARY_PATH=\"${cli}/lib\"" | sudo tee -a /bin/metacall > /dev/null
 		echo "export PORT_LIBRARY_PATH=\"${cli}/lib\"" | sudo tee -a /bin/metacall > /dev/null
 		echo "export CONFIGURATION_PATH=\"${cli}/configurations/global.json\"" | sudo tee -a /bin/metacall > /dev/null
+		echo "export LOADER_SCRIPT_PATH=\"\${LOADER_SCRIPT_PATH:-`pwd`}\"" | sudo tee -a /bin/metacall > /dev/null
 		echo "${cli}/metacallcli \$@" | sudo tee -a /bin/metacall > /dev/null
 		sudo chmod 755 /bin/metacall
 	fi
