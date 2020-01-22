@@ -242,7 +242,8 @@ cli() {
 		echo "export CONFIGURATION_PATH=\"${cli}/configurations/global.json\"" >> /bin/metacall
 		echo "export LOADER_SCRIPT_PATH=\"\${LOADER_SCRIPT_PATH:-`pwd`}\"" >> /bin/metacall
 		echo "export NODE_PATH=\"${npm}/lib/node_modules\"" >> /bin/metacall
-		echo "export NODE_EXE_PATH=\"${node}/bin/node\"" >> /bin/metacall
+		# echo "export NODE_EXE_PATH=\"${node}/bin/node\"" >> /bin/metacall
+		echo "if [ -z \"\${PATH-}\" ]; then export PATH=\"/gnu/bin\"; else PATH=\"/gnu/bin:\${PATH}\"; fi" >> /bin/metacall
 		echo "${cli}/metacallcli \$@" >> /bin/metacall
 		chmod 755 /bin/metacall
 	else
@@ -254,7 +255,8 @@ cli() {
 		echo "export CONFIGURATION_PATH=\"${cli}/configurations/global.json\"" | sudo tee -a /bin/metacall > /dev/null
 		echo "export LOADER_SCRIPT_PATH=\"\${LOADER_SCRIPT_PATH:-`pwd`}\"" | sudo tee -a /bin/metacall > /dev/null
 		echo "export NODE_PATH=\"${npm}/lib/node_modules\"" | sudo tee -a /bin/metacall > /dev/null
-		echo "export NODE_EXE_PATH=\"${node}/bin/node\"" | sudo tee -a /bin/metacall > /dev/null
+		# echo "export NODE_EXE_PATH=\"${node}/bin/node\"" | sudo tee -a /bin/metacall > /dev/null
+		echo "if [ -z \"\${PATH-}\" ]; then export PATH=\"/gnu/bin\"; else PATH=\"/gnu/bin:\${PATH}\"; fi" | sudo tee -a /bin/metacall > /dev/null
 		echo "${cli}/metacallcli \$@" | sudo tee -a /bin/metacall > /dev/null
 		sudo chmod 755 /bin/metacall
 	fi
