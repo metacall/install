@@ -263,7 +263,7 @@ cli() {
 
 		echo "CMD=\`ls -a /gnu/bin | grep \"\$1\" | head -n 1\`" >> /bin/metacall
 
-		echo "if [ \"\${CMD}\" != \"\$1\" ]; then" >> /bin/metacall
+		echo "if [ \"\${CMD}\" = \"\$1\" ]; then" >> /bin/metacall
 		echo "	if [ -z \"\${PATH-}\" ]; then export PATH=\"/gnu/bin\"; else PATH=\"/gnu/bin:\${PATH}\"; fi" >> /bin/metacall
 		echo "	\$@" >> /bin/metacall
 		echo "	exit \$?" >> /bin/metacall
@@ -309,7 +309,7 @@ cli() {
 
 		echo "CMD=\`ls -a /gnu/bin | grep \"\$1\" | head -n 1\`" | sudo tee -a /bin/metacall > /dev/null
 
-		echo "if [ \"\${CMD}\" != \"\$1\" ]; then" | sudo tee -a /bin/metacall > /dev/null
+		echo "if [ \"\${CMD}\" = \"\$1\" ]; then" | sudo tee -a /bin/metacall > /dev/null
 		echo "	if [ -z \"\${PATH-}\" ]; then export PATH=\"/gnu/bin\"; else PATH=\"/gnu/bin:\${PATH}\"; fi" | sudo tee -a /bin/metacall > /dev/null
 		echo "	\$@" | sudo tee -a /bin/metacall > /dev/null
 		echo "	exit \$?" | sudo tee -a /bin/metacall > /dev/null
