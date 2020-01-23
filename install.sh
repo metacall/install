@@ -226,9 +226,7 @@ uncompress() {
 
 # Install the CLI
 cli() {
-	local cli="$(find /gnu/store/ -type d -name '*metacall*[^R]' | head -n 1)"
-	local npm="$(find /gnu/store/ -type d -name '*libnode*' | head -n 1)"
-	local node="$(find /gnu/store/ -type d -name '*node*' | head -n 1)"
+	local cli="/gnu/store/`ls /gnu/store/ | grep metacall | head -n 1`"
 
 	print "Installing the Command Line Interface shortcut (needs sudo or root permissions)."
 
