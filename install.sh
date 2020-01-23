@@ -229,9 +229,9 @@ cli() {
 	local cli="$(find /gnu/store/ -type d -name '*metacall*[^R]' | head -n 1)"
 	local npm="$(find /gnu/store/ -type d -name '*libnode*' | head -n 1)"
 	local node="$(find /gnu/store/ -type d -name '*node*' | head -n 1)"
-	local python="$(find /gnu/store/ -type d -name '*python*' | head -n 1)"
-	local pythonhome="$(find ${python}/lib -type d -name 'python*' | head -n 1)"
-	local pythonpath="${pythonhome}:${pythonhome}/site-packages"
+	#local python="$(find /gnu/store/ -type d -name '*python*' | head -n 1)"
+	#local pythonhome="$(find ${python}/lib -type d -name 'python*' | head -n 1)"
+	#local pythonpath="${pythonhome}:${pythonhome}/site-packages"
 
 	print "Installing the Command Line Interface shortcut (needs sudo or root permissions)."
 
