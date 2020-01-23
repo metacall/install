@@ -261,7 +261,7 @@ cli() {
 		echo "	exit 0" >> /bin/metacall
 		echo "fi" >> /bin/metacall
 
-		echo "COMMAND=`find /gnu/bin -type f -name \"\$1\" | wc -l`" >> /bin/metacall
+		echo "COMMAND=\`find /gnu/bin -type f -name \"\$1\" | wc -l\`" >> /bin/metacall
 
 		echo "if [ \"\$COMMAND\" != \"0\" ]; then" >> /bin/metacall
 		echo "	if [ -z \"\${PATH-}\" ]; then export PATH=\"/gnu/bin\"; else PATH=\"/gnu/bin:\${PATH}\"; fi" >> /bin/metacall
@@ -307,7 +307,7 @@ cli() {
 		echo "	exit 0" | sudo tee -a /bin/metacall > /dev/null
 		echo "fi" | sudo tee -a /bin/metacall > /dev/null
 
-		echo "COMMAND=`find /gnu/bin -type f -name \"\$1\" | wc -l`" | sudo tee -a /bin/metacall > /dev/null
+		echo "COMMAND=\`find /gnu/bin -type f -name \"\$1\" | wc -l\`" | sudo tee -a /bin/metacall > /dev/null
 
 		echo "if [ \"\$COMMAND\" != \"0\" ]; then" | sudo tee -a /bin/metacall > /dev/null
 		echo "	if [ -z \"\${PATH-}\" ]; then export PATH=\"/gnu/bin\"; else PATH=\"/gnu/bin:\${PATH}\"; fi" | sudo tee -a /bin/metacall > /dev/null
