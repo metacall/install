@@ -235,11 +235,11 @@ cli() {
 
 	print "Installing the Command Line Interface shortcut (needs sudo or root permissions)."
 
-	# TODO: Setting PATH with /gnu/bin is needed for NPM under metacall.
-	# But doing this makes PIP generate a coredump (possibly because of paths are wrong)
-	# Also there is two python installations in the tarball maybe they are conflicting
-	# Meanwhile there is a workaround that checks if the installer being run is node or python
-	# and sets the PATH conditionally to allow both working
+	# # TODO: Setting PATH with /gnu/bin is needed for NPM under metacall.
+	# # But doing this makes PIP generate a coredump (possibly because of paths are wrong)
+	# # Also there is two python installations in the tarball maybe they are conflicting
+	# # Meanwhile there is a workaround that checks if the installer being run is node or python
+	# # and sets the PATH conditionally to allow both working
 
 	# Write shell script pointing to MetaCall CLI
 	if [ $(id -u) -eq 0 ]; then
@@ -253,21 +253,37 @@ cli() {
 		echo "export CONFIGURATION_PATH=\"${cli}/configurations/global.json\"" >> /bin/metacall
 		echo "export LOADER_SCRIPT_PATH=\"\${LOADER_SCRIPT_PATH:-`pwd`}\"" >> /bin/metacall
 
-		# NodeJS Environment
-		echo "export NODE_PATH=\"${npm}/lib/node_modules\"" >> /bin/metacall
-		# echo "export NODE_EXE_PATH=\"${node}/bin/node\"" >> /bin/metacall
+		# TODO: In the Core:
+		#	1) Delete functionality of package managers from MetaCall CLI
+		#	2) Move the package manager wrapper from here to the Core and install it with the CLI
 
-		# # Python Environment
-		# echo "export PYTHONHOME=\"${pythonhome}\"" >> /bin/metacall
-		# echo "export PYTHONPATH=\"${pythonpath}\"" >> /bin/metacall
-
-		# TODO: Remove this workaround for (node/py) package managers incompatibility
-		echo "if [ \"\$1\" = \"install\" ] && [ \"\$2\" = \"node\" ]; then" >> /bin/metacall
-
-			# Bash Environment
-			echo "if [ -z \"\${PATH-}\" ]; then export PATH=\"/gnu/bin\"; else PATH=\"/gnu/bin:\${PATH}\"; fi" >> /bin/metacall
-
+		echo "if [ \"\$1\" = \"install\" ]; then" >> /bin/metacall
+		echo "	exit 0" >> /bin/metacall
 		echo "fi" >> /bin/metacall
+
+		echo "COMMAND=`find /gnu/bin -type f -name \"\$1\" | wc -l`" >> /bin/metacall
+
+		echo "if [ \"\$COMMAND\" != \"0\" ]; then" >> /bin/metacall
+		echo "	if [ -z \"\${PATH-}\" ]; then export PATH=\"/gnu/bin\"; else PATH=\"/gnu/bin:\${PATH}\"; fi" >> /bin/metacall
+		echo "	\$@" >> /bin/metacall
+		echo "	exit \$?" >> /bin/metacall
+		echo "fi" >> /bin/metacall
+
+		# # NodeJS Environment
+		# echo "export NODE_PATH=\"${npm}/lib/node_modules\"" >> /bin/metacall
+		# # echo "export NODE_EXE_PATH=\"${node}/bin/node\"" >> /bin/metacall
+
+		# # # Python Environment
+		# # echo "export PYTHONHOME=\"${pythonhome}\"" >> /bin/metacall
+		# # echo "export PYTHONPATH=\"${pythonpath}\"" >> /bin/metacall
+
+		# # TODO: Remove this workaround for (node/py) package managers incompatibility
+		# echo "if [ \"\$1\" = \"install\" ] && [ \"\$2\" = \"node\" ]; then" >> /bin/metacall
+
+		# 	# Bash Environment
+		# 	echo "if [ -z \"\${PATH-}\" ]; then export PATH=\"/gnu/bin\"; else PATH=\"/gnu/bin:\${PATH}\"; fi" >> /bin/metacall
+
+		# echo "fi" >> /bin/metacall
 
 		# CLI
 		echo "${cli}/metacallcli \$@" >> /bin/metacall
@@ -283,21 +299,37 @@ cli() {
 		echo "export CONFIGURATION_PATH=\"${cli}/configurations/global.json\"" | sudo tee -a /bin/metacall > /dev/null
 		echo "export LOADER_SCRIPT_PATH=\"\${LOADER_SCRIPT_PATH:-`pwd`}\"" | sudo tee -a /bin/metacall > /dev/null
 
-		# NodeJS Environment
-		echo "export NODE_PATH=\"${npm}/lib/node_modules\"" | sudo tee -a /bin/metacall > /dev/null
-		# echo "export NODE_EXE_PATH=\"${node}/bin/node\"" | sudo tee -a /bin/metacall > /dev/null
+		# TODO: In the Core:
+		#	1) Delete functionality of package managers from MetaCall CLI
+		#	2) Move the package manager wrapper from here to the Core and install it with the CLI
 
-		# # Python Environment
-		# echo "export PYTHONHOME=\"${pythonhome}\"" | sudo tee -a /bin/metacall > /dev/null
-		# echo "export PYTHONPATH=\"${pythonpath}\"" | sudo tee -a /bin/metacall > /dev/null
-
-		# TODO: Remove this workaround for (node/py) package managers incompatibility
-		echo "if [ \"\$1\" = \"install\" ] && [ \"\$2\" = \"node\" ]; then" | sudo tee -a /bin/metacall > /dev/null
-
-			# Bash Environment
-			echo "if [ -z \"\${PATH-}\" ]; then export PATH=\"/gnu/bin\"; else PATH=\"/gnu/bin:\${PATH}\"; fi" | sudo tee -a /bin/metacall > /dev/null
-
+		echo "if [ \"\$1\" = \"install\" ]; then" | sudo tee -a /bin/metacall > /dev/null
+		echo "	exit 0" | sudo tee -a /bin/metacall > /dev/null
 		echo "fi" | sudo tee -a /bin/metacall > /dev/null
+
+		echo "COMMAND=`find /gnu/bin -type f -name \"\$1\" | wc -l`" | sudo tee -a /bin/metacall > /dev/null
+
+		echo "if [ \"\$COMMAND\" != \"0\" ]; then" | sudo tee -a /bin/metacall > /dev/null
+		echo "	if [ -z \"\${PATH-}\" ]; then export PATH=\"/gnu/bin\"; else PATH=\"/gnu/bin:\${PATH}\"; fi" | sudo tee -a /bin/metacall > /dev/null
+		echo "	\$@" | sudo tee -a /bin/metacall > /dev/null
+		echo "	exit \$?" | sudo tee -a /bin/metacall > /dev/null
+		echo "fi" | sudo tee -a /bin/metacall > /dev/null
+
+		# # NodeJS Environment
+		# echo "export NODE_PATH=\"${npm}/lib/node_modules\"" | sudo tee -a /bin/metacall > /dev/null
+		# # echo "export NODE_EXE_PATH=\"${node}/bin/node\"" | sudo tee -a /bin/metacall > /dev/null
+
+		# # # Python Environment
+		# # echo "export PYTHONHOME=\"${pythonhome}\"" | sudo tee -a /bin/metacall > /dev/null
+		# # echo "export PYTHONPATH=\"${pythonpath}\"" | sudo tee -a /bin/metacall > /dev/null
+
+		# # TODO: Remove this workaround for (node/py) package managers incompatibility
+		# echo "if [ \"\$1\" = \"install\" ] && [ \"\$2\" = \"node\" ]; then" | sudo tee -a /bin/metacall > /dev/null
+
+		# 	# Bash Environment
+		# 	echo "if [ -z \"\${PATH-}\" ]; then export PATH=\"/gnu/bin\"; else PATH=\"/gnu/bin:\${PATH}\"; fi" | sudo tee -a /bin/metacall > /dev/null
+
+		# echo "fi" | sudo tee -a /bin/metacall > /dev/null
 
 		# CLI
 		echo "${cli}/metacallcli \$@" | sudo tee -a /bin/metacall > /dev/null
