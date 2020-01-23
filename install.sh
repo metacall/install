@@ -261,9 +261,9 @@ cli() {
 		echo "	exit 0" >> /bin/metacall
 		echo "fi" >> /bin/metacall
 
-		echo "COMMAND=\`find /gnu/bin -type f -name \"\$1\" | wc -l\`" >> /bin/metacall
+		echo "CMD=\`ls -a /gnu/bin | grep \"\$1\" | head -n 1\`" >> /bin/metacall
 
-		echo "if [ \"\$COMMAND\" != \"0\" ]; then" >> /bin/metacall
+		echo "if [ \"\${CMD}\" != \"\$1\" ]; then" >> /bin/metacall
 		echo "	if [ -z \"\${PATH-}\" ]; then export PATH=\"/gnu/bin\"; else PATH=\"/gnu/bin:\${PATH}\"; fi" >> /bin/metacall
 		echo "	\$@" >> /bin/metacall
 		echo "	exit \$?" >> /bin/metacall
@@ -307,9 +307,9 @@ cli() {
 		echo "	exit 0" | sudo tee -a /bin/metacall > /dev/null
 		echo "fi" | sudo tee -a /bin/metacall > /dev/null
 
-		echo "COMMAND=\`find /gnu/bin -type f -name \"\$1\" | wc -l\`" | sudo tee -a /bin/metacall > /dev/null
+		echo "CMD=\`ls -a /gnu/bin | grep \"\$1\" | head -n 1\`" | sudo tee -a /bin/metacall > /dev/null
 
-		echo "if [ \"\$COMMAND\" != \"0\" ]; then" | sudo tee -a /bin/metacall > /dev/null
+		echo "if [ \"\${CMD}\" != \"\$1\" ]; then" | sudo tee -a /bin/metacall > /dev/null
 		echo "	if [ -z \"\${PATH-}\" ]; then export PATH=\"/gnu/bin\"; else PATH=\"/gnu/bin:\${PATH}\"; fi" | sudo tee -a /bin/metacall > /dev/null
 		echo "	\$@" | sudo tee -a /bin/metacall > /dev/null
 		echo "	exit \$?" | sudo tee -a /bin/metacall > /dev/null
