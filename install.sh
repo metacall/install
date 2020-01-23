@@ -245,9 +245,6 @@ cli() {
 	if [ $(id -u) -eq 0 ]; then
 		echo "#!/usr/bin/env sh" &> /bin/metacall
 
-		# Parameters
-		echo "METACALL_ARGS=\"\$@\""
-
 		# MetaCall Environment
 		echo "export LOADER_LIBRARY_PATH=\"${cli}/lib\"" >> /bin/metacall
 		echo "export SERIAL_LIBRARY_PATH=\"${cli}/lib\"" >> /bin/metacall
