@@ -240,7 +240,7 @@ cli() {
 		echo "export DETOUR_LIBRARY_PATH=\"${cli}/lib\"" >> /bin/metacall
 		echo "export PORT_LIBRARY_PATH=\"${cli}/lib\"" >> /bin/metacall
 		echo "export CONFIGURATION_PATH=\"${cli}/configurations/global.json\"" >> /bin/metacall
-		echo "export LOADER_SCRIPT_PATH=\"\${LOADER_SCRIPT_PATH:-`pwd`}\"" >> /bin/metacall
+		echo "export LOADER_SCRIPT_PATH=\"\${LOADER_SCRIPT_PATH:-\`pwd\`}\"" >> /bin/metacall
 
 		echo "CMD=\`ls -a /gnu/bin | grep \"\$1\" | head -n 1\`" >> /bin/metacall
 
@@ -262,7 +262,7 @@ cli() {
 		echo "export DETOUR_LIBRARY_PATH=\"${cli}/lib\"" | sudo tee -a /bin/metacall > /dev/null
 		echo "export PORT_LIBRARY_PATH=\"${cli}/lib\"" | sudo tee -a /bin/metacall > /dev/null
 		echo "export CONFIGURATION_PATH=\"${cli}/configurations/global.json\"" | sudo tee -a /bin/metacall > /dev/null
-		echo "export LOADER_SCRIPT_PATH=\"\${LOADER_SCRIPT_PATH:-`pwd`}\"" | sudo tee -a /bin/metacall > /dev/null
+		echo "export LOADER_SCRIPT_PATH=\"\${LOADER_SCRIPT_PATH:-\`pwd\`}\"" | sudo tee -a /bin/metacall > /dev/null
 
 		echo "CMD=\`ls -a /gnu/bin | grep \"\$1\" | head -n 1\`" | sudo tee -a /bin/metacall > /dev/null
 
