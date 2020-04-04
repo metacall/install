@@ -29,16 +29,16 @@ program() {
 if program tput; then
 	ncolors=$(tput colors)
 	if [ -n "$ncolors" ] && [ "$ncolors" -ge 8 ]; then
-		bold="$(tput bold		|| echo)"
-		normal="$(tput sgr0		|| echo)"
-		black="$(tput setaf 0	|| echo)"
-		red="$(tput setaf 1		|| echo)"
-		green="$(tput setaf 2	|| echo)"
-		yellow="$(tput setaf 3	|| echo)"
-		blue="$(tput setaf 4	|| echo)"
-		magenta="$(tput setaf 5	|| echo)"
-		cyan="$(tput setaf 6	|| echo)"
-		white="$(tput setaf 7	|| echo)"
+		bold="$(tput bold       || echo)"
+		normal="$(tput sgr0     || echo)"
+		black="$(tput setaf 0   || echo)"
+		red="$(tput setaf 1     || echo)"
+		green="$(tput setaf 2   || echo)"
+		yellow="$(tput setaf 3  || echo)"
+		blue="$(tput setaf 4    || echo)"
+		magenta="$(tput setaf 5 || echo)"
+		cyan="$(tput setaf 6    || echo)"
+		white="$(tput setaf 7   || echo)"
 	fi
 fi
 
@@ -309,5 +309,11 @@ main() {
 		"  Run 'metacall' command for start the CLI and type help for more information about CLI commands."
 }
 
-# Run main
-main
+# if [ $# -eq 0 ]; then
+# 	# Run main
+# 	main
+
+SCRIPTPATH="$( cd "$(dirname "$0")" >/dev/null 2>&1 ; pwd -P )"
+
+echo "$SCRIPTPATH"
+echo "$0"
