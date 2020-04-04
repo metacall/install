@@ -284,7 +284,7 @@ cli() {
 	success "CLI shortcut installed successfully."
 }
 
-main() {
+binary_install() {
 	# Show title
 	title "MetaCall Self-Contained Binary Installer"
 
@@ -313,7 +313,7 @@ main() {
 		"  Run 'metacall' command for start the CLI and type help for more information about CLI commands."
 }
 
-docker_fallback () {
+docker_install() {
 	# Show title
 	title "MetaCall Docker Installer"
 
@@ -329,7 +329,11 @@ docker_fallback () {
 	# Pull MetaCall CLI Docker Image
 	print "Pulling MetaCall CLI Image."
 
-	if [ $(docker pull metacall/cli:latest) -ne 0 ]; then
+	docker pull metacall/cli:latest
+
+	result=$?
+
+	if [ $result -ne 0 ]; then
 		err "Docker image could not be pulled. Aborting installation."
 	fi
 
@@ -354,27 +358,24 @@ docker_fallback () {
 		"  Run 'metacall' command for start the CLI and type help for more information about CLI commands."
 }
 
-# Launcher for the script, includes fallback to docker install
-if [ $# -eq 0 ]; then
+main() {
 	# Required program for recursive calls
 	programs_required wait
 
-	# Run main
-	main &
+	# Run binary install
+	binary_install &
 	proc=$!
 	wait ${proc}
 	result=$?
 
 	if [ $result -ne 0 ]; then
 		ask "Binary installation has failed, do you want to fallback to Docker installation"
-		# On error, fallback to docker
-		docker_fallback &
+		# On error, fallback to docker install
+		docker_install &
 		proc=$!
 		wait ${proc}
 	fi
-else
-	# Run function
-	$1 &
-	proc=$!
-	wait ${proc}
-fi
+}
+
+# Run main
+main
