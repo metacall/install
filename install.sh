@@ -309,11 +309,21 @@ main() {
 		"  Run 'metacall' command for start the CLI and type help for more information about CLI commands."
 }
 
-# if [ $# -eq 0 ]; then
-# 	# Run main
-# 	main
+docker () {
+	print "Docker ..."
+}
 
-SCRIPTPATH="$( cd "$(dirname "$0")" >/dev/null 2>&1 ; pwd -P )"
+if [ $# -eq 0 ]; then
+	# Run main
+	$0 main
 
-echo "$SCRIPTPATH"
-echo "$0"
+	result=$?
+
+	if [ $result -ne 0 ]; then
+		# On error, fallback to docker
+		$0 docker
+	fi
+else
+	# Run function
+	$1
+fi
