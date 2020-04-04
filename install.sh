@@ -17,9 +17,6 @@
 #	See the License for the specific language governing permissions and
 #	limitations under the License.
 
-# Set mode
-set -eu -o pipefail
-
 # Check if program exists
 program() {
 	command -v $1 >/dev/null 2>&1
@@ -316,7 +313,7 @@ main() {
 		"  Run 'metacall' command for start the CLI and type help for more information about CLI commands."
 }
 
-docker () {
+docker_fallback () {
 	# Show title
 	title "MetaCall Docker Installer"
 
@@ -359,22 +356,25 @@ docker () {
 
 # Launcher for the script, includes fallback to docker install
 if [ $# -eq 0 ]; then
-	result=0
-
-	echo "-- DEBUG --: Running main $0"
+	# Required program for recursive calls
+	programs_required wait
 
 	# Run main
-	$0 main || result=$?
+	main &
+	proc=$!
+	wait ${proc}
+	result=$?
 
 	if [ $result -ne 0 ]; then
 		ask "Binary installation has failed, do you want to fallback to Docker installation"
 		# On error, fallback to docker
-		echo "-- DEBUG --: Running docker $0"
-		$0 docker
+		docker_fallback &
+		proc=$!
+		wait ${proc}
 	fi
 else
-	echo "-- DEBUG --: Running function $0 $1"
-
 	# Run function
-	$1
+	$1 &
+	proc=$!
+	wait ${proc}
 fi
