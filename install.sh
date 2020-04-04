@@ -320,6 +320,19 @@ docker () {
 	# Show title
 	title "MetaCall Docker Installer"
 
+	# Check if Docker command is installed
+	programs_required docker
+
+	# Pull MetaCall CLI Docker Image
+	if [ $(docker pull metacall/cli:latest) -ne 0 ]; then
+		err "Docker image could not be pulled. Aborting installation."
+	fi
+
+	# TODO: Install CLI
+
+	# Show information
+	success "MetaCall has been installed." \
+		"  Run 'metacall' command for start the CLI and type help for more information about CLI commands."
 }
 
 # Launcher for the script, includes fallback to docker install
