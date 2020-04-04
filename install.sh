@@ -66,9 +66,14 @@ success() {
 
 # Ask message
 ask() {
-	printf "%b\n" "${normal:-}▷ ${cyan:-}$@ ?${normal:-} [Y/n]\n"
-
-	# TODO
+	while true; do
+		read -p "${normal:-}▷ ${cyan:-}$@?${normal:-} [Y/n] " yn
+		case $yn in
+			[Yy]* ) break;;
+			[Nn]* ) exit 1;;
+			* ) warning "Please answer yes [Yy] or no [Nn].";;
+		esac
+	done
 }
 
 # Check if a list of programs exist or aborts
@@ -369,7 +374,11 @@ main() {
 	result=$?
 
 	if [ $result -ne 0 ]; then
+		# Required program for ask question to the user
+		programs_required read
+
 		ask "Binary installation has failed, do you want to fallback to Docker installation"
+
 		# On error, fallback to docker install
 		docker_install &
 		proc=$!
