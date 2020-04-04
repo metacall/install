@@ -98,7 +98,7 @@ programs_required_one() {
 
 # Check all dependencies
 dependencies() {
-	print "Checking system dependencies"
+	print "Checking system dependencies."
 
 	# Check if required programs are installed
 	programs_required tar grep tail awk rev cut uname echo rm id find head chmod
@@ -321,14 +321,36 @@ docker () {
 	title "MetaCall Docker Installer"
 
 	# Check if Docker command is installed
-	programs_required docker
+	print "Checking Docker Dependency."
+
+	programs_required docker echo chmod
+
+	if [ $(id -u) -ne 0 ]; then
+		programs_required tee
+	fi
 
 	# Pull MetaCall CLI Docker Image
+	print "Pulling MetaCall CLI Image."
+
 	if [ $(docker pull metacall/cli:latest) -ne 0 ]; then
 		err "Docker image could not be pulled. Aborting installation."
 	fi
 
-	# TODO: Install CLI
+	# Install Docker based CLI
+	print "Installing the Command Line Interface shortcut (needs sudo or root permissions)."
+
+	local command="docker run --rm --network host -e \"LOADER_SCRIPT_PATH=/metacall/source\" -v \`pwd\`:/metacall/source -it metacall/cli \$@"
+
+	# Write shell script wrapping the Docker run of MetaCall CLI image
+	if [ $(id -u) -eq 0 ]; then
+		echo "#!/usr/bin/env sh" &> /bin/metacall
+		echo "${command}" >> /bin/metacall
+		chmod 755 /bin/metacall
+	else
+		echo "#!/usr/bin/env sh" | sudo tee /bin/metacall > /dev/null
+		echo "${command}" | sudo tee -a /bin/metacall > /dev/null
+		sudo chmod 755 /bin/metacall
+	fi
 
 	# Show information
 	success "MetaCall has been installed." \
