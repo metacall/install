@@ -361,15 +361,20 @@ docker () {
 if [ $# -eq 0 ]; then
 	result=0
 
+	echo "-- DEBUG --: Running main $0"
+
 	# Run main
 	$0 main || result=$?
 
 	if [ $result -ne 0 ]; then
 		ask "Binary installation has failed, do you want to fallback to Docker installation"
 		# On error, fallback to docker
+		echo "-- DEBUG --: Running docker $0"
 		$0 docker
 	fi
 else
+	echo "-- DEBUG --: Running function $0 $1"
+
 	# Run function
 	$1
 fi
