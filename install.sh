@@ -44,7 +44,7 @@ fi
 
 # Title message
 title() {
-	printf "%b\n\n" "${bold:-}$@${normal:-}"
+	printf "%b\n\n" "${normal:-}${bold:-}$@${normal:-}"
 }
 
 # Warning message
@@ -65,6 +65,13 @@ print() {
 # Success message
 success() {
 	printf "%b\n" "${green:-}✔${normal:-} $@"
+}
+
+# Ask message
+ask() {
+	printf "%b\n" "${normal:-}▷ ${cyan:-}$@ ?${normal:-} [Y/n]\n"
+
+	# TODO
 }
 
 # Check if a list of programs exist or aborts
@@ -310,16 +317,20 @@ main() {
 }
 
 docker () {
-	print "Docker ..."
+	# Show title
+	title "MetaCall Docker Installer"
+
 }
 
+# Launcher for the script, includes fallback to docker install
 if [ $# -eq 0 ]; then
-	# Run main
-	$0 main
+	result=0
 
-	result=$?
+	# Run main
+	$0 main || result=$?
 
 	if [ $result -ne 0 ]; then
+		ask "Binary installation has failed, do you want to fallback to Docker installation"
 		# On error, fallback to docker
 		$0 docker
 	fi
