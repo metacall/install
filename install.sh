@@ -241,49 +241,49 @@ cli() {
 
 	# Write shell script pointing to MetaCall CLI
 	if [ $(id -u) -eq 0 ]; then
-		echo "#!/usr/bin/env sh" &> /bin/metacall
+		echo "#!/usr/bin/env sh" &> /usr/local/bin/metacall
 
 		# MetaCall Environment
-		echo "export LOADER_LIBRARY_PATH=\"${cli}/lib\"" >> /bin/metacall
-		echo "export SERIAL_LIBRARY_PATH=\"${cli}/lib\"" >> /bin/metacall
-		echo "export DETOUR_LIBRARY_PATH=\"${cli}/lib\"" >> /bin/metacall
-		echo "export PORT_LIBRARY_PATH=\"${cli}/lib\"" >> /bin/metacall
-		echo "export CONFIGURATION_PATH=\"${cli}/configurations/global.json\"" >> /bin/metacall
-		echo "export LOADER_SCRIPT_PATH=\"\${LOADER_SCRIPT_PATH:-\`pwd\`}\"" >> /bin/metacall
+		echo "export LOADER_LIBRARY_PATH=\"${cli}/lib\"" >> /usr/local/bin/metacall
+		echo "export SERIAL_LIBRARY_PATH=\"${cli}/lib\"" >> /usr/local/bin/metacall
+		echo "export DETOUR_LIBRARY_PATH=\"${cli}/lib\"" >> /usr/local/bin/metacall
+		echo "export PORT_LIBRARY_PATH=\"${cli}/lib\"" >> /usr/local/bin/metacall
+		echo "export CONFIGURATION_PATH=\"${cli}/configurations/global.json\"" >> /usr/local/bin/metacall
+		echo "export LOADER_SCRIPT_PATH=\"\${LOADER_SCRIPT_PATH:-\`pwd\`}\"" >> /usr/local/bin/metacall
 
-		echo "CMD=\`ls -a /gnu/bin | grep \"\$1\" | head -n 1\`" >> /bin/metacall
+		echo "CMD=\`ls -a /gnu/bin | grep \"\$1\" | head -n 1\`" >> /usr/local/bin/metacall
 
-		echo "if [ \"\${CMD}\" = \"\$1\" ]; then" >> /bin/metacall
-		echo "	if [ -z \"\${PATH-}\" ]; then export PATH=\"/gnu/bin\"; else PATH=\"/gnu/bin:\${PATH}\"; fi" >> /bin/metacall
-		echo "	\$@" >> /bin/metacall
-		echo "	exit \$?" >> /bin/metacall
-		echo "fi" >> /bin/metacall
+		echo "if [ \"\${CMD}\" = \"\$1\" ]; then" >> /usr/local/bin/metacall
+		echo "	if [ -z \"\${PATH-}\" ]; then export PATH=\"/gnu/bin\"; else PATH=\"/gnu/bin:\${PATH}\"; fi" >> /usr/local/bin/metacall
+		echo "	\$@" >> /usr/local/bin/metacall
+		echo "	exit \$?" >> /usr/local/bin/metacall
+		echo "fi" >> /usr/local/bin/metacall
 
 		# CLI
-		echo "${cli}/metacallcli \$@" >> /bin/metacall
-		chmod 755 /bin/metacall
+		echo "${cli}/metacallcli \$@" >> /usr/local/bin/metacall
+		chmod 755 /usr/local/bin/metacall
 	else
-		echo "#!/usr/bin/env sh" | sudo tee /bin/metacall > /dev/null
+		echo "#!/usr/bin/env sh" | sudo tee /usr/local/bin/metacall > /dev/null
 
 		# MetaCall Environment
-		echo "export LOADER_LIBRARY_PATH=\"${cli}/lib\"" | sudo tee -a /bin/metacall > /dev/null
-		echo "export SERIAL_LIBRARY_PATH=\"${cli}/lib\"" | sudo tee -a /bin/metacall > /dev/null
-		echo "export DETOUR_LIBRARY_PATH=\"${cli}/lib\"" | sudo tee -a /bin/metacall > /dev/null
-		echo "export PORT_LIBRARY_PATH=\"${cli}/lib\"" | sudo tee -a /bin/metacall > /dev/null
-		echo "export CONFIGURATION_PATH=\"${cli}/configurations/global.json\"" | sudo tee -a /bin/metacall > /dev/null
-		echo "export LOADER_SCRIPT_PATH=\"\${LOADER_SCRIPT_PATH:-\`pwd\`}\"" | sudo tee -a /bin/metacall > /dev/null
+		echo "export LOADER_LIBRARY_PATH=\"${cli}/lib\"" | sudo tee -a /usr/local/bin/metacall > /dev/null
+		echo "export SERIAL_LIBRARY_PATH=\"${cli}/lib\"" | sudo tee -a /usr/local/bin/metacall > /dev/null
+		echo "export DETOUR_LIBRARY_PATH=\"${cli}/lib\"" | sudo tee -a /usr/local/bin/metacall > /dev/null
+		echo "export PORT_LIBRARY_PATH=\"${cli}/lib\"" | sudo tee -a /usr/local/bin/metacall > /dev/null
+		echo "export CONFIGURATION_PATH=\"${cli}/configurations/global.json\"" | sudo tee -a /usr/local/bin/metacall > /dev/null
+		echo "export LOADER_SCRIPT_PATH=\"\${LOADER_SCRIPT_PATH:-\`pwd\`}\"" | sudo tee -a /usr/local/bin/metacall > /dev/null
 
-		echo "CMD=\`ls -a /gnu/bin | grep \"\$1\" | head -n 1\`" | sudo tee -a /bin/metacall > /dev/null
+		echo "CMD=\`ls -a /gnu/bin | grep \"\$1\" | head -n 1\`" | sudo tee -a /usr/local/bin/metacall > /dev/null
 
-		echo "if [ \"\${CMD}\" = \"\$1\" ]; then" | sudo tee -a /bin/metacall > /dev/null
-		echo "	if [ -z \"\${PATH-}\" ]; then export PATH=\"/gnu/bin\"; else PATH=\"/gnu/bin:\${PATH}\"; fi" | sudo tee -a /bin/metacall > /dev/null
-		echo "	\$@" | sudo tee -a /bin/metacall > /dev/null
-		echo "	exit \$?" | sudo tee -a /bin/metacall > /dev/null
-		echo "fi" | sudo tee -a /bin/metacall > /dev/null
+		echo "if [ \"\${CMD}\" = \"\$1\" ]; then" | sudo tee -a /usr/local/bin/metacall > /dev/null
+		echo "	if [ -z \"\${PATH-}\" ]; then export PATH=\"/gnu/bin\"; else PATH=\"/gnu/bin:\${PATH}\"; fi" | sudo tee -a /usr/local/bin/metacall > /dev/null
+		echo "	\$@" | sudo tee -a /usr/local/bin/metacall > /dev/null
+		echo "	exit \$?" | sudo tee -a /usr/local/bin/metacall > /dev/null
+		echo "fi" | sudo tee -a /usr/local/bin/metacall > /dev/null
 
 		# CLI
-		echo "${cli}/metacallcli \$@" | sudo tee -a /bin/metacall > /dev/null
-		sudo chmod 755 /bin/metacall
+		echo "${cli}/metacallcli \$@" | sudo tee -a /usr/local/bin/metacall > /dev/null
+		sudo chmod 755 /usr/local/bin/metacall
 	fi
 
 	success "CLI shortcut installed successfully."
@@ -294,17 +294,20 @@ binary_install() {
 	title "MetaCall Self-Contained Binary Installer"
 
 	# Check dependencies
-	dependencies
-
+	dependencies 
+	
 	# Detect operative system and architecture
 	print "Detecting Operative System and Architecture."
 
 	local os="$(operative_system)"
 	local arch="$(architecture)"
-
+	
+	operative_system && architecture
+	
 	success "Operative System (${os}) and Architecture (${arch}) detected."
 
 	# Download tarball
+	
 	download ${os} ${arch}
 
 	# Extract
@@ -349,13 +352,13 @@ docker_install() {
 
 	# Write shell script wrapping the Docker run of MetaCall CLI image
 	if [ $(id -u) -eq 0 ]; then
-		echo "#!/usr/bin/env sh" &> /bin/metacall
-		echo "${command}" >> /bin/metacall
-		chmod 755 /bin/metacall
+		echo "#!/usr/bin/env sh" &> /usr/local/bin/metacall
+		echo "${command}" >> /usr/local/bin/metacall
+		chmod 755 /usr/local/bin/metacall
 	else
-		echo "#!/usr/bin/env sh" | sudo tee /bin/metacall > /dev/null
-		echo "${command}" | sudo tee -a /bin/metacall > /dev/null
-		sudo chmod 755 /bin/metacall
+		echo "#!/usr/bin/env sh" | sudo tee /usr/local/bin/metacall > /dev/null
+		echo "${command}" | sudo tee -a /usr/local/bin/metacall > /dev/null
+		sudo chmod 755 /usr/local/bin/metacall
 	fi
 
 	# Show information
@@ -364,6 +367,7 @@ docker_install() {
 }
 
 main() {
+	
 	# Required program for recursive calls
 	programs_required wait
 
@@ -383,6 +387,19 @@ main() {
 		docker_install &
 		proc=$!
 		wait ${proc}
+	fi
+		# check if /usr/local/bin is in PATH
+	if [[ :$PATH: == *:"/usr/local/bin":* ]] ; then
+		# in path env
+		echo ""
+	else
+
+		# write it 
+		echo "export PATH=$PATH:/usr/local/bin" >> /etc/profile
+		success "Metacall installation finished, please run\n" \
+		" source /etc/profile\n" \
+		" to start using it\n"
+
 	fi
 }
 
