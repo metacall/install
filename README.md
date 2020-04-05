@@ -12,7 +12,7 @@ Cross-platform set of scripts to install MetaCall Core infrastructure.
 # Install
 
 The following scripts are provided in order to install MetaCall:
-- [install.sh](https://raw.githubusercontent.com/metacall/install/master/install.sh) `bash | UNIX`
+- [install.sh](https://raw.githubusercontent.com/metacall/install/master/install.sh) `bash or zsh | Linux or MacOS`
 
 - [install.ps1](https://raw.githubusercontent.com/metacall/install/master/install.ps1) `PowerShell | Windows` (Not implemented yet)
 
