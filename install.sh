@@ -67,7 +67,7 @@ success() {
 # Ask message
 ask() {
 	while true; do
-		read -p "${normal:-}▷ ${cyan:-}$@?${normal:-} [Y/n] " yn
+		read -n 1 -p "${normal:-}▷ ${cyan:-}$@?${normal:-} [Y/n] " yn
 		case $yn in
 			[Yy]* ) break;;
 			[Nn]* ) exit 1;;
@@ -294,20 +294,21 @@ binary_install() {
 	title "MetaCall Self-Contained Binary Installer"
 
 	# Check dependencies
-	dependencies 
-	
+	dependencies
+
 	# Detect operative system and architecture
 	print "Detecting Operative System and Architecture."
 
+	# Run to check if the operative system is supported
+	operative_system && architecture
+
+	# Get the operative system and architecture into a variable
 	local os="$(operative_system)"
 	local arch="$(architecture)"
-	
-	operative_system && architecture
-	
+
 	success "Operative System (${os}) and Architecture (${arch}) detected."
 
 	# Download tarball
-	
 	download ${os} ${arch}
 
 	# Extract
@@ -315,10 +316,6 @@ binary_install() {
 
 	# Install CLI
 	cli
-
-	# Show information
-	success "MetaCall has been installed." \
-		"  Run 'metacall' command for start the CLI and type help for more information about CLI commands."
 }
 
 docker_install() {
@@ -360,14 +357,9 @@ docker_install() {
 		echo "${command}" | sudo tee -a /usr/local/bin/metacall > /dev/null
 		sudo chmod 755 /usr/local/bin/metacall
 	fi
-
-	# Show information
-	success "MetaCall has been installed." \
-		"  Run 'metacall' command for start the CLI and type help for more information about CLI commands."
 }
 
 main() {
-	
 	# Required program for recursive calls
 	programs_required wait
 
@@ -388,19 +380,23 @@ main() {
 		proc=$!
 		wait ${proc}
 	fi
-		# check if /usr/local/bin is in PATH
-	if [[ :$PATH: == *:"/usr/local/bin":* ]] ; then
-		# in path env
-		echo ""
-	else
 
-		# write it 
-		echo "export PATH=$PATH:/usr/local/bin" >> /etc/profile
-		success "Metacall installation finished, please run\n" \
-		" source /etc/profile\n" \
-		" to start using it\n"
+	# Check if /usr/local/bin is in PATH
+	if [[ ! :$PATH: == *:"/usr/local/bin":* ]]; then
+		# Add /usr/local/bin to PATH
+		if [ $(id -u) -eq 0 ]; then
+			echo "export PATH=$PATH:/usr/local/bin" >> /etc/profile
+		else
+			echo "export PATH=$PATH:/usr/local/bin" | sudo tee -a /etc/profile > /dev/null
+		fi
 
+		warning "MetaCall install path is not present in PATH so we added it for you." \
+			"  Run 'source /etc/profile' to make 'metacall' command available to your current terminal instance."
 	fi
+
+	# Show information
+	success "MetaCall has been installed." \
+		"  Run 'metacall' command for start the CLI and type help for more information about CLI commands."
 }
 
 # Run main
