@@ -360,6 +360,14 @@ docker_install() {
 	fi
 }
 
+check_path_env() {
+	# Check if the PATH contains the install path
+	echo "${PATH}" | grep -i ":/usr/local/bin:"
+	echo "${PATH}" | grep -i "^/usr/local/bin:"
+	echo "${PATH}" | grep -i ":/usr/local/bin$"
+	echo "${PATH}" | grep -i "^/usr/local/bin$"
+}
+
 main() {
 	# Required program for recursive calls
 	programs_required wait
@@ -382,8 +390,10 @@ main() {
 		wait ${proc}
 	fi
 
+	local path="$(check_path_env)"
+
 	# Check if /usr/local/bin is in PATH
-	if [[ :${PATH}: != *:"/usr/local/bin":* ]]; then
+	if [ "${path}" == "" ]; then
 		# Add /usr/local/bin to PATH
 		if [ $(id -u) -eq 0 ]; then
 			echo "export PATH=\${PATH}:/usr/local/bin" >> /etc/profile
