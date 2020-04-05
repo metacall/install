@@ -392,6 +392,7 @@ main() {
 		fi
 
 		warning "MetaCall install path is not present in PATH so we added it for you." \
+			"  The command 'metacall' will be available in your subsequent terminal instances."
 			"  Run 'source /etc/profile' to make 'metacall' command available to your current terminal instance."
 	fi
 
