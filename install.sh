@@ -67,7 +67,7 @@ success() {
 # Ask message
 ask() {
 	while true; do
-		read -n 1 -p "${normal:-}▷ ${cyan:-}$@?${normal:-} [Y/n] " yn
+		read -r -n 1 -p "${normal:-}▷ ${cyan:-}$@?${normal:-} [Y/n] " yn
 		case $yn in
 			[Yy]* ) break;;
 			[Nn]* ) exit 1;;
