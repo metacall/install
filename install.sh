@@ -383,16 +383,16 @@ main() {
 	fi
 
 	# Check if /usr/local/bin is in PATH
-	if [[ ! :$PATH: == *:"/usr/local/bin":* ]]; then
+	if [[ :${PATH}: != *:"/usr/local/bin":* ]]; then
 		# Add /usr/local/bin to PATH
 		if [ $(id -u) -eq 0 ]; then
-			echo "export PATH=$PATH:/usr/local/bin" >> /etc/profile
+			echo "export PATH=\${PATH}:/usr/local/bin" >> /etc/profile
 		else
-			echo "export PATH=$PATH:/usr/local/bin" | sudo tee -a /etc/profile > /dev/null
+			echo "export PATH=\${PATH}:/usr/local/bin" | sudo tee -a /etc/profile > /dev/null
 		fi
 
 		warning "MetaCall install path is not present in PATH so we added it for you." \
-			"  The command 'metacall' will be available in your subsequent terminal instances."
+			"  The command 'metacall' will be available in your subsequent terminal instances." \
 			"  Run 'source /etc/profile' to make 'metacall' command available to your current terminal instance."
 	fi
 
