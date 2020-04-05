@@ -300,7 +300,8 @@ binary_install() {
 	print "Detecting Operative System and Architecture."
 
 	# Run to check if the operative system is supported
-	operative_system && architecture
+	operative_system > /dev/null 2>&1
+	architecture > /dev/null 2>&1
 
 	# Get the operative system and architecture into a variable
 	local os="$(operative_system)"
