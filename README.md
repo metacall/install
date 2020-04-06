@@ -19,11 +19,11 @@ The following scripts are provided in order to install MetaCall:
 In order to install MetaCall in one line, curl or wget or powershell can be used:
 - `curl`:
   ```bash
-  curl -sL https://raw.githubusercontent.com/metacall/install/master/install.sh | bash
+  bash <(curl -sL https://raw.githubusercontent.com/metacall/install/master/install.sh)
   ```
 - `wget`:
   ```bash
-  wget -O - https://raw.githubusercontent.com/metacall/install/master/install.sh | bash
+  bash <(wget -O - https://raw.githubusercontent.com/metacall/install/master/install.sh)
   ```
 - `powershell`:
   ```powershell
