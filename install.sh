@@ -206,7 +206,7 @@ download() {
 		exit 1
 	fi
 
-	success "Tarball downloaded."
+	success "Tarball ${version} downloaded."
 }
 
 # Extract the tarball (requires root or sudo)
