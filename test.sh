@@ -38,6 +38,7 @@ done
 # Test Docker Install
 DOCKER_HOST_PATH=`pwd`/test
 
+# Run Docker install with --docker-install parameter
 docker run --rm \
 	-v /var/run/docker.sock:/var/run/docker.sock \
 	-v ${DOCKER_HOST_PATH}:/metacall/source -it docker:19.03.13-dind \
@@ -49,5 +50,20 @@ docker run --rm \
 result=$?
 if [[ $result -ne 0 ]]; then
 	echo "Test test_docker failed. Abort."
+	exit 1
+fi
+
+# Run Docker install with fallback
+docker run --rm \
+	-v /var/run/docker.sock:/var/run/docker.sock \
+	-v ${DOCKER_HOST_PATH}:/metacall/source -it docker:19.03.13-dind \
+	sh -c "wget -O - https://raw.githubusercontent.com/metacall/install/master/install.sh | sh -s -- \
+		&& mkdir -p ${DOCKER_HOST_PATH} \
+		&& cd ${DOCKER_HOST_PATH} \
+		&& metacall script.js | grep '123456'"
+
+result=$?
+if [[ $result -ne 0 ]]; then
+	echo "Test test_docker_fallback failed. Abort."
 	exit 1
 fi
