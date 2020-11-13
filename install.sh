@@ -419,7 +419,13 @@ main() {
 		# Required program for ask question to the user
 		programs_required read
 
-		if [ -t 1 ]; then
+		# Check if the sell is interactive
+		case $- in
+			*i*) local interactive=1;;
+			*) local interactive=0;;
+		esac
+
+		if [ $interactive -ne 0 ]; then
 			# Ask for Docker fallback if we are in a terminal
 			ask "Binary installation has failed, do you want to fallback to Docker installation"
 		else
