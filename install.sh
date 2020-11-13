@@ -17,6 +17,9 @@
 #	See the License for the specific language governing permissions and
 #	limitations under the License.
 
+# Program options
+OPT_NO_CHECK_CERTIFICATE=0
+
 # Check if program exists
 program() {
 	command -v $1 >/dev/null 2>&1
@@ -182,10 +185,24 @@ download() {
 
 	print "Start to download the tarball."
 
+	if [ $OPT_NO_CHECK_CERTIFICATE = 0 ]; then
+		if program curl; then
+			local curl_cmd='curl'
+		elif program wget; then
+			local wget_cmd='wget'
+		fi
+	else
+		if program curl; then
+			local curl_cmd='curl --insecure'
+		elif program wget; then
+			local wget_cmd='wget --no-check-certificate'
+		fi
+	fi
+
 	if program curl; then
-		local tag_url=$(curl -Ls -o /dev/null -w %{url_effective} ${url})
+		local tag_url=$(${curl_cmd} -Ls -o /dev/null -w %{url_effective} ${url})
 	elif program wget; then
-		local tag_url=$(wget -O /dev/null ${url} 2>&1 | grep Location: | tail -n 1 | awk '{print $2}')
+		local tag_url=$(${wget_cmd} -O /dev/null ${url} 2>&1 | grep Location: | tail -n 1 | awk '{print $2}')
 	fi
 
 	local version=$(printf "${tag_url}" | rev | cut -d '/' -f1 | rev)
@@ -193,9 +210,9 @@ download() {
 	local fail=false
 
 	if program curl; then
-		curl --retry 10 -f --create-dirs -LS ${final_url} --output ${tmp} || fail=true
+		${curl_cmd} --retry 10 -f --create-dirs -LS ${final_url} --output ${tmp} || fail=true
 	elif program wget; then
-		wget --tries 10 -O ${tmp} ${final_url} || fail=true
+		${wget_cmd} --tries 10 -O ${tmp} ${final_url} || fail=true
 	fi
 
 	if "${fail}" == true; then
@@ -371,6 +388,14 @@ check_path_env() {
 main() {
 	# Required program for recursive calls
 	programs_required wait
+
+	# Check for command line arguments
+	for option in "$@"
+	do
+		if [ "$option" = '--no-check-certificate' ]; then
+			OPT_NO_CHECK_CERTIFICATE=1
+		fi
+	done
 
 	# Run binary install
 	binary_install &
