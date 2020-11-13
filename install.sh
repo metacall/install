@@ -20,6 +20,14 @@
 # Program options
 OPT_NO_CHECK_CERTIFICATE=0
 
+# Check for command line arguments
+for option in "$@"
+do
+	if [ "$option" = '--no-check-certificate' ]; then
+		OPT_NO_CHECK_CERTIFICATE=1
+	fi
+done
+
 # Check if program exists
 program() {
 	command -v $1 >/dev/null 2>&1
@@ -185,17 +193,18 @@ download() {
 
 	print "Start to download the tarball."
 
-	if [ $OPT_NO_CHECK_CERTIFICATE = 0 ]; then
-		if program curl; then
-			local curl_cmd='curl'
-		elif program wget; then
-			local wget_cmd='wget'
-		fi
-	else
+	# Skip certificate checks
+	if [ $OPT_NO_CHECK_CERTIFICATE = 1 ]; then
 		if program curl; then
 			local curl_cmd='curl --insecure'
 		elif program wget; then
 			local wget_cmd='wget --no-check-certificate'
+		fi
+	else
+		if program curl; then
+			local curl_cmd='curl'
+		elif program wget; then
+			local wget_cmd='wget'
 		fi
 	fi
 
@@ -389,16 +398,8 @@ main() {
 	# Required program for recursive calls
 	programs_required wait
 
-	# Check for command line arguments
-	for option in "$@"
-	do
-		if [ "$option" = '--no-check-certificate' ]; then
-			OPT_NO_CHECK_CERTIFICATE=1
-		fi
-	done
-
 	# Run binary install
-	binary_install &
+	binary_install $@ &
 	proc=$!
 	wait ${proc}
 	result=$?
@@ -410,7 +411,7 @@ main() {
 		ask "Binary installation has failed, do you want to fallback to Docker installation"
 
 		# On error, fallback to docker install
-		docker_install &
+		docker_install $@ &
 		proc=$!
 		wait ${proc}
 	fi
