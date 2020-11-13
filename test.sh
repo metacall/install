@@ -23,14 +23,31 @@ TEST_LIST=$(cat Dockerfile | grep 'AS test_' | awk '{print $4}')
 # Run tests
 for test in ${TEST_LIST}; do
 	docker build --progress=plain --target ${test} -t metacall/install:${test} .
-    result=$?
-    if [[ $result -ne 0 ]]; then
-        echo "Test ${test} failed. Abort."
-        exit 1
-    fi
+	result=$?
+	if [[ $result -ne 0 ]]; then
+		echo "Test ${test} failed. Abort."
+		exit 1
+	fi
 done
 
 # Clean tests
 for test in ${TEST_LIST}; do
 	docker rmi metacall/install:${test}
 done
+
+# Test Docker Install
+DOCKER_HOST_PATH=`pwd`/test
+
+docker run --rm \
+	-v /var/run/docker.sock:/var/run/docker.sock \
+	-v ${DOCKER_HOST_PATH}:/metacall/source -it docker:19.03.13-dind \
+	sh -c "wget -O - https://raw.githubusercontent.com/metacall/install/master/install.sh | sh -s -- --docker-install \
+		&& mkdir -p ${DOCKER_HOST_PATH} \
+		&& cd ${DOCKER_HOST_PATH} \
+		&& metacall script.js | grep '123456'"
+
+result=$?
+if [[ $result -ne 0 ]]; then
+	echo "Test test_docker failed. Abort."
+	exit 1
+fi

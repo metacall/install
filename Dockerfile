@@ -164,6 +164,3 @@ FROM busybox:1.32.0-uclibc AS test_busybox_fail
 # BusyBox fails due to lack of SSL implementation in wget (if it fails, then the test passes)
 RUN wget -O - https://raw.githubusercontent.com/metacall/install/master/install.sh | sh \
 	|| if [ $? -ne 0 ]; then exit 0; else exit 1; fi
-
-# TODO: dind for the docker install
-# TODO: check interactive mode?

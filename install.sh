@@ -203,7 +203,7 @@ download() {
 	print "Start to download the tarball."
 
 	# Skip certificate checks
-	if [ $OPT_NO_CHECK_CERTIFICATE = 1 ]; then
+	if [ $OPT_NO_CHECK_CERTIFICATE -eq 1 ]; then
 		if program curl; then
 			local curl_cmd='curl --insecure'
 		elif program wget; then
@@ -408,7 +408,7 @@ main() {
 	# Required program for recursive calls
 	programs_required wait
 
-	if [ $OPT_DOCKER_INSTALL = 1 ]; then
+	if [ $OPT_DOCKER_INSTALL -eq 1 ]; then
 		# Run docker install
 		docker_install $@ &
 		proc=$!
@@ -427,7 +427,7 @@ main() {
 
 		if [ $result -ne 0 ]; then
 			# Exit if Docker fallback is disabled
-			if [ $OPT_NO_DOCKER_FALLBACK = 1 ]; then
+			if [ $OPT_NO_DOCKER_FALLBACK -eq 1 ]; then
 				exit 1
 			fi
 
