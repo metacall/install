@@ -17,3 +17,20 @@
 #	See the License for the specific language governing permissions and
 #	limitations under the License.
 
+# Get test list (any target prefixed by 'test_')
+TEST_LIST=$(cat Dockerfile | grep 'AS test_' | awk '{print $4}')
+
+# Run tests
+for test in ${TEST_LIST}; do
+	docker build --progress=plain --target ${test} -t metacall/install:${test} .
+    result=$?
+    if [[ $result -ne 0 ]]; then
+        echo "Test ${test} failed. Abort."
+        exit 1
+    fi
+done
+
+# Clean tests
+for test in ${TEST_LIST}; do
+	docker rmi metacall/install:${test}
+done

@@ -48,27 +48,27 @@ FROM debian_root AS debian_user
 USER user
 
 # Test install Debian with root and curl
-FROM debian_root AS debian_root_curl
+FROM debian_root AS test_debian_root_curl
 
 RUN curl -sL https://raw.githubusercontent.com/metacall/install/master/install.sh | bash \
 	&& metacall /test/script.js | grep '123456'
 
 # Test install Debian with root and wget
-FROM debian_root AS debian_root_wget
+FROM debian_root AS test_debian_root_wget
 
 RUN wget -O - https://raw.githubusercontent.com/metacall/install/master/install.sh | bash \
 	&& metacall /test/script.js | grep '123456'
 
 # Test install Debian without root and curl
-FROM debian_user AS debian_user_curl
+FROM debian_user AS test_debian_user_curl
 
-RUN yes | bash -c 'curl -sL https://raw.githubusercontent.com/metacall/install/master/install.sh | bash' \
+RUN curl -sL https://raw.githubusercontent.com/metacall/install/master/install.sh | bash \
 	&& metacall /test/script.js | grep '123456'
 
 # Test install Debian without root and wget
-FROM debian_user AS debian_user_wget
+FROM debian_user AS test_debian_user_wget
 
-RUN yes | bash -c 'wget -O - https://raw.githubusercontent.com/metacall/install/master/install.sh | bash' \
+RUN wget -O - https://raw.githubusercontent.com/metacall/install/master/install.sh | bash \
 	&& metacall /test/script.js | grep '123456'
 
 # Fedora Base (root)
@@ -92,27 +92,27 @@ FROM fedora_root AS fedora_user
 USER user
 
 # Test install Fedora with root and curl
-FROM fedora_root AS fedora_root_curl
+FROM fedora_root AS test_fedora_root_curl
 
 RUN curl -sL https://raw.githubusercontent.com/metacall/install/master/install.sh | bash \
 	&& metacall /test/script.js | grep '123456'
 
 # Test install Fedora with root and wget
-FROM fedora_root AS fedora_root_wget
+FROM fedora_root AS test_fedora_root_wget
 
 RUN wget -O - https://raw.githubusercontent.com/metacall/install/master/install.sh | bash \
 	&& metacall /test/script.js | grep '123456'
 
 # Test install Fedora without root and curl
-FROM fedora_user AS fedora_user_curl
+FROM fedora_user AS test_fedora_user_curl
 
-RUN yes | bash -c 'curl -sL https://raw.githubusercontent.com/metacall/install/master/install.sh | bash' \
+RUN curl -sL https://raw.githubusercontent.com/metacall/install/master/install.sh | bash \
 	&& metacall /test/script.js | grep '123456'
 
 # Test install Fedora without root and wget
-FROM fedora_user AS fedora_user_wget
+FROM fedora_user AS test_fedora_user_wget
 
-RUN yes | bash -c 'wget -O - https://raw.githubusercontent.com/metacall/install/master/install.sh | bash' \
+RUN wget -O - https://raw.githubusercontent.com/metacall/install/master/install.sh | bash \
 	&& metacall /test/script.js | grep '123456'
 
 # Alpine Base (root)
@@ -123,6 +123,7 @@ COPY test/ /test/
 # Install dependencies and set up a sudo user without password
 RUN apk update \
 	&& apk add --no-cache sudo curl wget ca-certificates \
+	&& rm -rf /var/cache/apk/* \
 	&& adduser --disabled-password --gecos "" user \
 	&& echo "user ALL=(ALL) NOPASSWD:ALL" >> /etc/sudoers \
 	&& chown -R user /test \
@@ -134,38 +135,35 @@ FROM alpine_root AS alpine_user
 USER user
 
 # Test install Alpine with root and curl
-FROM alpine_root AS alpine_root_curl
+FROM alpine_root AS test_alpine_root_curl
 
 RUN curl -sL https://raw.githubusercontent.com/metacall/install/master/install.sh | sh \
 	&& metacall /test/script.js | grep '123456'
 
 # Test install Alpine with root and wget
-FROM alpine_root AS alpine_root_wget
+FROM alpine_root AS test_alpine_root_wget
 
 RUN wget -O - https://raw.githubusercontent.com/metacall/install/master/install.sh | sh \
 	&& metacall /test/script.js | grep '123456'
 
 # Test install Alpine without root and curl
-FROM alpine_user AS alpine_user_curl
+FROM alpine_user AS test_alpine_user_curl
 
-RUN yes | sh -c 'curl -sL https://raw.githubusercontent.com/metacall/install/master/install.sh | sh' \
+RUN curl -sL https://raw.githubusercontent.com/metacall/install/master/install.sh | sh \
 	&& metacall /test/script.js | grep '123456'
 
 # Test install Alpine without root and wget
-FROM alpine_user AS alpine_user_wget
+FROM alpine_user AS test_alpine_user_wget
 
-RUN yes | sh -c 'wget -O - https://raw.githubusercontent.com/metacall/install/master/install.sh | sh' \
+RUN wget -O - https://raw.githubusercontent.com/metacall/install/master/install.sh | sh \
 	&& metacall /test/script.js | grep '123456'
 
-# BusyBox Base (root)
-FROM busybox:1.32.0-uclibc AS busybox_root
+# BusyBox Base (download fail safely)
+FROM busybox:1.32.0-uclibc AS test_busybox_fail
 
-# RUN echo "alias wget='/bin/wget --no-check-certificate'" >> $HOME/.profile \
-# 	&& sh -c 'wget -O - https://raw.githubusercontent.com/metacall/install/master/install.sh | sh'
-
-# \
-#	&& metacall /test/script.js | grep '123456'
-
+# BusyBox fails due to lack of SSL implementation in wget (if it fails, then the test passes)
+RUN wget -O - https://raw.githubusercontent.com/metacall/install/master/install.sh | sh \
+	|| if [ $? -ne 0 ]; then exit 0; else exit 1; fi
 
 # TODO: dind for the docker install
-# TODO: install without dependencies to force it fail safely
+# TODO: check interactive mode?
