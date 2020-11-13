@@ -19,12 +19,16 @@
 
 # Program options
 OPT_NO_CHECK_CERTIFICATE=0
+OPT_NO_DOCKER_FALLBACK=0
 
 # Check for command line arguments
 for option in "$@"
 do
 	if [ "$option" = '--no-check-certificate' ]; then
 		OPT_NO_CHECK_CERTIFICATE=1
+	fi
+	if [ "$option" = '--no-docker-fallback' ]; then
+		OPT_NO_DOCKER_FALLBACK=1
 	fi
 done
 
@@ -78,7 +82,8 @@ success() {
 # Ask message
 ask() {
 	while true; do
-		read -r -n 1 -p "${normal:-}▷ ${cyan:-}$@?${normal:-} [Y/n] " yn
+		printf "${normal:-}▷ ${cyan:-}$@?${normal:-} [Y/n] "
+		read -r -n 1 yn < /dev/tty
 		case $yn in
 			[Yy]* ) break;;
 			[Nn]* ) exit 1;;
@@ -367,6 +372,7 @@ docker_install() {
 
 	if [ $result -ne 0 ]; then
 		err "Docker image could not be pulled. Aborting installation."
+		exit 1
 	fi
 
 	# Install Docker based CLI
@@ -405,15 +411,31 @@ main() {
 	result=$?
 
 	if [ $result -ne 0 ]; then
+		# Exit if Docker fallback is disabled
+		if [ $OPT_NO_DOCKER_FALLBACK = 1 ]; then
+			exit 1
+		fi
+
 		# Required program for ask question to the user
 		programs_required read
 
-		ask "Binary installation has failed, do you want to fallback to Docker installation"
+		if [ -t 1 ]; then
+			# Ask for Docker fallback if we are in a terminal
+			ask "Binary installation has failed, do you want to fallback to Docker installation"
+		else
+			# Run Docker fallback otherwise
+			warning "Binary installation has failed, fallback to Docker installation."
+		fi
 
 		# On error, fallback to docker install
 		docker_install $@ &
 		proc=$!
 		wait ${proc}
+		result=$?
+
+		if [ $result -ne 0 ]; then
+			exit 1
+		fi
 	fi
 
 	local path="$(check_path_env)"
