@@ -18,12 +18,16 @@
 #	limitations under the License.
 
 # Program options
+OPT_DOCKER_INSTALL=0
 OPT_NO_CHECK_CERTIFICATE=0
 OPT_NO_DOCKER_FALLBACK=0
 
 # Check for command line arguments
 for option in "$@"
 do
+	if [ "$option" = '--docker-install' ]; then
+		OPT_DOCKER_INSTALL=1
+	fi
 	if [ "$option" = '--no-check-certificate' ]; then
 		OPT_NO_CHECK_CERTIFICATE=1
 	fi
@@ -404,36 +408,8 @@ main() {
 	# Required program for recursive calls
 	programs_required wait
 
-	# Run binary install
-	binary_install $@ &
-	proc=$!
-	wait ${proc}
-	result=$?
-
-	if [ $result -ne 0 ]; then
-		# Exit if Docker fallback is disabled
-		if [ $OPT_NO_DOCKER_FALLBACK = 1 ]; then
-			exit 1
-		fi
-
-		# Required program for ask question to the user
-		programs_required read
-
-		# Check if the sell is interactive
-		case $- in
-			*i*) local interactive=1;;
-			*) local interactive=0;;
-		esac
-
-		if [ $interactive -ne 0 ]; then
-			# Ask for Docker fallback if we are in a terminal
-			ask "Binary installation has failed, do you want to fallback to Docker installation"
-		else
-			# Run Docker fallback otherwise
-			warning "Binary installation has failed, fallback to Docker installation."
-		fi
-
-		# On error, fallback to docker install
+	if [ $OPT_DOCKER_INSTALL = 1 ]; then
+		# Run docker install
 		docker_install $@ &
 		proc=$!
 		wait ${proc}
@@ -441,6 +417,46 @@ main() {
 
 		if [ $result -ne 0 ]; then
 			exit 1
+		fi
+	else
+		# Run binary install
+		binary_install $@ &
+		proc=$!
+		wait ${proc}
+		result=$?
+
+		if [ $result -ne 0 ]; then
+			# Exit if Docker fallback is disabled
+			if [ $OPT_NO_DOCKER_FALLBACK = 1 ]; then
+				exit 1
+			fi
+
+			# Required program for ask question to the user
+			programs_required read
+
+			# Check if the sell is interactive
+			case $- in
+				*i*) local interactive=1;;
+				*) local interactive=0;;
+			esac
+
+			if [ $interactive -ne 0 ]; then
+				# Ask for Docker fallback if we are in a terminal
+				ask "Binary installation has failed, do you want to fallback to Docker installation"
+			else
+				# Run Docker fallback otherwise
+				warning "Binary installation has failed, fallback to Docker installation."
+			fi
+
+			# On error, fallback to docker install
+			docker_install $@ &
+			proc=$!
+			wait ${proc}
+			result=$?
+
+			if [ $result -ne 0 ]; then
+				exit 1
+			fi
 		fi
 	fi
 
