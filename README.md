@@ -18,14 +18,33 @@ The following scripts are provided in order to install MetaCall:
 
 In order to install MetaCall in one line, curl or wget or powershell can be used:
 - `curl`:
-  ```bash
-  bash <(curl -sL https://raw.githubusercontent.com/metacall/install/master/install.sh)
+  ```sh
+  curl -sL https://raw.githubusercontent.com/metacall/install/master/install.sh | sh
   ```
 - `wget`:
-  ```bash
-  bash <(wget -O - https://raw.githubusercontent.com/metacall/install/master/install.sh)
+  ```sh
+  wget -O - https://raw.githubusercontent.com/metacall/install/master/install.sh | sh
   ```
 - `powershell`:
   ```powershell
   powershell -exec bypass -c "(New-Object Net.WebClient).Proxy.Credentials=[Net.CredentialCache]::DefaultNetworkCredentials;iwr('https://raw.githubusercontent.com/metacall/install/master/install.ps1')|iex"
+  ```
+
+# Install Parameters
+
+Additional parameters for the install script:
+
+- `--docker-install`: Runs Docker installation overwriting Docker fallback option from binary installation.
+- `--no-check-certificate`: When running binary installation (the default one), disables checking certificates when downloading the tarball. Useful for environments where there is not certificates, but insecure.
+- `--no-docker-fallback`: When running binary installation (the default one), disables Docker installation as fallback if the binary installation fails.
+
+Example usage:
+
+- `curl`:
+  ```sh
+  curl -sL https://raw.githubusercontent.com/metacall/install/master/install.sh | sh -s -- --no-check-certificate --no-docker-fallback
+  ```
+- `wget`:
+  ```sh
+  wget -O - https://raw.githubusercontent.com/metacall/install/master/install.sh | sh -s -- --docker-install
   ```
