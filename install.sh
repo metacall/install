@@ -463,7 +463,7 @@ main() {
 	local path="$(check_path_env)"
 
 	# Check if /usr/local/bin is in PATH
-	if [ "${path}" == "" ]; then
+	if [ -z "${path}" ]; then
 		# Add /usr/local/bin to PATH
 		if [ $(id -u) -eq 0 ]; then
 			echo "export PATH=\${PATH}:/usr/local/bin" >> /etc/profile
