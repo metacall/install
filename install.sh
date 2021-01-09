@@ -123,7 +123,7 @@ dependencies() {
 	print "Checking system dependencies."
 
 	# Check if required programs are installed
-	programs_required tar grep tail awk rev cut uname echo rm id find head chmod
+	programs_required tar grep tail awk rev cut uname echo rm id find head chmod ln
 
 	if [ $(id -u) -ne 0 ]; then
 		programs_required tee
@@ -252,13 +252,27 @@ uncompress() {
 
 	if [ $(id -u) -eq 0 ]; then
 		tar xzf ${tmp} -C /
-		chmod -R 755 /gnu/store
+		chmod -R 755 /gnu
 	else
 		sudo tar xzf ${tmp} -C /
-		sudo chmod -R 755 /gnu/store
+		sudo chmod -R 755 /gnu
 	fi
 
 	success "Tarball uncompressed successfully."
+
+	# Add links for certificates
+	local openssl_base="/gnu/store/`ls /gnu/store/ | grep openssl | head -n 1`/share"
+	local openssl_dir="${openssl_base}/`ls ${openssl_base} | grep openssl`"
+	local openssl_cert_dir="${openssl_dir}/certs"
+	local openssl_cert_file="${openssl_dir}/cert.pem"
+	local nss_cert_dir="/gnu/etc/ssl/certs"
+	local nss_cert_file="/gnu/etc/ssl/certs/ca-certificates.crt"
+
+	print "Linking certificates: ${openssl_cert_dir} => ${nss_cert_dir}"
+	print "Linking certificate CA: ${openssl_cert_file} => ${nss_cert_file}"
+	rmdir ${openssl_cert_dir}
+	ln -s ${openssl_cert_dir} ${nss_cert_dir}
+	ln -s ${openssl_cert_file} ${nss_cert_file}
 
 	# Clean the tarball
 	print "Cleaning the tarball."
@@ -286,6 +300,17 @@ cli() {
 		echo "export CONFIGURATION_PATH=\"${cli}/configurations/global.json\"" >> /usr/local/bin/metacall
 		echo "export LOADER_SCRIPT_PATH=\"\${LOADER_SCRIPT_PATH:-\`pwd\`}\"" >> /usr/local/bin/metacall
 
+		# Certificates
+		echo "export SSL_CERT_DIR=\"/gnu/etc/ssl/certs\"" >> /usr/local/bin/metacall
+		echo "export SSL_CERT_FILE=\"/gnu/etc/ssl/certs/ca-certificates.crt\"" >> /usr/local/bin/metacall
+		echo "export GIT_SSL_FILE=\"/gnu/etc/ssl/certs/ca-certificates.crt\"" >> /usr/local/bin/metacall
+		echo "export GIT_SSL_CAINFO=\"/gnu/etc/ssl/certs/ca-certificates.crt\"" >> /usr/local/bin/metacall
+		echo "export CURL_CA_BUNDLE=\"/gnu/etc/ssl/certs/ca-certificates.crt\"" >> /usr/local/bin/metacall
+
+		# Locale
+		echo "export GUIX_LOCPATH=\"/gnu/lib/locale\"" >> /usr/local/bin/metacall
+
+		# Set up command line
 		echo "CMD=\`ls -a /gnu/bin | grep \"\$1\" | head -n 1\`" >> /usr/local/bin/metacall
 
 		echo "if [ \"\${CMD}\" = \"\$1\" ]; then" >> /usr/local/bin/metacall
@@ -308,6 +333,17 @@ cli() {
 		echo "export CONFIGURATION_PATH=\"${cli}/configurations/global.json\"" | sudo tee -a /usr/local/bin/metacall > /dev/null
 		echo "export LOADER_SCRIPT_PATH=\"\${LOADER_SCRIPT_PATH:-\`pwd\`}\"" | sudo tee -a /usr/local/bin/metacall > /dev/null
 
+		# Certificates
+		echo "export SSL_CERT_DIR=\"/gnu/etc/ssl/certs\"" | sudo tee -a /usr/local/bin/metacall > /dev/null
+		echo "export SSL_CERT_FILE=\"/gnu/etc/ssl/certs/ca-certificates.crt\"" | sudo tee -a /usr/local/bin/metacall > /dev/null
+		echo "export GIT_SSL_FILE=\"/gnu/etc/ssl/certs/ca-certificates.crt\"" | sudo tee -a /usr/local/bin/metacall > /dev/null
+		echo "export GIT_SSL_CAINFO=\"/gnu/etc/ssl/certs/ca-certificates.crt\"" | sudo tee -a /usr/local/bin/metacall > /dev/null
+		echo "export CURL_CA_BUNDLE=\"/gnu/etc/ssl/certs/ca-certificates.crt\"" | sudo tee -a /usr/local/bin/metacall > /dev/null
+
+		# Locale
+		echo "export GUIX_LOCPATH=\"/gnu/lib/locale\"" | sudo tee -a /usr/local/bin/metacall > /dev/null
+
+		# Set up command line
 		echo "CMD=\`ls -a /gnu/bin | grep \"\$1\" | head -n 1\`" | sudo tee -a /usr/local/bin/metacall > /dev/null
 
 		echo "if [ \"\${CMD}\" = \"\$1\" ]; then" | sudo tee -a /usr/local/bin/metacall > /dev/null
