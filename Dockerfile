@@ -165,9 +165,16 @@ FROM busybox:1.32.0-uclibc AS test_busybox_fail
 RUN wget -O - https://raw.githubusercontent.com/metacall/install/master/install.sh | sh \
 	|| if [ $? -ne 0 ]; then exit 0; else exit 1; fi
 
-# Test certificates in Debian with root
+# Test certificates in Debian with root (comparing against <!doctype html> in buffer format)
 FROM test_debian_root_curl AS test_debian_root_certificates
 
-RUN export WEB_RESULT="`printf 'load py /test/script.py\ninspect\ncall fetch_https("www.google.com")\nexit' | metacall`" \
+RUN export WEB_RESULT="`printf 'load py /test/script.py\ninspect\ncall fetch_https(\"www.google.com\")\nexit' | metacall`" \
 	&& export WEB_BUFFER="{\"data\":[60,33,100,111,99,116,121,112,101,32,104,116,109,108,62" \
-	&& [ "${WEB_RESULT:0:63}" = "${WEB_BUFFER}" ] || exit 1
+	&& [ -z "${WEB_RESULT##*$WEB_BUFFER*}" ] || exit 1
+
+# Test certificates in Debian with user (comparing against <!doctype html> in buffer format)
+FROM test_debian_user_curl AS test_debian_user_certificates
+
+RUN export WEB_RESULT="`printf 'load py /test/script.py\ninspect\ncall fetch_https(\"www.google.com\")\nexit' | metacall`" \
+	&& export WEB_BUFFER="{\"data\":[60,33,100,111,99,116,121,112,101,32,104,116,109,108,62" \
+	&& [ -z "${WEB_RESULT##*$WEB_BUFFER*}" ] || exit 1
