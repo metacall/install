@@ -22,7 +22,7 @@ TEST_LIST=$(cat Dockerfile | grep 'AS test_' | awk '{print $4}')
 
 # Run tests
 for test in ${TEST_LIST}; do
-	docker build --progress=plain --target ${test} -t metacall/install:${test} .
+	docker build --no-cache --progress=plain --target ${test} -t metacall/install:${test} .
 	result=$?
 	if [[ $result -ne 0 ]]; then
 		echo "Test ${test} failed. Abort."
@@ -67,3 +67,5 @@ if [[ $result -ne 0 ]]; then
 	echo "Test test_docker_fallback failed. Abort."
 	exit 1
 fi
+
+echo "All tests passed."
