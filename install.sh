@@ -270,9 +270,16 @@ uncompress() {
 
 	print "Linking certificates: ${openssl_cert_dir} => ${nss_cert_dir}"
 	print "Linking certificate CA: ${openssl_cert_file} => ${nss_cert_file}"
-	rmdir ${openssl_cert_dir}
-	ln -s ${nss_cert_dir} ${openssl_cert_dir}
-	ln -s ${nss_cert_file} ${openssl_cert_file}
+
+	if [ $(id -u) -eq 0 ]; then
+		rmdir ${openssl_cert_dir}
+		ln -s ${nss_cert_dir} ${openssl_cert_dir}
+		ln -s ${nss_cert_file} ${openssl_cert_file}
+	else
+		sudo rmdir ${openssl_cert_dir}
+		sudo ln -s ${nss_cert_dir} ${openssl_cert_dir}
+		sudo ln -s ${nss_cert_file} ${openssl_cert_file}
+	fi
 
 	# Clean the tarball
 	print "Cleaning the tarball."
