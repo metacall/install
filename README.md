@@ -1,13 +1,11 @@
-
 <div align="center">
-  <a href="https://metacall.io" target="_blank"><img src="https://raw.githubusercontent.com/metacall/core/develop/deploy/images/logo.png" alt="M E T A C A L L" style="max-width:100%;" width="32" height="32">
-  <p><b>M E T A C A L L</b></p></a>
-  <p>A library for providing inter-language foreign function interface calls</p>
+  <a href="https://metacall.io" target="_blank"><img src="https://raw.githubusercontent.com/metacall/core/develop/deploy/images/logo.png" alt="METACALL" style="max-width:100%; margin: 0 auto;" width="80" height="80">
+  <p><b>MetaCall Polyglot Runtime</b></p></a>
 </div>
 
 # Abstract
 
-Cross-platform set of scripts to install MetaCall Core infrastructure.
+Cross-platform set of scripts to install MetaCall Core infrastructure. For advanced install information, [check the documentation](https://github.com/metacall/core/blob/develop/docs/README.md#41-installation).
 
 # Install
 
