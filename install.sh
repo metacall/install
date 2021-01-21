@@ -21,6 +21,8 @@
 OPT_DOCKER_INSTALL=0
 OPT_NO_CHECK_CERTIFICATE=0
 OPT_NO_DOCKER_FALLBACK=0
+OPT_UPDATE=0
+OPT_UNINSTALL=0
 
 # Check for command line arguments
 for option in "$@"
@@ -33,6 +35,12 @@ do
 	fi
 	if [ "$option" = '--no-docker-fallback' ]; then
 		OPT_NO_DOCKER_FALLBACK=1
+	fi
+	if [ "$option" = '--update' ]; then
+		OPT_UPDATE=1
+	fi
+	if [ "$option" = '--uninstall' ]; then
+		OPT_UNINSTALL=1
 	fi
 done
 
@@ -447,7 +455,33 @@ check_path_env() {
 	echo "${PATH}" | grep -i "^/usr/local/bin$"
 }
 
+uninstall() {
+	# Delete all the previously installed files
+	if [ $(id -u) -eq 0 ]; then
+		rm -rf /usr/local/bin/metacall || true
+		rm -rf /gnu || true
+	else
+		sudo rm -rf /usr/local/bin/metacall || true
+		sudo rm -rf /gnu || true
+	fi
+}
+
 main() {
+	if program metacall; then
+		# Skip asking for updates if the update flag is enabled
+		if [ $OPT_UPDATE -eq 0 ] && [ $OPT_UNINSTALL -eq 0 ]; then
+			ask "MetaCall is already installed. Do you want to update it?\n  Warning: This operation will delete the /gnu folder, continue"
+		fi
+
+		uninstall
+	fi
+
+	# Exit if the user only wants to uninstall
+	if [ $OPT_UNINSTALL -eq 1 ]; then
+		success "MetaCall has been successfully uninstalled"
+		exit 0
+	fi
+
 	# Required program for recursive calls
 	programs_required wait
 

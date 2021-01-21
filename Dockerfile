@@ -178,3 +178,17 @@ FROM test_debian_user_curl AS test_debian_user_certificates
 RUN export WEB_RESULT="`printf 'load py /test/script.py\ninspect\ncall fetch_https(\"www.google.com\")\nexit' | metacall`" \
 	&& export WEB_BUFFER="{\"data\":[60,33,100,111,99,116,121,112,101,32,104,116,109,108,62" \
 	&& [ -z "${WEB_RESULT##*$WEB_BUFFER*}" ] || exit 1
+
+# Test update Alpine
+FROM test_alpine_user_wget AS test_alpine_user_wget_update
+
+RUN wget -O - https://raw.githubusercontent.com/metacall/install/master/install.sh \
+	| sh -s -- --update \
+	| grep 'MetaCall has been installed'
+
+# Test uninstall alpine
+FROM test_alpine_user_wget AS test_alpine_user_wget_uninstall
+
+RUN wget -O - https://raw.githubusercontent.com/metacall/install/master/install.sh \
+	| sh -s -- --uninstall \
+	| grep 'MetaCall has been successfully uninstalled'

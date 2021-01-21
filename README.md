@@ -32,17 +32,22 @@ In order to install MetaCall in one line, curl or wget or powershell can be used
 
 Additional parameters for the install script:
 
+- `--update`: Updates automatically MetaCall if it is already installed without asking to the user.
+- `--uninstall`: Uninstalls MetaCall if it is already installed without asking to the user. Overwrites the update command.
 - `--docker-install`: Runs Docker installation overwriting Docker fallback option from binary installation.
 - `--no-check-certificate`: When running binary installation (the default one), disables checking certificates when downloading the tarball. Useful for environments where there is not certificates, but insecure.
 - `--no-docker-fallback`: When running binary installation (the default one), disables Docker installation as fallback if the binary installation fails.
 
 Example usage:
 
-- `curl`:
+
+- Install with `curl` without checking certificates and without docker fallback:
   ```sh
-  curl -sL https://raw.githubusercontent.com/metacall/install/master/install.sh | sh -s -- --no-check-certificate --no-docker-fallback
+  curl --insecure -sL https://raw.githubusercontent.com/metacall/install/master/install.sh | sh -s -- --no-check-certificate --no-docker-fallback
   ```
-- `wget`:
+
+
+- Install with `wget` using Docker installer:
   ```sh
   wget -O - https://raw.githubusercontent.com/metacall/install/master/install.sh | sh -s -- --docker-install
   ```
