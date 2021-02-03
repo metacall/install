@@ -99,7 +99,7 @@ success() {
 ask() {
 	while true; do
 		printf "${normal:-}▷ ${cyan:-}$@?${normal:-} [Y/n] "
-		read -r -n 1 yn < /dev/tty
+		read -r yn < /dev/tty
 		case $yn in
 			[Yy]* ) break;;
 			[Nn]* ) exit 1;;
