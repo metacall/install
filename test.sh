@@ -53,11 +53,14 @@ if [[ $result -ne 0 ]]; then
 	exit 1
 fi
 
-# Run Docker install with fallback
+# Run Docker install with fallback (remove wget during the install phase in order to trigger the fallback)
 docker run --rm \
 	-v /var/run/docker.sock:/var/run/docker.sock \
 	-v ${DOCKER_HOST_PATH}:/metacall/source -it docker:19.03.13-dind \
-	sh -c "wget -O - https://raw.githubusercontent.com/metacall/install/master/install.sh | sh -s -- \
+	sh -c "wget https://raw.githubusercontent.com/metacall/install/master/install.sh \
+		&& rm -rf /usr/bin/wget \
+		&& chmod +x ./install.sh \
+		&& sh ./install.sh \
 		&& mkdir -p ${DOCKER_HOST_PATH} \
 		&& cd ${DOCKER_HOST_PATH} \
 		&& metacall script.js | grep '123456'"
