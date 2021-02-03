@@ -158,12 +158,26 @@ FROM alpine_user AS test_alpine_user_wget
 RUN wget -O - https://raw.githubusercontent.com/metacall/install/master/install.sh | sh \
 	&& metacall /test/script.js | grep '123456'
 
-# BusyBox Base (download fail safely)
-FROM busybox:1.32.0-uclibc AS test_busybox_fail
+# BusyBox Base
+FROM busybox:1.32.0-uclibc AS test_busybox
 
-# BusyBox fails due to lack of SSL implementation in wget (if it fails, then the test passes)
+# Test install BusyBox fail due to lack of SSL implementation in wget (if it fails, then the test passes)
+FROM test_busybox AS test_busybox_fail
+
 RUN wget -O - https://raw.githubusercontent.com/metacall/install/master/install.sh | sh \
 	|| if [ $? -ne 0 ]; then exit 0; else exit 1; fi
+
+# BusyBox Base (with sources)
+FROM test_busybox AS test_busybox_base
+
+COPY test/ /test/
+
+# Test install BusyBox without certificates
+FROM test_busybox_base AS test_busybox_without_certificates
+
+RUN wget --no-check-certificate -O - https://raw.githubusercontent.com/metacall/install/master/install.sh | sh \
+	-s -- --no-check-certificate \
+	&& sh /usr/local/bin/metacall /test/script.js | grep '123456'
 
 # Test certificates in Debian with root (comparing against <!doctype html> in buffer format)
 FROM test_debian_root_curl AS test_debian_root_certificates

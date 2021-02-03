@@ -24,6 +24,10 @@ OPT_NO_DOCKER_FALLBACK=0
 OPT_UPDATE=0
 OPT_UNINSTALL=0
 
+# Program commands
+CMD_DOWNLOAD=""
+CMD_SHEBANG=""
+
 # Check for command line arguments
 for option in "$@"
 do
@@ -118,12 +122,10 @@ programs_required() {
 programs_required_one() {
 	for prog in "$@"; do
 		if program ${prog}; then
+			echo "${prog}"
 			return
 		fi
 	done
-
-	err "None of the following programs are installed: $@. One of them is required at least to download the tarball. Aborting installation."
-	exit 1
 }
 
 # Check all dependencies
@@ -138,7 +140,28 @@ dependencies() {
 	fi
 
 	# Check if download programs are installed
-	programs_required_one curl wget
+	local download_dependencies="curl wget"
+	local download_program=$(programs_required_one ${download_dependencies})
+
+	if [ -z "${download_program}" ]; then
+		err "None of the following programs are installed: ${download_dependencies}. One of them is required at least to download the tarball. Aborting installation."
+		exit 1
+	fi
+
+	# Set up download command
+	CMD_DOWNLOAD="${download_program}"
+
+	# Detect where is the 'env' found in order to set properly the shebang
+	local shebang_dependencies="/usr/bin/env /bin/env /bin/sh"
+	local shebang_program=$(programs_required_one ${shebang_dependencies})
+
+	if [ -z "${shebang_program}" ]; then
+		err "None of the following programs are installed: ${shebang_dependencies}. One of them is required at least to find the shell. Aborting installation."
+		exit 1
+	fi
+
+	# Set up shebang command
+	CMD_SHEBANG="${shebang_program}"
 
 	# Detect sudo or run with root
 	if ! program sudo && [ $(id -u) -ne 0 ]; then
@@ -210,6 +233,8 @@ download() {
 
 	print "Start to download the tarball."
 
+	# TODO: Use ${CMD_DOWNLOAD} for improving this code?
+
 	# Skip certificate checks
 	if [ $OPT_NO_CHECK_CERTIFICATE -eq 1 ]; then
 		if program curl; then
@@ -228,7 +253,7 @@ download() {
 	if program curl; then
 		local tag_url=$(${curl_cmd} -Ls -o /dev/null -w %{url_effective} ${url})
 	elif program wget; then
-		local tag_url=$(${wget_cmd} -O /dev/null ${url} 2>&1 | grep Location: | tail -n 1 | awk '{print $2}')
+		local tag_url=$(${wget_cmd} -S -O /dev/null ${url} 2>&1 | grep Location: | tail -n 1 | awk '{print $2}')
 	fi
 
 	local version=$(printf "${tag_url}" | rev | cut -d '/' -f1 | rev)
@@ -305,7 +330,11 @@ cli() {
 
 	# Write shell script pointing to MetaCall CLI
 	if [ $(id -u) -eq 0 ]; then
-		echo "#!/usr/bin/env sh" &> /usr/local/bin/metacall
+		# Create folder if it does not exist
+		mkdir -p /usr/local/bin/
+
+		# Write the shebang
+		echo "#!${CMD_SHEBANG} sh" &> /usr/local/bin/metacall
 
 		# MetaCall Environment
 		echo "export LOADER_LIBRARY_PATH=\"${cli}/lib\"" >> /usr/local/bin/metacall
@@ -338,7 +367,11 @@ cli() {
 		echo "${cli}/metacallcli \$@" >> /usr/local/bin/metacall
 		chmod 755 /usr/local/bin/metacall
 	else
-		echo "#!/usr/bin/env sh" | sudo tee /usr/local/bin/metacall > /dev/null
+		# Create folder if it does not exist
+		sudo mkdir -p /usr/local/bin/
+
+		# Write the shebang
+		echo "#!${CMD_SHEBANG} sh" | sudo tee /usr/local/bin/metacall > /dev/null
 
 		# MetaCall Environment
 		echo "export LOADER_LIBRARY_PATH=\"${cli}/lib\"" | sudo tee -a /usr/local/bin/metacall > /dev/null
@@ -437,11 +470,13 @@ docker_install() {
 
 	# Write shell script wrapping the Docker run of MetaCall CLI image
 	if [ $(id -u) -eq 0 ]; then
-		echo "#!/usr/bin/env sh" &> /usr/local/bin/metacall
+		mkdir -p /usr/local/bin/
+		echo "#!${CMD_SHEBANG} sh" &> /usr/local/bin/metacall
 		echo "${command}" >> /usr/local/bin/metacall
 		chmod 755 /usr/local/bin/metacall
 	else
-		echo "#!/usr/bin/env sh" | sudo tee /usr/local/bin/metacall > /dev/null
+		sudo mkdir -p /usr/local/bin/
+		echo "#!${CMD_SHEBANG} sh" | sudo tee /usr/local/bin/metacall > /dev/null
 		echo "${command}" | sudo tee -a /usr/local/bin/metacall > /dev/null
 		sudo chmod 755 /usr/local/bin/metacall
 	fi
