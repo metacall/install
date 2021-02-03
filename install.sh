@@ -128,6 +128,21 @@ programs_required_one() {
 	done
 }
 
+# Find proper shebang for the launcher script
+find_shebang() {
+	# Detect where is the 'env' found in order to set properly the shebang
+	local shebang_dependencies="/usr/bin/env /bin/env /bin/sh"
+	local shebang_program=$(programs_required_one ${shebang_dependencies})
+
+	if [ -z "${shebang_program}" ]; then
+		err "None of the following programs are installed: ${shebang_dependencies}. One of them is required at least to find the shell. Aborting installation."
+		exit 1
+	fi
+
+	# Set up shebang command
+	CMD_SHEBANG="${shebang_program}"
+}
+
 # Check all dependencies
 dependencies() {
 	print "Checking system dependencies."
@@ -151,17 +166,8 @@ dependencies() {
 	# Set up download command
 	CMD_DOWNLOAD="${download_program}"
 
-	# Detect where is the 'env' found in order to set properly the shebang
-	local shebang_dependencies="/usr/bin/env /bin/env /bin/sh"
-	local shebang_program=$(programs_required_one ${shebang_dependencies})
-
-	if [ -z "${shebang_program}" ]; then
-		err "None of the following programs are installed: ${shebang_dependencies}. One of them is required at least to find the shell. Aborting installation."
-		exit 1
-	fi
-
-	# Set up shebang command
-	CMD_SHEBANG="${shebang_program}"
+	# Locate shebang
+	find_shebang
 
 	# Detect sudo or run with root
 	if ! program sudo && [ $(id -u) -ne 0 ]; then
@@ -450,6 +456,9 @@ docker_install() {
 	if [ $(id -u) -ne 0 ]; then
 		programs_required tee
 	fi
+
+	# Locate shebang
+	find_shebang
 
 	# Pull MetaCall CLI Docker Image
 	print "Pulling MetaCall CLI Image."
