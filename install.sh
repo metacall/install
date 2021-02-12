@@ -98,7 +98,7 @@ success() {
 # Ask message
 ask() {
 	while true; do
-		printf "${normal:-}▷ ${cyan:-}$@?${normal:-} [Y/n] "
+		printf "${normal:-}▷ $@? [Y/n] "
 		read -r yn < /dev/tty
 		case $yn in
 			[Yy]* ) break;;
@@ -514,7 +514,7 @@ main() {
 	if program metacall; then
 		# Skip asking for updates if the update flag is enabled
 		if [ $OPT_UPDATE -eq 0 ] && [ $OPT_UNINSTALL -eq 0 ]; then
-			ask "MetaCall is already installed. Do you want to update it?\n  Warning: This operation will delete the /gnu folder, continue"
+			ask "MetaCall is already installed. Do you want to update it?\n  ${red:-}${bold:-}Warning: This operation will delete the /gnu folder${normal:-}. Continue"
 		fi
 
 		uninstall
