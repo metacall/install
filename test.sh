@@ -18,7 +18,7 @@
 #	limitations under the License.
 
 # Get test list (any target prefixed by 'test_')
-TEST_LIST=$(cat Dockerfile | grep 'AS test_' | awk '{print $4}')
+TEST_LIST=$(cat Dockerfile | grep -v '^#' | grep 'AS test_' | awk '{print $4}')
 
 # Run tests
 for test in ${TEST_LIST}; do
