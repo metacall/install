@@ -71,7 +71,13 @@ FROM debian_user AS test_debian_user_wget
 RUN wget -O - https://raw.githubusercontent.com/metacall/install/master/install.sh | bash \
 	&& metacall /test/script.js | grep '123456'
 
-# Test npm installation
+# Test reinstall Debian without root and wget
+FROM test_debian_user_wget AS test_debian_user_wget_reinstall
+
+RUN wget -O - https://raw.githubusercontent.com/metacall/install/master/install.sh | bash -s -- --update \
+	&& metacall /test/script.js | grep '123456'
+
+# Test pip installation
 FROM test_debian_user_wget AS test_debian_user_pip
 
 RUN metacall pip3 install -r /test/requirements.txt \
