@@ -71,6 +71,12 @@ FROM debian_user AS test_debian_user_wget
 RUN wget -O - https://raw.githubusercontent.com/metacall/install/master/install.sh | bash \
 	&& metacall /test/script.js | grep '123456'
 
+# Test npm installation
+FROM test_debian_user_wget AS test_debian_user_pip
+
+RUN metacall pip3 install -r /test/requirements.txt \
+	&& metacall /test/requirements.py | grep '123456'
+
 # Fedora Base (root)
 FROM fedora:33 AS fedora_root
 
