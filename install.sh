@@ -295,6 +295,7 @@ uncompress() {
 	else
 		sudo tar xzf ${tmp} -C /
 		sudo chmod -R 755 /gnu
+		sudo chown -R $(id -u):$(id -g) /gnu
 	fi
 
 	success "Tarball uncompressed successfully."
