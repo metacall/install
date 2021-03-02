@@ -476,7 +476,7 @@ docker_install() {
 	# Install Docker based CLI
 	print "Installing the Command Line Interface shortcut (needs sudo or root permissions)."
 
-	local command="docker run --rm --network host -e \"LOADER_SCRIPT_PATH=/metacall/source\" -v \`pwd\`:/metacall/source -it metacall/cli \$@"
+	local command="docker run --rm --network host -e \"LOADER_SCRIPT_PATH=/metacall/source\" -v \`pwd\`:/metacall/source -w /metacall/source -it metacall/cli \$@"
 
 	# Write shell script wrapping the Docker run of MetaCall CLI image
 	if [ $(id -u) -eq 0 ]; then
