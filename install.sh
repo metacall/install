@@ -361,6 +361,9 @@ cli() {
 		# Locale
 		echo "export GUIX_LOCPATH=\"/gnu/lib/locale\"" >> /usr/local/bin/metacall
 
+		# Python
+		echo "export PYTHONPATH=\"/gnu/store/`ls /gnu/store/ | grep python-3 | head -n 1`/lib\"" >> /usr/local/bin/metacall
+
 		# Set up command line
 		echo "CMD=\`ls -a /gnu/bin | grep \"\$1\" | head -n 1\`" >> /usr/local/bin/metacall
 
@@ -397,6 +400,9 @@ cli() {
 
 		# Locale
 		echo "export GUIX_LOCPATH=\"/gnu/lib/locale\"" | sudo tee -a /usr/local/bin/metacall > /dev/null
+
+		# Python
+		echo "export PYTHONPATH=\"/gnu/store/`ls /gnu/store/ | grep python-3 | head -n 1`/lib\"" | sudo tee -a /usr/local/bin/metacall > /dev/null
 
 		# Set up command line
 		echo "CMD=\`ls -a /gnu/bin | grep \"\$1\" | head -n 1\`" | sudo tee -a /usr/local/bin/metacall > /dev/null
