@@ -23,29 +23,38 @@ OPT_NO_CHECK_CERTIFICATE=0
 OPT_NO_DOCKER_FALLBACK=0
 OPT_UPDATE=0
 OPT_UNINSTALL=0
+OPT_FROM_PATH=0
+OPT_FROM_PATH_TARGET=""
 
 # Program commands
 CMD_DOWNLOAD=""
 CMD_SHEBANG=""
 
 # Check for command line arguments
-for option in "$@"
+while [ $# -ne 0 ]
 do
-	if [ "$option" = '--docker-install' ]; then
+	if [ "$1" = '--docker-install' ]; then
 		OPT_DOCKER_INSTALL=1
 	fi
-	if [ "$option" = '--no-check-certificate' ]; then
+	if [ "$1" = '--no-check-certificate' ]; then
 		OPT_NO_CHECK_CERTIFICATE=1
 	fi
-	if [ "$option" = '--no-docker-fallback' ]; then
+	if [ "$1" = '--no-docker-fallback' ]; then
 		OPT_NO_DOCKER_FALLBACK=1
 	fi
-	if [ "$option" = '--update' ]; then
+	if [ "$1" = '--update' ]; then
 		OPT_UPDATE=1
 	fi
-	if [ "$option" = '--uninstall' ]; then
+	if [ "$1" = '--uninstall' ]; then
 		OPT_UNINSTALL=1
 	fi
+	if [ "$1" = '--from-path' ]; then
+		OPT_FROM_PATH=1
+		shift
+		OPT_FROM_PATH_TARGET="$1"
+	fi
+	# Get the next argument
+	shift
 done
 
 # Check if program exists
@@ -148,23 +157,29 @@ dependencies() {
 	print "Checking system dependencies."
 
 	# Check if required programs are installed
-	programs_required tar grep tail awk rev cut uname echo rm id find head chmod ln
+	if [ $OPT_FROM_PATH -eq 0 ]; then
+		programs_required tar grep tail awk rev cut uname echo rm id head chmod chown ln
+	else
+		programs_required tar grep echo rm id head chmod chown ln
+	fi
 
 	if [ $(id -u) -ne 0 ]; then
 		programs_required tee
 	fi
 
 	# Check if download programs are installed
-	local download_dependencies="curl wget"
-	local download_program=$(programs_required_one ${download_dependencies})
+	if [ $OPT_FROM_PATH -eq 0 ]; then
+		local download_dependencies="curl wget"
+		local download_program=$(programs_required_one ${download_dependencies})
 
-	if [ -z "${download_program}" ]; then
-		err "None of the following programs are installed: ${download_dependencies}. One of them is required at least to download the tarball. Aborting installation."
-		exit 1
+		if [ -z "${download_program}" ]; then
+			err "None of the following programs are installed: ${download_dependencies}. One of them is required at least to download the tarball. Aborting installation."
+			exit 1
+		fi
+
+		# Set up download command
+		CMD_DOWNLOAD="${download_program}"
 	fi
-
-	# Set up download command
-	CMD_DOWNLOAD="${download_program}"
 
 	# Locate shebang
 	find_shebang
@@ -285,7 +300,11 @@ download() {
 
 # Extract the tarball (requires root or sudo)
 uncompress() {
-	local tmp="/tmp/metacall-tarball.tar.gz"
+	if [ $OPT_FROM_PATH -eq 1 ]; then
+		local tmp="${OPT_FROM_PATH_TARGET}"
+	else
+		local tmp="/tmp/metacall-tarball.tar.gz"
+	fi
 
 	print "Uncompress the tarball (needs sudo or root permissions)."
 
@@ -322,11 +341,11 @@ uncompress() {
 	fi
 
 	# Clean the tarball
-	print "Cleaning the tarball."
-
-	rm -rf ${tmp}
-
-	success "Tarball cleaned successfully."
+	if [ $OPT_FROM_PATH -eq 0 ]; then
+		print "Cleaning the tarball."
+		rm -rf ${tmp}
+		success "Tarball cleaned successfully."
+	fi
 }
 
 # Install the CLI
@@ -428,21 +447,23 @@ binary_install() {
 	# Check dependencies
 	dependencies
 
-	# Detect operative system and architecture
-	print "Detecting Operative System and Architecture."
+	if [ $OPT_FROM_PATH -eq 0 ]; then
+		# Detect operative system and architecture
+		print "Detecting Operative System and Architecture."
 
-	# Run to check if the operative system is supported
-	operative_system > /dev/null 2>&1
-	architecture > /dev/null 2>&1
+		# Run to check if the operative system is supported
+		operative_system > /dev/null 2>&1
+		architecture > /dev/null 2>&1
 
-	# Get the operative system and architecture into a variable
-	local os="$(operative_system)"
-	local arch="$(architecture)"
+		# Get the operative system and architecture into a variable
+		local os="$(operative_system)"
+		local arch="$(architecture)"
 
-	success "Operative System (${os}) and Architecture (${arch}) detected."
+		success "Operative System (${os}) and Architecture (${arch}) detected."
 
-	# Download tarball
-	download ${os} ${arch}
+		# Download tarball
+		download ${os} ${arch}
+	fi
 
 	# Extract
 	uncompress
