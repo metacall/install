@@ -539,6 +539,14 @@ uninstall() {
 }
 
 main() {
+	# Check if the tarball is correct
+	if [ $OPT_FROM_PATH -eq 1 ]; then
+		if [ ! -f "$OPT_FROM_PATH_TARGET" ]; then
+			error "The tarball $OPT_FROM_PATH_TARGET does not exist, exiting..."
+			exit 1
+		fi
+	fi
+
 	if program metacall; then
 		# Skip asking for updates if the update flag is enabled
 		if [ $OPT_UPDATE -eq 0 ] && [ $OPT_UNINSTALL -eq 0 ]; then
