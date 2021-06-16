@@ -23,7 +23,7 @@ In order to install MetaCall in one line, curl or wget or powershell can be used
   ```sh
   wget -O - https://raw.githubusercontent.com/metacall/install/master/install.sh | sh
   ```
-- `powershell`:
+- `powershell` (Not implemented yet):
   ```powershell
   powershell -exec bypass -c "(New-Object Net.WebClient).Proxy.Credentials=[Net.CredentialCache]::DefaultNetworkCredentials;iwr('https://raw.githubusercontent.com/metacall/install/master/install.ps1')|iex"
   ```
@@ -37,6 +37,7 @@ Additional parameters for the install script:
 - `--docker-install`: Runs Docker installation overwriting Docker fallback option from binary installation.
 - `--no-check-certificate`: When running binary installation (the default one), disables checking certificates when downloading the tarball. Useful for environments where there is not certificates, but insecure.
 - `--no-docker-fallback`: When running binary installation (the default one), disables Docker installation as fallback if the binary installation fails.
+- `--from-path <path>`: Installs MetaCall from specific path, the `<path>` points to a previously download tarball located in your file system.
 
 Example usage:
 
@@ -50,4 +51,10 @@ Example usage:
 - Install with `wget` using Docker installer:
   ```sh
   wget -O - https://raw.githubusercontent.com/metacall/install/master/install.sh | sh -s -- --docker-install
+  ```
+
+
+- Install with `wget` from a existing tarball located at `/root/downloads/metacall-tarball-linux-amd64.tar.gz`:
+  ```sh
+  wget -O - https://raw.githubusercontent.com/metacall/install/master/install.sh | sh -s -- --from-path /root/downloads/metacall-tarball-linux-amd64.tar.gz
   ```
