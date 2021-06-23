@@ -139,21 +139,26 @@ programs_required_one() {
 
 # Find proper shebang for the launcher script
 find_shebang() {
-	print "Detecting shebang."
-
-	# Detect where is the 'env' found in order to set properly the shebang
-	local shebang_dependencies="/usr/bin/env /bin/env /bin/sh /bin/bash /bin/dash"
+	# Check common shells
+	local shebang_dependencies="/bin/sh /bin/bash /bin/dash"
 	local shebang_program=$(programs_required_one ${shebang_dependencies})
 
 	if [ -z "${shebang_program}" ]; then
-		err "None of the following programs are installed: ${shebang_dependencies}. One of them is required at least to find the shell. Aborting installation."
-		exit 1
+		# Detect where is the 'env' found in order to set properly the shebang
+		local shebang_dependencies="/usr/bin/env /bin/env"
+		local shebang_program=$(programs_required_one ${shebang_dependencies})
+
+		if [ -z "${shebang_program}" ]; then
+			err "None of the following programs are installed: ${shebang_dependencies}. One of them is required at least to find the shell. Aborting installation."
+			exit 1
+		else
+			# Set up shebang command based on env
+			CMD_SHEBANG="${shebang_program} sh"
+		fi
+	else
+		# Set up shebang command
+		CMD_SHEBANG="${shebang_program}"
 	fi
-
-	# Set up shebang command
-	CMD_SHEBANG="${shebang_program}"
-
-	success "Shebang found: ${CMD_SHEBANG}."
 }
 
 # Check all dependencies
@@ -364,7 +369,7 @@ cli() {
 		mkdir -p /usr/local/bin/
 
 		# Write the shebang
-		echo "#!${CMD_SHEBANG} sh" &> /usr/local/bin/metacall
+		echo "#!${CMD_SHEBANG}" &> /usr/local/bin/metacall
 
 		# MetaCall Environment
 		echo "export LOADER_LIBRARY_PATH=\"${cli}/lib\"" >> /usr/local/bin/metacall
@@ -404,7 +409,7 @@ cli() {
 		sudo mkdir -p /usr/local/bin/
 
 		# Write the shebang
-		echo "#!${CMD_SHEBANG} sh" | sudo tee /usr/local/bin/metacall > /dev/null
+		echo "#!${CMD_SHEBANG}" | sudo tee /usr/local/bin/metacall > /dev/null
 
 		# MetaCall Environment
 		echo "export LOADER_LIBRARY_PATH=\"${cli}/lib\"" | sudo tee -a /usr/local/bin/metacall > /dev/null
@@ -512,12 +517,12 @@ docker_install() {
 	# Write shell script wrapping the Docker run of MetaCall CLI image
 	if [ $(id -u) -eq 0 ]; then
 		mkdir -p /usr/local/bin/
-		echo "#!${CMD_SHEBANG} sh" &> /usr/local/bin/metacall
+		echo "#!${CMD_SHEBANG}" &> /usr/local/bin/metacall
 		echo "${command}" >> /usr/local/bin/metacall
 		chmod 755 /usr/local/bin/metacall
 	else
 		sudo mkdir -p /usr/local/bin/
-		echo "#!${CMD_SHEBANG} sh" | sudo tee /usr/local/bin/metacall > /dev/null
+		echo "#!${CMD_SHEBANG}" | sudo tee /usr/local/bin/metacall > /dev/null
 		echo "${command}" | sudo tee -a /usr/local/bin/metacall > /dev/null
 		sudo chmod 755 /usr/local/bin/metacall
 	fi
