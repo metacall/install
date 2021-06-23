@@ -139,25 +139,27 @@ programs_required_one() {
 
 # Find proper shebang for the launcher script
 find_shebang() {
-	# Check common shells
-	local shebang_dependencies="/bin/sh /bin/bash /bin/dash"
+	# Detect where is the 'env' found in order to set properly the shebang
+	local shebang_dependencies="/usr/bin/env /bin/env"
 	local shebang_program=$(programs_required_one ${shebang_dependencies})
 
 	if [ -z "${shebang_program}" ]; then
-		# Detect where is the 'env' found in order to set properly the shebang
-		local shebang_dependencies="/usr/bin/env /bin/env"
+		warning "None of the following programs are installed: ${shebang_dependencies}. Trying to detect common shells..."
+
+		# Check common shells
+		local shebang_dependencies="/bin/sh /bin/bash /bin/dash"
 		local shebang_program=$(programs_required_one ${shebang_dependencies})
 
 		if [ -z "${shebang_program}" ]; then
 			err "None of the following programs are installed: ${shebang_dependencies}. One of them is required at least to find the shell. Aborting installation."
 			exit 1
 		else
-			# Set up shebang command based on env
-			CMD_SHEBANG="${shebang_program} sh"
+			# Set up shebang command
+			CMD_SHEBANG="${shebang_program}"
 		fi
 	else
-		# Set up shebang command
-		CMD_SHEBANG="${shebang_program}"
+		# Set up shebang command based on env
+		CMD_SHEBANG="${shebang_program} sh"
 	fi
 }
 
@@ -369,7 +371,7 @@ cli() {
 		mkdir -p /usr/local/bin/
 
 		# Write the shebang
-		echo "#!${CMD_SHEBANG}" &> /usr/local/bin/metacall
+		echo "#!${CMD_SHEBANG}" >> /usr/local/bin/metacall
 
 		# MetaCall Environment
 		echo "export LOADER_LIBRARY_PATH=\"${cli}/lib\"" >> /usr/local/bin/metacall
