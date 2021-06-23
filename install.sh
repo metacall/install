@@ -139,8 +139,10 @@ programs_required_one() {
 
 # Find proper shebang for the launcher script
 find_shebang() {
+	print "Detecting shebang."
+
 	# Detect where is the 'env' found in order to set properly the shebang
-	local shebang_dependencies="/usr/bin/env /bin/env /bin/sh /bin/bash"
+	local shebang_dependencies="/usr/bin/env /bin/env /bin/sh /bin/bash /bin/dash"
 	local shebang_program=$(programs_required_one ${shebang_dependencies})
 
 	if [ -z "${shebang_program}" ]; then
@@ -150,6 +152,8 @@ find_shebang() {
 
 	# Set up shebang command
 	CMD_SHEBANG="${shebang_program}"
+
+	success "Shebang found: ${CMD_SHEBANG}."
 }
 
 # Check all dependencies
