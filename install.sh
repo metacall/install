@@ -169,9 +169,9 @@ dependencies() {
 
 	# Check if required programs are installed
 	if [ $OPT_FROM_PATH -eq 0 ]; then
-		programs_required tar grep tail awk rev cut uname echo rm id head chmod chown ln
+		programs_required tar grep tail awk rev cut uname echo printf rm id head chmod chown ln
 	else
-		programs_required tar grep echo rm id head chmod chown ln
+		programs_required tar grep echo printf rm id head chmod chown ln
 	fi
 
 	if [ $(id -u) -ne 0 ]; then
@@ -371,7 +371,8 @@ cli() {
 		mkdir -p /usr/local/bin/
 
 		# Write the shebang
-		echo "#!${CMD_SHEBANG}" >> /usr/local/bin/metacall
+		printf '#!' > /usr/local/bin/metacall
+		echo "${CMD_SHEBANG}" >> /usr/local/bin/metacall
 
 		# MetaCall Environment
 		echo "export LOADER_LIBRARY_PATH=\"${cli}/lib\"" >> /usr/local/bin/metacall
@@ -411,7 +412,8 @@ cli() {
 		sudo mkdir -p /usr/local/bin/
 
 		# Write the shebang
-		echo "#!${CMD_SHEBANG}" | sudo tee /usr/local/bin/metacall > /dev/null
+		printf "#!" | sudo tee /usr/local/bin/metacall > /dev/null
+		echo "${CMD_SHEBANG}" | sudo tee -a /usr/local/bin/metacall > /dev/null
 
 		# MetaCall Environment
 		echo "export LOADER_LIBRARY_PATH=\"${cli}/lib\"" | sudo tee -a /usr/local/bin/metacall > /dev/null
@@ -519,12 +521,14 @@ docker_install() {
 	# Write shell script wrapping the Docker run of MetaCall CLI image
 	if [ $(id -u) -eq 0 ]; then
 		mkdir -p /usr/local/bin/
-		echo "#!${CMD_SHEBANG}" &> /usr/local/bin/metacall
+		printf '#!' > /usr/local/bin/metacall
+		echo "${CMD_SHEBANG}" >> /usr/local/bin/metacall
 		echo "${command}" >> /usr/local/bin/metacall
 		chmod 755 /usr/local/bin/metacall
 	else
 		sudo mkdir -p /usr/local/bin/
-		echo "#!${CMD_SHEBANG}" | sudo tee /usr/local/bin/metacall > /dev/null
+		printf '#!' | sudo tee /usr/local/bin/metacall > /dev/null
+		echo "${CMD_SHEBANG}" | sudo tee -a /usr/local/bin/metacall > /dev/null
 		echo "${command}" | sudo tee -a /usr/local/bin/metacall > /dev/null
 		sudo chmod 755 /usr/local/bin/metacall
 	fi
