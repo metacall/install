@@ -362,6 +362,8 @@ uncompress() {
 # Install the CLI
 cli() {
 	local cli="/gnu/store/`ls /gnu/store/ | grep metacall | head -n 1`"
+	local pythonpath_base="/gnu/store/`ls /gnu/store/ | grep python-3 | head -n 1`/lib"
+	local pythonpath_dynlink="`ls -d ${pythonpath_base}/*/ | grep 'python3\.[0-9]*\/$'`lib-dynload"
 
 	print "Installing the Command Line Interface shortcut (needs sudo or root permissions)."
 
@@ -393,7 +395,7 @@ cli() {
 		echo "export GUIX_LOCPATH=\"/gnu/lib/locale\"" >> /usr/local/bin/metacall
 
 		# Python
-		echo "export PYTHONPATH=\"/gnu/store/`ls /gnu/store/ | grep python-3 | head -n 1`/lib\"" >> /usr/local/bin/metacall
+		echo "export PYTHONPATH=\"${pythonpath_base}:${pythonpath_dynlink}\"" >> /usr/local/bin/metacall
 
 		# Set up command line
 		echo "CMD=\`ls -a /gnu/bin | grep \"\$1\" | head -n 1\`" >> /usr/local/bin/metacall
@@ -434,7 +436,7 @@ cli() {
 		echo "export GUIX_LOCPATH=\"/gnu/lib/locale\"" | sudo tee -a /usr/local/bin/metacall > /dev/null
 
 		# Python
-		echo "export PYTHONPATH=\"/gnu/store/`ls /gnu/store/ | grep python-3 | head -n 1`/lib\"" | sudo tee -a /usr/local/bin/metacall > /dev/null
+		echo "export PYTHONPATH=\"${pythonpath_base}:${pythonpath_dynlink}\"" | sudo tee -a /usr/local/bin/metacall > /dev/null
 
 		# Set up command line
 		echo "CMD=\`ls -a /gnu/bin | grep \"\$1\" | head -n 1\`" | sudo tee -a /usr/local/bin/metacall > /dev/null
