@@ -58,3 +58,9 @@ Example usage:
   ```sh
   wget -O - https://raw.githubusercontent.com/metacall/install/master/install.sh | sh -s -- --from-path /root/downloads/metacall-tarball-linux-amd64.tar.gz
   ```
+
+
+- Install `metacall` in a BusyBox without certificates:
+  ```sh
+  wget --no-check-certificate -O - https://raw.githubusercontent.com/metacall/install/master/install.sh | sh -s -- --no-check-certificate
+  ```
