@@ -90,6 +90,11 @@ FROM test_debian_user_wget AS test_debian_user_pip
 RUN metacall pip3 install -r /test/requirements.txt \
 	&& metacall /test/requirements.py | grep '123456'
 
+# Test PYTHONPATH
+FROM test_debian_user_wget AS test_debian_user_pythonpath
+
+RUN metacall /test/async.py | grep 'Async Done'
+
 # Fedora Base (root)
 FROM fedora:33 AS fedora_root
 

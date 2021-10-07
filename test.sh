@@ -17,6 +17,9 @@
 #	See the License for the specific language governing permissions and
 #	limitations under the License.
 
+# Run with Buildkit
+export DOCKER_BUILDKIT=1
+
 # Get test list (any target prefixed by 'test_')
 TEST_LIST=$(cat Dockerfile | grep -v '^#' | grep 'AS test_' | awk '{print $4}')
 
