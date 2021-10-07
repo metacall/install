@@ -362,7 +362,7 @@ uncompress() {
 # Install the CLI
 cli() {
 	local cli="/gnu/store/`ls /gnu/store/ | grep metacall | head -n 1`"
-	local pythonpath_base="/gnu/store/`ls /gnu/store/ | grep python-3 | head -n 1`/lib"
+	local pythonpath_base="/gnu/store/`ls /gnu/store/ | grep python-next-3 | head -n 1`/lib"
 	local pythonpath_dynlink="`ls -d ${pythonpath_base}/*/ | grep 'python3\.[0-9]*\/$'`lib-dynload"
 
 	print "Installing the Command Line Interface shortcut (needs sudo or root permissions)."
