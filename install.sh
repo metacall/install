@@ -393,6 +393,7 @@ cli() {
 
 		# Locale
 		echo "export GUIX_LOCPATH=\"/gnu/lib/locale\"" >> /usr/local/bin/metacall
+		echo "export LANG=\"en_US.UTF-8\"" >> /usr/local/bin/metacall
 
 		# Python
 		echo "export PYTHONPATH=\"${pythonpath_base}:${pythonpath_dynlink}\"" >> /usr/local/bin/metacall
@@ -434,6 +435,7 @@ cli() {
 
 		# Locale
 		echo "export GUIX_LOCPATH=\"/gnu/lib/locale\"" | sudo tee -a /usr/local/bin/metacall > /dev/null
+		echo "export LANG=\"en_US.UTF-8\"" | sudo tee -a /usr/local/bin/metacall > /dev/null
 
 		# Python
 		echo "export PYTHONPATH=\"${pythonpath_base}:${pythonpath_dynlink}\"" | sudo tee -a /usr/local/bin/metacall > /dev/null

@@ -64,3 +64,9 @@ Example usage:
   ```sh
   wget --no-check-certificate -O - https://raw.githubusercontent.com/metacall/install/master/install.sh | sh -s -- --no-check-certificate
   ```
+
+# Testing
+
+```sh
+./test.sh
+```
