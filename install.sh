@@ -208,7 +208,7 @@ dependencies() {
 operative_system() {
 	local os=$(uname)
 
-	# TODO: Implement other operative systems in metacall/distributable
+	# TODO: Implement other operative systems in metacall/distributable-linux
 	case ${os} in
 		# Darwin)
 		# 	echo "osx"
@@ -234,7 +234,7 @@ operative_system() {
 architecture() {
 	local arch=$(uname -m)
 
-	# TODO: Implement other architectures in metacall/distributable
+	# TODO: Implement other architectures in metacall/distributable-linux
 	case ${arch} in
 		x86_64)
 			echo "amd64"
@@ -258,7 +258,7 @@ architecture() {
 
 # Download tarball
 download() {
-	local url="https://github.com/metacall/distributable/releases/latest"
+	local url="https://github.com/metacall/distributable-linux/releases/latest"
 	local tmp="/tmp/metacall-tarball.tar.gz"
 	local os="$1"
 	local arch="$2"
@@ -289,7 +289,7 @@ download() {
 	fi
 
 	local version=$(printf "${tag_url}" | rev | cut -d '/' -f1 | rev)
-	local final_url=$(printf "https://github.com/metacall/distributable/releases/download/${version}/metacall-tarball-${os}-${arch}.tar.gz")
+	local final_url=$(printf "https://github.com/metacall/distributable-linux/releases/download/${version}/metacall-tarball-${os}-${arch}.tar.gz")
 	local fail=false
 
 	if program curl; then
