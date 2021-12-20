@@ -641,11 +641,15 @@ main() {
 	# Check if /usr/local/bin is in PATH
 	if [ -z "${path}" ]; then
 		# Add /usr/local/bin to PATH
+		mkdir -p /etc/profile.d/
+
 		if [ $(id -u) -eq 0 ]; then
-			echo "export PATH=\${PATH}:/usr/local/bin" >> /etc/profile
+			echo "export PATH=\"\${PATH}:/usr/local/bin\"" > /etc/profile.d/metacall.sh
 		else
-			echo "export PATH=\${PATH}:/usr/local/bin" | sudo tee -a /etc/profile > /dev/null
+			echo "export PATH=\"\${PATH}:/usr/local/bin\"" | sudo tee /etc/profile.d/metacall.sh > /dev/null
 		fi
+
+		chmod 644 /etc/profile.d/metacall.sh
 
 		warning "MetaCall install path is not present in PATH so we added it for you." \
 			"  The command 'metacall' will be available in your subsequent terminal instances." \
