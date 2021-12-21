@@ -142,7 +142,21 @@ function Resolve-Version([string]$Version) {
 }
 
 function Post-Install([string]$InstallRoot) {
+	# Reinstall Python Pip to the latest version (needed in order to patch the python.exe location)
+	$InstallLocation = Join-Path -Path $InstallRoot -ChildPath "metacall"
+	$InstallPythonScript = @"
+setlocal
+set "PYTHONHOME=$($InstallLocation)\runtimes\python"
+set "PIP_TARGET=$($InstallLocation)\runtimes\python\Pip"
+set "PATH=$($InstallLocation)\runtimes\python;$($InstallLocation)\runtimes\python\Scripts"
+echo $($InstallLocation)\runtimes\python\python.exe -m pip install --upgrade --force-reinstall pip
+endlocal
+"@
+	$InstallPythonScriptOneLine = $($InstallPythonScript.Trim()).replace("`n", " && ")
+	cmd /V /C "$InstallPythonScriptOneLine"
 
+	# TODO: Replace in the files D:/ and D:\
+	# TODO: Add safely MetaCall command to the PATH (and persist it)
 }
 
 function Install-Tarball([string]$InstallDir, [string]$Version) {
@@ -169,22 +183,8 @@ function Install-Tarball([string]$InstallDir, [string]$Version) {
 	# Delete the tarball
 	Remove-Item -Force $InstallOutput | Out-Null
 
-	# Reinstall Python Pip to the latest version
-	$InstallLocation = Join-Path -Path $InstallRoot -ChildPath "metacall"
-	$InstallPythonScript = @"
-setlocal
-set "PYTHONHOME=$($InstallLocation)\runtimes\python"
-set "PIP_TARGET=$($InstallLocation)\runtimes\python\Pip"
-set "PATH=$($InstallLocation)\runtimes\python;$($InstallLocation)\runtimes\python\Scripts"
-echo $($InstallLocation)\runtimes\python\python.exe -m pip install --upgrade --force-reinstall pip
-endlocal
-"@
-	$InstallPythonScriptOneLine = $($InstallPythonScript.Trim()).replace("`n", " && ")
-	cmd /V /C "$InstallPythonScriptOneLine"
-
 	# Run post install scripts
-	# TODO: Replace in the files D:/ and D:\
-	# TODO: Add safely MetaCall command to the PATH (and persist it)
+	Post-Install $InstallRoot
 }
 
 # Install the tarball and post scripts
