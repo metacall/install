@@ -184,6 +184,7 @@ endlocal
 
 	# Run post install scripts
 	# TODO: Replace in the files D:/ and D:\
+	# TODO: Add safely MetaCall command to the PATH (and persist it)
 }
 
 # Install the tarball and post scripts
