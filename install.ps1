@@ -169,10 +169,21 @@ function Install-Tarball([string]$InstallDir, [string]$Version) {
 	# Delete the tarball
 	Remove-Item -Force $InstallOutput | Out-Null
 
-	# Run post install scripts
-	# TODO: python -m pip install --upgrade --force-reinstall pip
-	# TODO: Replace in the files D:/ and D:\
+	# Reinstall Python Pip to the latest version
+	$InstallLocation = Join-Path -Path $InstallRoot -ChildPath "metacall"
+	$InstallPythonScript = @"
+setlocal
+set "PYTHONHOME=$($InstallLocation)\runtimes\python"
+set "PIP_TARGET=$($InstallLocation)\runtimes\python\Pip"
+set "PATH=$($InstallLocation)\runtimes\python;$($InstallLocation)\runtimes\python\Scripts"
+echo $($InstallLocation)\runtimes\python\python.exe -m pip install --upgrade --force-reinstall pip
+endlocal
+"@
+	$InstallPythonScriptOneLine = $($InstallPythonScript.Trim()).replace("`n", " && ")
+	cmd /V /C "$InstallPythonScriptOneLine"
 
+	# Run post install scripts
+	# TODO: Replace in the files D:/ and D:\
 }
 
 # Install the tarball and post scripts
