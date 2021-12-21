@@ -34,7 +34,7 @@
 [cmdletbinding()]
 param(
    [string]$InstallDir="<auto>",
-   [string]$Version="latest",
+   [string]$Version="latest"
 )
 
 Set-StrictMode -Version Latest
@@ -104,14 +104,14 @@ function Get-RedirectedUri {
 	process {
 		do {
 			try {
-				$request = Invoke-WebRequest -Method Head -Uri $Uri
+				$request = Invoke-WebRequest -UseBasicParsing -Method Head -Uri $Uri
 				if ($request.BaseResponse.ResponseUri -ne $null) {
 					# This is for Powershell 5
-					$redirectUri = $request.BaseResponse.ResponseUri.AbsoluteUri
+					$redirectUri = $request.BaseResponse.ResponseUri
 				}
 				elseif ($request.BaseResponse.RequestMessage.RequestUri -ne $null) {
 					# This is for Powershell core
-					$redirectUri = $request.BaseResponse.RequestMessage.RequestUri.AbsoluteUri
+					$redirectUri = $request.BaseResponse.RequestMessage.RequestUri
 				}
 
 				$retry = $false
@@ -133,23 +133,47 @@ function Get-RedirectedUri {
 
 function Resolve-Version([string]$Version) {
 	if ($Version.ToLowerInvariant() -eq "latest") {
-		$LatestTag = $(Get-RedirectedUri "https://github.com/metacall/distributable-linux/releases/latest")
-		return $LatestTag.substring(1)
+		$LatestTag = $(Get-RedirectedUri "https://github.com/metacall/distributable-windows/releases/latest")
+		return $LatestTag.Segments[$LatestTag.Segments.Count – 1]
 	}
 	else {
-		return $Version
+		return "v$Version"
 	}
 }
 
-function Download-Tarball([string]$InstallDir) {
-	$InstallRoot = Resolve-Installation-Path $InstallDir
-	$InstallVersion = Resolve-Version $Version
+function Post-Install([string]$InstallRoot) {
 
-	# TODO
 }
 
+function Install-Tarball([string]$InstallDir, [string]$Version) {
+	$InstallRoot = Resolve-Installation-Path $InstallDir
+	$InstallOutput = Join-Path -Path $InstallRoot -ChildPath "metacall-tarball-win.zip"
+	$InstallVersion = Resolve-Version $Version
+	$InstallArchitecture = Get-CLI-Architecture
+	$DownloadUri = "https://github.com/metacall/distributable-windows/releases/download/$InstallVersion/metacall-tarball-win-$InstallArchitecture.zip"
 
+	# Delete directory contents if any
+	if (Test-Path $InstallRoot) {
+		Remove-Item -Recurse -Force $InstallRoot | Out-Null
+	}
 
+	# Create directory if it does not exist
+	New-Item -ItemType Directory -Force -Path $InstallRoot | Out-Null
 
-# TODO: python -m pip install --upgrade --force-reinstall pip
-# TODO: Replace in the files D:/ and D:\
+	# Download the tarball
+	Invoke-WebRequest -Uri $DownloadUri -OutFile $InstallOutput
+
+	# Unzip the tarball
+	Expand-Archive -Path $InstallOutput -DestinationPath $InstallRoot -Force
+
+	# Delete the tarball
+	Remove-Item -Force $InstallOutput | Out-Null
+
+	# Run post install scripts
+	# TODO: python -m pip install --upgrade --force-reinstall pip
+	# TODO: Replace in the files D:/ and D:\
+
+}
+
+# Install the tarball and post scripts
+Install-Tarball $InstallDir $Version
