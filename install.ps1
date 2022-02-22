@@ -134,7 +134,7 @@ function Get-RedirectedUri {
 function Resolve-Version([string]$Version) {
 	if ($Version.ToLowerInvariant() -eq "latest") {
 		$LatestTag = $(Get-RedirectedUri "https://github.com/metacall/distributable-windows/releases/latest")
-		return $LatestTag.Segments[$LatestTag.Segments.Count – 1]
+		return $LatestTag.Segments[$LatestTag.Segments.Count - 1]
 	}
 	else {
 		return "v$Version"
