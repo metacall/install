@@ -68,10 +68,6 @@ Additional parameters for the install script:
 - `-InstallDir <directory>`: Defines a custom folder in order to install MetaCall in, otherwise it uses `%LocalAppData%\MetaCall` by default.
 - `-Version <version>`: Version of the tarball to be downloaded. Versions are available [here](https://github.com/metacall/distributable-windows/releases). Uses latest version by default.
 
-Add MetaCall command to environment variable
-
-- Locate `metacall.bat` file in your installed folder, copy the path of the folder where the file is located and paste it in the `PATH` variable under System Variables. 
-
 Example usage:
 
 - Install tarball version `v0.1.0` into `D:\metacall`:
