@@ -156,7 +156,25 @@ endlocal
 	cmd /V /C "$InstallPythonScriptOneLine"
 
 	# TODO: Replace in the files D:/ and D:\
-	# TODO: Add safely MetaCall command to the PATH (and persist it)
+}
+
+function Path-Install([string]$InstallRoot) {
+    # Add safely MetaCall command to the PATH (and persist it)
+    
+    # To add folder containing metacall.bat to PATH
+    $persistedPaths = [Environment]::GetEnvironmentVariable('Path', [EnvironmentVariableTarget]::Machine) -split ';'
+   if ($persistedPaths -notcontains $InstallRoot) {
+       $persistedPaths = $persistedPaths + $InstallRoot | where { $_ }
+       [Environment]::SetEnvironmentVariable('Path', $persistedPaths -join ';', [EnvironmentVariableTarget]::Machine)
+     }
+    
+    #To verify if PATH isn't already added
+    $envPaths = $env:Path -split ';'
+    if ($envPaths -notcontains $InstallRoot) {
+        $envPaths = $envPaths + $InstallRoot | where { $_ }
+        $env:Path = $envPaths -join ';'
+    }
+
 }
 
 function Install-Tarball([string]$InstallDir, [string]$Version) {
@@ -185,6 +203,9 @@ function Install-Tarball([string]$InstallDir, [string]$Version) {
 
 	# Run post install scripts
 	Post-Install $InstallRoot
+
+	# Add PATH
+	Path-Install $InstallRoot
 }
 
 # Install the tarball and post scripts
