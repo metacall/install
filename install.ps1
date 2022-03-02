@@ -168,13 +168,12 @@ function Path-Install([string]$InstallRoot) {
        [Environment]::SetEnvironmentVariable('Path', $persistedPaths -join ';', [EnvironmentVariableTarget]::Machine)
      }
     
-    #To verify if PATH isn't already added
+    # To verify if PATH isn't already added
     $envPaths = $env:Path -split ';'
     if ($envPaths -notcontains $InstallRoot) {
         $envPaths = $envPaths + $InstallRoot | where { $_ }
         $env:Path = $envPaths -join ';'
     }
-
 }
 
 function Install-Tarball([string]$InstallDir, [string]$Version) {
@@ -204,7 +203,7 @@ function Install-Tarball([string]$InstallDir, [string]$Version) {
 	# Run post install scripts
 	Post-Install $InstallRoot
 
-	# Add PATH
+	# Add MetaCall CLI to PATH
 	Path-Install $InstallRoot
 }
 
