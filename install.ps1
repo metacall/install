@@ -149,7 +149,7 @@ setlocal
 set "PYTHONHOME=$($InstallLocation)\runtimes\python"
 set "PIP_TARGET=$($InstallLocation)\runtimes\python\Pip"
 set "PATH=$($InstallLocation)\runtimes\python;$($InstallLocation)\runtimes\python\Scripts"
-echo $($InstallLocation)\runtimes\python\python.exe -m pip install --upgrade --force-reinstall pip
+$($InstallLocation)\runtimes\python\python.exe -m pip install --upgrade --force-reinstall pip
 endlocal
 "@
 	$InstallPythonScriptOneLine = $($InstallPythonScript.Trim()).replace("`n", " && ")
