@@ -140,18 +140,18 @@ programs_required_one() {
 # Find proper shebang for the launcher script
 find_shebang() {
 	# Detect where is the 'env' found in order to set properly the shebang
-	local shebang_dependencies="/usr/bin/env /bin/env"
-	local shebang_program=$(programs_required_one ${shebang_dependencies})
+	local shebang_dependencies=("/usr/bin/env" "/bin/env")
+	local shebang_program=$(programs_required_one ${shebang_dependencies[@]})
 
 	if [ -z "${shebang_program}" ]; then
-		warning "None of the following programs are installed: ${shebang_dependencies}. Trying to detect common shells..."
+		warning "None of the following programs are installed: ${shebang_dependencies[@]}. Trying to detect common shells..."
 
 		# Check common shells
-		local shebang_dependencies="/bin/sh /bin/bash /bin/dash"
-		local shebang_program=$(programs_required_one ${shebang_dependencies})
+		local shebang_dependencies=("/bin/sh" "/bin/bash" "/bin/dash")
+		local shebang_program=$(programs_required_one ${shebang_dependencies[@]})
 
 		if [ -z "${shebang_program}" ]; then
-			err "None of the following programs are installed: ${shebang_dependencies}. One of them is required at least to find the shell. Aborting installation."
+			err "None of the following programs are installed: ${shebang_dependencies[@]}. One of them is required at least to find the shell. Aborting installation."
 			exit 1
 		else
 			# Set up shebang command
@@ -180,11 +180,11 @@ dependencies() {
 
 	# Check if download programs are installed
 	if [ $OPT_FROM_PATH -eq 0 ]; then
-		local download_dependencies="curl wget"
-		local download_program=$(programs_required_one ${download_dependencies})
+		local download_dependencies=("curl" "wget")
+		local download_program=$(programs_required_one ${download_dependencies[@]})
 
 		if [ -z "${download_program}" ]; then
-			err "None of the following programs are installed: ${download_dependencies}. One of them is required at least to download the tarball. Aborting installation."
+			err "None of the following programs are installed: ${download_dependencies[@]}. One of them is required at least to download the tarball. Aborting installation."
 			exit 1
 		fi
 
@@ -210,10 +210,10 @@ operative_system() {
 
 	# TODO: Implement other operative systems in metacall/distributable-linux
 	case ${os} in
-		# Darwin)
-		# 	echo "osx"
-		# 	return
-		# 	;;
+		Darwin)
+			echo "osx"
+			return
+			;;
 		# FreeBSD)
 		# 	echo "freebsd"
 		# 	return
