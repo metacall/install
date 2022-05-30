@@ -140,24 +140,13 @@ programs_required_one() {
 # Find proper shebang for the launcher script
 find_shebang() {
 	# Detect where is the 'env' found in order to set properly the shebang
-	# The below two lines work fine when running `bash install.sh` but throw an error when running `sh install.sh`
-	#local shebang_dependencies=("/usr/bin/env" "/bin/env")
-	#local shebang_program=$(programs_required_one ${shebang_dependencies[@]})
-	
-	shebang_dependencies="/usr/bin/env /bin/env"
-	set -- $shebang_dependencies
-	local shebang_program=$(programs_required_one $@)
+	local shebang_program=$(programs_required_one /usr/bin/env /bin/env)
 
 	if [ -z "${shebang_program}" ]; then
 		warning "None of the following programs are installed: $@}. Trying to detect common shells..."
 
 		# Check common shells
-		# The below two lines work fine when running `bash install.sh` but throw an error when running `sh install.sh`
-		#local shebang_dependencies=("/bin/sh" "/bin/bash" "/bin/dash")
-		#local shebang_program=$(programs_required_one ${shebang_dependencies[@]})
-		shebang_dependencies="/bin/sh /bin/bash /bin/dash"
-		set -- $shebang_dependencies
-		local shebang_program=$(programs_required_one $@)
+		local shebang_program=$(programs_required_one /bin/sh /bin/bash /bin/dash)
 		
 		if [ -z "${shebang_program}" ]; then
 			err "None of the following programs are installed: $@. One of them is required at least to find the shell. Aborting installation."
@@ -189,12 +178,7 @@ dependencies() {
 
 	# Check if download programs are installed
 	if [ $OPT_FROM_PATH -eq 0 ]; then
-		# The below two lines work fine when running `bash install.sh` but throw an error when running `sh install.sh`
-		#local download_dependencies=("curl" "wget")
-		#local download_program=$(programs_required_one ${download_dependencies[@]})
-		download_dependencies="curl wget"
-		set -- $download_dependencies
-		local download_program=$(programs_required_one $@)
+		local download_program=$(programs_required_one curl wget)
 
 		if [ -z "${download_program}" ]; then
 			err "None of the following programs are installed: ${download_dependencies[@]}. One of them is required at least to download the tarball. Aborting installation."
