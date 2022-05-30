@@ -143,13 +143,13 @@ find_shebang() {
 	local shebang_program=$(programs_required_one /usr/bin/env /bin/env)
 
 	if [ -z "${shebang_program}" ]; then
-		warning "None of the following programs are installed: $@}. Trying to detect common shells..."
+		warning "None of the following programs are installed: /usr/bin/env /bin/env. Trying to detect common shells..."
 
 		# Check common shells
 		local shebang_program=$(programs_required_one /bin/sh /bin/bash /bin/dash)
 		
 		if [ -z "${shebang_program}" ]; then
-			err "None of the following programs are installed: $@. One of them is required at least to find the shell. Aborting installation."
+			err "None of the following programs are installed: /bin/sh /bin/bash /bin/dash. One of them is required at least to find the shell. Aborting installation."
 			exit 1
 		else
 			# Set up shebang command
@@ -181,7 +181,7 @@ dependencies() {
 		local download_program=$(programs_required_one curl wget)
 
 		if [ -z "${download_program}" ]; then
-			err "None of the following programs are installed: ${download_dependencies[@]}. One of them is required at least to download the tarball. Aborting installation."
+			err "None of the following programs are installed: curl wget. One of them is required at least to download the tarball. Aborting installation."
 			exit 1
 		fi
 
