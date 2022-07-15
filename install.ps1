@@ -215,9 +215,9 @@ function Install-Tarball([string]$InstallDir, [string]$Version) {
 	# Run post install scripts
 	Post-Install $InstallRoot
 
-	# Enable current user to modify PATH
-	$Principal = [System.Security.Principal.WindowsIdentity]::GetCurrent().Name
-	Allow-EnvironmentVariableUpdate $Principal
+	# Enable current user to modify PATH (TODO)
+	# $Principal = [System.Security.Principal.WindowsIdentity]::GetCurrent().Name
+	# Allow-EnvironmentVariableUpdate $Principal
 
 	# Add MetaCall CLI to PATH
 	Path-Install $InstallRoot
