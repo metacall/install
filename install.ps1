@@ -158,6 +158,18 @@ endlocal
 	# TODO: Replace in the files D:/ and D:\
 }
 
+function Allow-EnvironmentVariableUpdate([string]$Principal) {
+	# Allow necessary registry permissions to allow updating environment variables
+    $acl = get-acl -path "hklm:\SYSTEM\CurrentControlSet\Control\Session Manager\Environment"
+    $inherit = [system.security.accesscontrol.InheritanceFlags]"None"
+    $propagation = [system.security.accesscontrol.PropagationFlags]"None"
+    $rights = "QueryValues,SetValue,CreateSubKey"
+    $rule = new-object system.security.accesscontrol.registryaccessrule $Principal,$rights,$inherit,$propagation,"Allow"
+    $acl.addaccessrule($rule)
+    $acl | set-acl
+    "'$Principal' can edit environment variables."
+}
+
 function Path-Install([string]$InstallRoot) {
     # Add safely MetaCall command to the PATH (and persist it)
     
@@ -202,6 +214,10 @@ function Install-Tarball([string]$InstallDir, [string]$Version) {
 
 	# Run post install scripts
 	Post-Install $InstallRoot
+
+	# Enable current user to modify PATH
+	$Principal = [System.Security.Principal.WindowsIdentity]::GetCurrent().Name
+	Allow-EnvironmentVariableUpdate $Principal
 
 	# Add MetaCall CLI to PATH
 	Path-Install $InstallRoot
