@@ -157,27 +157,44 @@ endlocal
 
 	# TODO: Replace in the files D:/ and D:\
 }
+# TODO: Use for implementing uninstall
+function Remove-EnvPath {
+    param(
+        [Parameter(Mandatory=$true)]
+        [string] $Path,
 
-function Allow-EnvironmentVariableUpdate([string]$Principal) {
-	# Allow necessary registry permissions to allow updating environment variables
-    $acl = get-acl -path "hklm:\SYSTEM\CurrentControlSet\Control\Session Manager\Environment"
-    $inherit = [system.security.accesscontrol.InheritanceFlags]"None"
-    $propagation = [system.security.accesscontrol.PropagationFlags]"None"
-    $rights = "QueryValues,SetValue,CreateSubKey"
-    $rule = new-object system.security.accesscontrol.registryaccessrule $Principal,$rights,$inherit,$propagation,"Allow"
-    $acl.addaccessrule($rule)
-    $acl | set-acl
-    "'$Principal' can edit environment variables."
+        [ValidateSet('Machine', 'User', 'Session')]
+        [string] $Container = 'Session'
+    )
+
+    if ($Container -ne 'Session') {
+        $containerMapping = @{
+            Machine = [EnvironmentVariableTarget]::Machine
+            User = [EnvironmentVariableTarget]::User
+        }
+        $containerType = $containerMapping[$Container]
+
+        $persistedPaths = [Environment]::GetEnvironmentVariable('Path', $containerType) -split ';'
+        if ($persistedPaths -contains $Path) {
+            $persistedPaths = $persistedPaths | where { $_ -and $_ -ne $Path }
+            [Environment]::SetEnvironmentVariable('Path', $persistedPaths -join ';', $containerType)
+        }
+    }
+
+    $envPaths = $env:Path -split ';'
+    if ($envPaths -contains $Path) {
+        $envPaths = $envPaths | where { $_ -and $_ -ne $Path }
+        $env:Path = $envPaths -join ';'
+    }
 }
 
 function Path-Install([string]$InstallRoot) {
     # Add safely MetaCall command to the PATH (and persist it)
     
     # To add folder containing metacall.bat to PATH
-    $persistedPaths = [Environment]::GetEnvironmentVariable('Path', [EnvironmentVariableTarget]::Machine) -split ';'
-   if ($persistedPaths -notcontains $InstallRoot) {
-       $persistedPaths = $persistedPaths + $InstallRoot | where { $_ }
-       [Environment]::SetEnvironmentVariable('Path', $persistedPaths -join ';', [EnvironmentVariableTarget]::Machine)
+    $persistedPaths = [Environment]::GetEnvironmentVariable('PATH', [EnvironmentVariableTarget]::User) -split ';'
+   	if ($persistedPaths -notcontains $InstallRoot) {
+       [Environment]::SetEnvironmentVariable('PATH', $env:PATH+";"+$InstallRoot, [EnvironmentVariableTarget]::User)
      }
     
     # To verify if PATH isn't already added
@@ -214,10 +231,6 @@ function Install-Tarball([string]$InstallDir, [string]$Version) {
 
 	# Run post install scripts
 	Post-Install $InstallRoot
-
-	# Enable current user to modify PATH (TODO)
-	# $Principal = [System.Security.Principal.WindowsIdentity]::GetCurrent().Name
-	# Allow-EnvironmentVariableUpdate $Principal
 
 	# Add MetaCall CLI to PATH
 	Path-Install $InstallRoot
