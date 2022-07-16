@@ -33,8 +33,8 @@
 #>
 [cmdletbinding()]
 param(
-   [string]$InstallDir="<auto>",
-   [string]$Version="latest"
+	[string]$InstallDir="<auto>",
+	[string]$Version="latest"
 )
 
 Set-StrictMode -Version Latest
@@ -157,52 +157,37 @@ endlocal
 
 	# TODO: Replace in the files D:/ and D:\
 }
-# TODO: Use for implementing uninstall
-function Remove-EnvPath {
-    param(
-        [Parameter(Mandatory=$true)]
-        [string] $Path,
-
-        [ValidateSet('Machine', 'User', 'Session')]
-        [string] $Container = 'Session'
-    )
-
-    if ($Container -ne 'Session') {
-        $containerMapping = @{
-            Machine = [EnvironmentVariableTarget]::Machine
-            User = [EnvironmentVariableTarget]::User
-        }
-        $containerType = $containerMapping[$Container]
-
-        $persistedPaths = [Environment]::GetEnvironmentVariable('Path', $containerType) -split ';'
-        if ($persistedPaths -contains $Path) {
-            $persistedPaths = $persistedPaths | where { $_ -and $_ -ne $Path }
-            [Environment]::SetEnvironmentVariable('Path', $persistedPaths -join ';', $containerType)
-        }
-    }
-
-    $envPaths = $env:Path -split ';'
-    if ($envPaths -contains $Path) {
-        $envPaths = $envPaths | where { $_ -and $_ -ne $Path }
-        $env:Path = $envPaths -join ';'
-    }
-}
 
 function Path-Install([string]$InstallRoot) {
-    # Add safely MetaCall command to the PATH (and persist it)
-    
-    # To add folder containing metacall.bat to PATH
-    $persistedPaths = [Environment]::GetEnvironmentVariable('PATH', [EnvironmentVariableTarget]::User) -split ';'
-   	if ($persistedPaths -notcontains $InstallRoot) {
-       [Environment]::SetEnvironmentVariable('PATH', $env:PATH+";"+$InstallRoot, [EnvironmentVariableTarget]::User)
-     }
-    
-    # To verify if PATH isn't already added
-    $envPaths = $env:Path -split ';'
-    if ($envPaths -notcontains $InstallRoot) {
-        $envPaths = $envPaths + $InstallRoot | where { $_ }
-        $env:Path = $envPaths -join ';'
-    }
+	# Add safely MetaCall command to the PATH (and persist it)
+
+	# To add folder containing metacall.bat to PATH
+	$persistedPaths = [Environment]::GetEnvironmentVariable('PATH', [EnvironmentVariableTarget]::User) -split ';'
+	if ($persistedPaths -notcontains $InstallRoot) {
+		[Environment]::SetEnvironmentVariable('PATH', $env:PATH+";"+$InstallRoot, [EnvironmentVariableTarget]::User)
+	}
+
+	# To verify if PATH isn't already added
+	$envPaths = $env:Path -split ';'
+	if ($envPaths -notcontains $InstallRoot) {
+		$envPaths = $envPaths + $InstallRoot | where { $_ }
+		$env:Path = $envPaths -join ';'
+	}
+}
+
+# TODO: Use this for implementing uninstall
+function Path-Uninstall([string]$Path) {
+	$persistedPaths = [Environment]::GetEnvironmentVariable('PATH', [EnvironmentVariableTarget]::User) -split ';'
+	if ($persistedPaths -contains $Path) {
+		$persistedPaths = $persistedPaths | where { $_ -and $_ -ne $Path }
+		[Environment]::SetEnvironmentVariable('PATH', $persistedPaths -join ';', [EnvironmentVariableTarget]::User)
+	}
+
+	$envPaths = $env:Path -split ';'
+	if ($envPaths -contains $Path) {
+		$envPaths = $envPaths | where { $_ -and $_ -ne $Path }
+		$env:Path = $envPaths -join ';'
+	}
 }
 
 function Install-Tarball([string]$InstallDir, [string]$Version) {
