@@ -30,11 +30,16 @@
 .PARAMETER InstallDir
 	Default: %LocalAppData%\MetaCall
 	Path to where to install MetaCall. Note that binaries will be placed directly in a given directory.
+.PARAMETER FromPath
+	Default: $null
+	Path to the tarball to be installed. If specified, this parameter will override the Version parameter.
 #>
+
 [cmdletbinding()]
 param(
 	[string]$InstallDir="<auto>",
-	[string]$Version="latest"
+	[string]$Version="latest",
+	[string]$FromPath=$null
 )
 
 Set-StrictMode -Version Latest
@@ -147,11 +152,11 @@ function Post-Install([string]$InstallRoot) {
 	$InstallPythonScript = @"
 setlocal
 set "PYTHONHOME=$($InstallLocation)\runtimes\python"
-set "PIP_TARGET=$($InstallLocation)\runtimes\python\Pip"
+set "PIP_TARGET=$($InstallLocation)\runtimes\python\Lib"
 set "PATH=$($InstallLocation)\runtimes\python;$($InstallLocation)\runtimes\python\Scripts"
 $($InstallLocation)\runtimes\python\python.exe -m pip install --upgrade --force-reinstall pip
 endlocal
-"@
+"@ # Pip_target here might be incorrect here, for more info check https://github.com/metacall/distributable-windows/pull/20
 	$InstallPythonScriptOneLine = $($InstallPythonScript.Trim()).replace("`n", " && ")
 	cmd /V /C "$InstallPythonScriptOneLine"
 
@@ -193,20 +198,25 @@ function Path-Uninstall([string]$Path) {
 function Install-Tarball([string]$InstallDir, [string]$Version) {
 	$InstallRoot = Resolve-Installation-Path $InstallDir
 	$InstallOutput = Join-Path -Path $InstallRoot -ChildPath "metacall-tarball-win.zip"
-	$InstallVersion = Resolve-Version $Version
-	$InstallArchitecture = Get-CLI-Architecture
-	$DownloadUri = "https://github.com/metacall/distributable-windows/releases/download/$InstallVersion/metacall-tarball-win-$InstallArchitecture.zip"
+        # Delete directory contents if any
+        if (Test-Path $InstallRoot) {
+           Remove-Item -Recurse -Force $InstallRoot | Out-Null
+        }
 
-	# Delete directory contents if any
-	if (Test-Path $InstallRoot) {
-		Remove-Item -Recurse -Force $InstallRoot | Out-Null
+        # Create directory if it does not exist
+        New-Item -ItemType Directory -Force -Path $InstallRoot | Out-Null
+	
+        if (!$FromPath) { 
+           $InstallVersion = Resolve-Version $Version
+           $InstallArchitecture = Get-CLI-Architecture
+           $DownloadUri = "https://github.com/metacall/distributable-windows/releases/download/$InstallVersion/metacall-tarball-win-$InstallArchitecture.zip"
+
+           # Download the tarball
+           Invoke-WebRequest -Uri $DownloadUri -OutFile $InstallOutput
+	} else {
+           # Copy the tarball from the path
+           Copy-Item -Path $FromPath -Destination $InstallOutput
 	}
-
-	# Create directory if it does not exist
-	New-Item -ItemType Directory -Force -Path $InstallRoot | Out-Null
-
-	# Download the tarball
-	Invoke-WebRequest -Uri $DownloadUri -OutFile $InstallOutput
 
 	# Unzip the tarball
 	Expand-Archive -Path $InstallOutput -DestinationPath $InstallRoot -Force
