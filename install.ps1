@@ -156,7 +156,8 @@ set "PIP_TARGET=$($InstallLocation)\runtimes\python\Lib"
 set "PATH=$($InstallLocation)\runtimes\python;$($InstallLocation)\runtimes\python\Scripts"
 $($InstallLocation)\runtimes\python\python.exe -m pip install --upgrade --force-reinstall pip
 endlocal
-"@ # Pip_target here might be incorrect here, for more info check https://github.com/metacall/distributable-windows/pull/20
+"@
+	# PIP_TARGET here might be incorrect here, for more info check https://github.com/metacall/distributable-windows/pull/20
 	$InstallPythonScriptOneLine = $($InstallPythonScript.Trim()).replace("`n", " && ")
 	cmd /V /C "$InstallPythonScriptOneLine"
 
