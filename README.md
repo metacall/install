@@ -67,6 +67,7 @@ Additional parameters for the install script:
 
 - `-InstallDir <directory>`: Defines a custom folder in order to install MetaCall in, otherwise it uses `%LocalAppData%\MetaCall` by default.
 - `-Version <version>`: Version of the tarball to be downloaded. Versions are available [here](https://github.com/metacall/distributable-windows/releases). Uses latest version by default.
+- `-FromPath <path>`: Install MetaCall from an existing distributable tarball, path must point to a tarball downloaded from [releases](https://github.com/metacall/distributable-windows/releases).
 
 Example usage:
 
