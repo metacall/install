@@ -152,7 +152,7 @@ function Post-Install([string]$InstallRoot) {
 	$InstallPythonScript = @"
 setlocal
 set "PYTHONHOME=$($InstallLocation)\runtimes\python"
-set "PIP_TARGET=$($InstallLocation)\runtimes\python\Lib"
+set "PIP_TARGET=$($InstallLocation)\runtimes\python\Pip"
 set "PATH=$($InstallLocation)\runtimes\python;$($InstallLocation)\runtimes\python\Scripts"
 $($InstallLocation)\runtimes\python\python.exe -m pip install --upgrade --force-reinstall pip
 endlocal
@@ -178,6 +178,10 @@ function Path-Install([string]$InstallRoot) {
 	if ($envPaths -notcontains $InstallRoot) {
 		$envPaths = $envPaths + $InstallRoot | where { $_ }
 		$env:Path = $envPaths -join ';'
+	}
+
+	if ($env:GITHUB_ENV -ne $null) {
+		echo "PATH=$env:PATH" >> $env:GITHUB_ENV
 	}
 }
 

@@ -1,0 +1,43 @@
+name: Install Metacall on Windows Test
+
+on: [push, pull_request]
+
+jobs:
+  install-default:
+    name: Install Metacall via Default Installation
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Install Metacall
+        run: |
+          cmd.exe /c "powershell -NoProfile -ExecutionPolicy unrestricted ./install.ps1"
+      - name: Run Metacall
+        run: |
+          metacall ./test/script.js | findstr "123456"
+      - name: Python Test
+        run: |
+          metacall pip install -r test/requirements.txt | findstr "Successfully installed"
+          metacall ./test/requirements.py | findstr "123456"
+  install-from-path:
+    name: Install Metacall via Path Installation
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Download Tarball
+        shell: pwsh
+        run: |
+          $request = Invoke-WebRequest -UseBasicParsing -Method Head -Uri https://github.com/metacall/distributable-windows/releases/latest
+          $redirectUri = $request.BaseResponse.RequestMessage.RequestUri
+          $version = $redirectUri.Segments[$redirectUri.Segments.Count - 1]
+          $url = "https://github.com/metacall/distributable-windows/releases/download/$version/metacall-tarball-win-x64.zip"
+          Invoke-WebRequest $url -OutFile metacall-tarball-win-x64.zip
+      - name: Install MetaCall
+        run: |
+          cmd.exe /c "powershell -NoProfile -ExecutionPolicy unrestricted ./install.ps1 -FromPath metacall-tarball-win-x64.zip"
+      - name: Run Metacall
+        run: |
+          metacall ./test/script.js | findstr "123456"
+      - name: Python Test
+        run: |
+          metacall pip install -r test/requirements.txt | findstr "Successfully installed"
+          metacall ./test/requirements.py | findstr "123456"
