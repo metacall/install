@@ -44,7 +44,7 @@ DOCKER_HOST_PATH=`pwd`/test
 # Run Docker install with --docker-install parameter
 docker run --rm \
 	-v /var/run/docker.sock:/var/run/docker.sock \
-	-v ${DOCKER_HOST_PATH}:/metacall/source -it docker:19.03.13-dind \
+	-v ${DOCKER_HOST_PATH}:/metacall/source -t docker:19.03.13-dind \
 	sh -c "wget -O - https://raw.githubusercontent.com/metacall/install/master/install.sh | sh -s -- --docker-install \
 		&& mkdir -p ${DOCKER_HOST_PATH} \
 		&& cd ${DOCKER_HOST_PATH} \
@@ -59,7 +59,7 @@ fi
 # Run Docker install with fallback (remove wget during the install phase in order to trigger the fallback)
 docker run --rm \
 	-v /var/run/docker.sock:/var/run/docker.sock \
-	-v ${DOCKER_HOST_PATH}:/metacall/source -it docker:19.03.13-dind \
+	-v ${DOCKER_HOST_PATH}:/metacall/source -t docker:19.03.13-dind \
 	sh -c "wget https://raw.githubusercontent.com/metacall/install/master/install.sh \
 		&& rm -rf /usr/bin/wget \
 		&& chmod +x ./install.sh \
@@ -73,5 +73,6 @@ if [[ $result -ne 0 ]]; then
 	echo "Test test_docker_fallback failed. Abort."
 	exit 1
 fi
+
 
 echo "All tests passed."
