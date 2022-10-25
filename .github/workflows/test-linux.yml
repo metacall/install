@@ -9,5 +9,4 @@ jobs:
     steps:
       - uses: actions/checkout@v2
       - name: Tests
-        run: |
-          ./test.sh
+        run: ./test.sh
