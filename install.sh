@@ -194,7 +194,7 @@ dependencies() {
 
 	# Detect sudo or run with root
 	if ! program sudo && [ $(id -u) -ne 0 ]; then
-		err "You need either having sudo installed or running this script as root. Aborting installation."
+		err "You either need to have sudo installed or run this script as root. Aborting installation."
 		exit 1
 	fi
 
