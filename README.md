@@ -81,3 +81,6 @@ Example usage:
 ```sh
 ./test.sh
 ```
+
+# Troubleshooting
+Sometimes the domain _raw.githubusercontent.com_ maybe blocked by your ISP. Due to this, you may not be able to install metacall directly from previous commands. In that case, you may clone this repo and directly run [install.sh](https://github.com/metacall/install/blob/master/install.sh) for Linux and run [install.ps1](https://github.com/metacall/install/blob/master/install.ps1) for Windows.
