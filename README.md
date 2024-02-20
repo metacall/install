@@ -25,7 +25,7 @@ In order to install MetaCall in one line, curl or wget or powershell can be used
   ```sh
   wget -O - https://raw.githubusercontent.com/metacall/install/master/install.sh | sh
   ```
-- `powershell`
+- `powershell`:
 
   ```powershell
   powershell -NoProfile -ExecutionPolicy unrestricted -Command "[Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12; &([scriptblock]::Create((Invoke-WebRequest -UseBasicParsing 'https://raw.githubusercontent.com/metacall/install/master/install.ps1')))"
