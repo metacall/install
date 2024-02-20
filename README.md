@@ -16,12 +16,11 @@ The following scripts are provided in order to install MetaCall:
 - [install.ps1](https://raw.githubusercontent.com/metacall/install/master/install.ps1) `PowerShell | Windows`
 
 In order to install MetaCall in one line, curl or wget or powershell can be used:
-
-- `curl`
+- `curl`:
   ```sh
   curl -sL https://raw.githubusercontent.com/metacall/install/master/install.sh | sh
   ```
-- `wget`
+- `wget`:
   ```sh
   wget -O - https://raw.githubusercontent.com/metacall/install/master/install.sh | sh
   ```
