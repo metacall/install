@@ -395,6 +395,9 @@ cli() {
 		# Python
 		echo "export PYTHONPATH=\"${pythonpath_base}:${pythonpath_dynlink}\"" >> /usr/local/bin/metacall
 
+		# Guix generated environment variables (TODO: Move all environment variables to metacall/distributable-linux)
+		echo ". /gnu/etc/profile" >> /usr/local/bin/metacall
+
 		# Set up command line
 		echo "CMD=\`ls -a /gnu/bin | grep \"\$1\" | head -n 1\`" >> /usr/local/bin/metacall
 
@@ -436,6 +439,9 @@ cli() {
 
 		# Python
 		echo "export PYTHONPATH=\"${pythonpath_base}:${pythonpath_dynlink}\"" | sudo tee -a /usr/local/bin/metacall > /dev/null
+
+		# Guix generated environment variables (TODO: Move all environment variables to metacall/distributable-linux)
+		echo ". /gnu/etc/profile" | sudo tee -a /usr/local/bin/metacall > /dev/null
 
 		# Set up command line
 		echo "CMD=\`ls -a /gnu/bin | grep \"\$1\" | head -n 1\`" | sudo tee -a /usr/local/bin/metacall > /dev/null
