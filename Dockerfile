@@ -28,7 +28,7 @@ LABEL copyright.name="Vicente Eduardo Ferrer Garcia" \
 	version="0.1"
 
 # Debian Base (root)
-FROM debian:trixie-slim AS debian_root
+FROM debian:bookworm-slim AS debian_root
 
 COPY test/ /test/
 
