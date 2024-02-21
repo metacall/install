@@ -50,7 +50,7 @@ USER user
 # Test install debian with root and wget from path
 FROM debian_root AS test_debian_root_wget_from_path
 
-RUN wget https://github.com/metacall/distributable-linux/releases/download/v0.4.8/metacall-tarball-linux-amd64.tar.gz \
+RUN wget https://github.com/metacall/distributable-linux/releases/download/v0.7.0/metacall-tarball-linux-amd64.tar.gz \
 	&& wget -O - https://raw.githubusercontent.com/metacall/install/master/install.sh | bash -s -- --from-path /metacall-tarball-linux-amd64.tar.gz \
 	&& metacall /test/script.js | grep '123456'
 
