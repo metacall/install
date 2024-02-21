@@ -408,7 +408,7 @@ cli() {
 		echo "fi" >> /usr/local/bin/metacall
 
 		# CLI
-		echo "${cli}/metacallcli \$@" >> /usr/local/bin/metacall
+		echo "${cli}/bin/metacallcli \$@" >> /usr/local/bin/metacall
 		chmod 755 /usr/local/bin/metacall
 	else
 		# Create folder if it does not exist
@@ -453,7 +453,7 @@ cli() {
 		echo "fi" | sudo tee -a /usr/local/bin/metacall > /dev/null
 
 		# CLI
-		echo "${cli}/metacallcli \$@" | sudo tee -a /usr/local/bin/metacall > /dev/null
+		echo "${cli}/bin/metacallcli \$@" | sudo tee -a /usr/local/bin/metacall > /dev/null
 		sudo chmod 755 /usr/local/bin/metacall
 	fi
 
