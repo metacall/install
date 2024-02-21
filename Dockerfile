@@ -102,7 +102,7 @@ COPY test/ /test/
 
 # Install dependencies and set up a sudo user without password
 RUN dnf update -y \
-	&& dnf install -y sudo curl wget ca-certificates findutils \
+	&& dnf install -y sudo curl wget ca-certificates findutils util-linux \
 	&& dnf clean all \
 	&& adduser user \
 	&& usermod -aG wheel user \
