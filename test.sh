@@ -31,8 +31,14 @@ for test in ${TEST_LIST}; do
 		echo "Test ${test} failed. Abort."
 		exit 1
 	fi
+
 	# Clean test on each iteration in order to not clog the disk
 	docker rmi metacall/install:${test}
+
+	# GitHub action has a limited size and the tests need to be cleaned on each iteration
+	if [[ -z "$GITHUB_ACTIONS" ]]; then
+		docker system prune --all
+	fi
 done
 
 # Test Docker Install
