@@ -32,13 +32,8 @@ for test in ${TEST_LIST}; do
 		exit 1
 	fi
 
-	# GitHub action has a limited size and the tests need to be cleaned on each iteration
-	if [[ -z "$GITHUB_ACTIONS" ]]; then
-		docker system prune -f --all
-	else
-		# Clean test on each iteration in order to not clog the disk
-		docker rmi metacall/install:${test}
-	fi
+	# Clean test on each iteration in order to not clog the disk
+	docker system prune -f --all
 done
 
 # Test Docker Install
