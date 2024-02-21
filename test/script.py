@@ -32,7 +32,7 @@ def fetch_https(url: str):
 		response = conn.getresponse()
 		data = response.read()
 		conn.close()
-		return data
+		return [x for x in data[:15]]
 	except Exception as e:
 		print(e)
 		sys.stdout.flush()

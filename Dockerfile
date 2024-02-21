@@ -207,14 +207,14 @@ RUN wget --no-check-certificate -O - https://raw.githubusercontent.com/metacall/
 FROM test_debian_root_curl AS test_debian_root_certificates
 
 RUN export WEB_RESULT="`printf 'load py /test/script.py\ninspect\ncall fetch_https(\"www.google.com\")\nexit' | metacall`" \
-	&& export WEB_BUFFER="{\"data\":[60,33,100,111,99,116,121,112,101,32,104,116,109,108,62" \
+	&& export WEB_BUFFER="[\n   60,  33, 100, 111, 99,\n  116, 121, 112, 101, 32,\n  104, 116, 109, 108, 62\n]" \
 	&& [ -z "${WEB_RESULT##*$WEB_BUFFER*}" ] || exit 1
 
 # Test certificates in Debian with user (comparing against <!doctype html> in buffer format)
 FROM test_debian_user_curl AS test_debian_user_certificates
 
 RUN export WEB_RESULT="`printf 'load py /test/script.py\ninspect\ncall fetch_https(\"www.google.com\")\nexit' | metacall`" \
-	&& export WEB_BUFFER="{\"data\":[60,33,100,111,99,116,121,112,101,32,104,116,109,108,62" \
+	&& export WEB_BUFFER="[\n   60,  33, 100, 111, 99,\n  116, 121, 112, 101, 32,\n  104, 116, 109, 108, 62\n]" \
 	&& [ -z "${WEB_RESULT##*$WEB_BUFFER*}" ] || exit 1
 
 # Test update Alpine
