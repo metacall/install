@@ -358,7 +358,6 @@ uncompress() {
 
 # Install the CLI
 cli() {
-	local cli="/gnu/store/`ls /gnu/store/ | grep metacall | head -n 1`"
 	local pythonpath_base="/gnu/store/`ls /gnu/store/ | grep python-3 | head -n 1`/lib"
 	local pythonpath_dynlink="`ls -d ${pythonpath_base}/*/ | grep 'python3\.[0-9]*\/$'`lib-dynload"
 
@@ -374,19 +373,11 @@ cli() {
 		echo "${CMD_SHEBANG}" >> /usr/local/bin/metacall
 
 		# MetaCall Environment
-		echo "export LOADER_LIBRARY_PATH=\"${cli}/lib\"" >> /usr/local/bin/metacall
-		echo "export SERIAL_LIBRARY_PATH=\"${cli}/lib\"" >> /usr/local/bin/metacall
-		echo "export DETOUR_LIBRARY_PATH=\"${cli}/lib\"" >> /usr/local/bin/metacall
-		echo "export PORT_LIBRARY_PATH=\"${cli}/lib\"" >> /usr/local/bin/metacall
-		echo "export CONFIGURATION_PATH=\"${cli}/configurations/global.json\"" >> /usr/local/bin/metacall
 		echo "export LOADER_SCRIPT_PATH=\"\${LOADER_SCRIPT_PATH:-\`pwd\`}\"" >> /usr/local/bin/metacall
 
 		# Certificates
-		echo "export SSL_CERT_DIR=\"/gnu/etc/ssl/certs\"" >> /usr/local/bin/metacall
-		echo "export SSL_CERT_FILE=\"/gnu/etc/ssl/certs/ca-certificates.crt\"" >> /usr/local/bin/metacall
 		echo "export GIT_SSL_FILE=\"/gnu/etc/ssl/certs/ca-certificates.crt\"" >> /usr/local/bin/metacall
 		echo "export GIT_SSL_CAINFO=\"/gnu/etc/ssl/certs/ca-certificates.crt\"" >> /usr/local/bin/metacall
-		echo "export CURL_CA_BUNDLE=\"/gnu/etc/ssl/certs/ca-certificates.crt\"" >> /usr/local/bin/metacall
 
 		# Locale
 		echo "export GUIX_LOCPATH=\"/gnu/lib/locale\"" >> /usr/local/bin/metacall
@@ -408,7 +399,7 @@ cli() {
 		echo "fi" >> /usr/local/bin/metacall
 
 		# CLI
-		echo "${cli}/bin/metacallcli \$@" >> /usr/local/bin/metacall
+		echo "/gnu/bin/metacallcli \$@" >> /usr/local/bin/metacall
 		chmod 755 /usr/local/bin/metacall
 	else
 		# Create folder if it does not exist
@@ -419,19 +410,11 @@ cli() {
 		echo "${CMD_SHEBANG}" | sudo tee -a /usr/local/bin/metacall > /dev/null
 
 		# MetaCall Environment
-		echo "export LOADER_LIBRARY_PATH=\"${cli}/lib\"" | sudo tee -a /usr/local/bin/metacall > /dev/null
-		echo "export SERIAL_LIBRARY_PATH=\"${cli}/lib\"" | sudo tee -a /usr/local/bin/metacall > /dev/null
-		echo "export DETOUR_LIBRARY_PATH=\"${cli}/lib\"" | sudo tee -a /usr/local/bin/metacall > /dev/null
-		echo "export PORT_LIBRARY_PATH=\"${cli}/lib\"" | sudo tee -a /usr/local/bin/metacall > /dev/null
-		echo "export CONFIGURATION_PATH=\"${cli}/configurations/global.json\"" | sudo tee -a /usr/local/bin/metacall > /dev/null
 		echo "export LOADER_SCRIPT_PATH=\"\${LOADER_SCRIPT_PATH:-\`pwd\`}\"" | sudo tee -a /usr/local/bin/metacall > /dev/null
 
 		# Certificates
-		echo "export SSL_CERT_DIR=\"/gnu/etc/ssl/certs\"" | sudo tee -a /usr/local/bin/metacall > /dev/null
-		echo "export SSL_CERT_FILE=\"/gnu/etc/ssl/certs/ca-certificates.crt\"" | sudo tee -a /usr/local/bin/metacall > /dev/null
 		echo "export GIT_SSL_FILE=\"/gnu/etc/ssl/certs/ca-certificates.crt\"" | sudo tee -a /usr/local/bin/metacall > /dev/null
 		echo "export GIT_SSL_CAINFO=\"/gnu/etc/ssl/certs/ca-certificates.crt\"" | sudo tee -a /usr/local/bin/metacall > /dev/null
-		echo "export CURL_CA_BUNDLE=\"/gnu/etc/ssl/certs/ca-certificates.crt\"" | sudo tee -a /usr/local/bin/metacall > /dev/null
 
 		# Locale
 		echo "export GUIX_LOCPATH=\"/gnu/lib/locale\"" | sudo tee -a /usr/local/bin/metacall > /dev/null
@@ -453,7 +436,7 @@ cli() {
 		echo "fi" | sudo tee -a /usr/local/bin/metacall > /dev/null
 
 		# CLI
-		echo "${cli}/bin/metacallcli \$@" | sudo tee -a /usr/local/bin/metacall > /dev/null
+		echo "/gnu/bin/metacallcli \$@" | sudo tee -a /usr/local/bin/metacall > /dev/null
 		sudo chmod 755 /usr/local/bin/metacall
 	fi
 
