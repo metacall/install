@@ -34,7 +34,7 @@ for test in ${TEST_LIST}; do
 
 	# Clean test on each iteration in order to not clog the disk
 	docker rmi metacall/install:${test}
-	docker system prune --all
+	docker system prune -f --all
 done
 
 # Test Docker Install
