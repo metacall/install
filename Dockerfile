@@ -28,7 +28,7 @@ LABEL copyright.name="Vicente Eduardo Ferrer Garcia" \
 	version="0.1"
 
 # Debian Base (root)
-FROM debian:bullseye-slim AS debian_root
+FROM debian:trixie-slim AS debian_root
 
 COPY test/ /test/
 
@@ -96,7 +96,7 @@ FROM test_debian_user_wget AS test_debian_user_pythonpath
 RUN metacall /test/async.py | grep 'Async Done'
 
 # Fedora Base (root)
-FROM fedora:33 AS fedora_root
+FROM fedora:latest AS fedora_root
 
 COPY test/ /test/
 
@@ -140,7 +140,7 @@ RUN wget -O - https://raw.githubusercontent.com/metacall/install/master/install.
 	&& metacall /test/script.js | grep '123456'
 
 # Alpine Base (root)
-FROM alpine:3.12.1 AS alpine_root
+FROM alpine:latest AS alpine_root
 
 COPY test/ /test/
 
@@ -183,7 +183,7 @@ RUN wget -O - https://raw.githubusercontent.com/metacall/install/master/install.
 	&& metacall /test/script.js | grep '123456'
 
 # BusyBox Base
-FROM busybox:1.32.0-uclibc AS test_busybox
+FROM busybox:stable-uclibc AS test_busybox
 
 # Test install BusyBox fail due to lack of SSL implementation in wget (if it fails, then the test passes)
 FROM test_busybox AS test_busybox_fail
