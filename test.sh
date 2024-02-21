@@ -31,10 +31,7 @@ for test in ${TEST_LIST}; do
 		echo "Test ${test} failed. Abort."
 		exit 1
 	fi
-done
-
-# Clean tests
-for test in ${TEST_LIST}; do
+	# Clean test on each iteration in order to not clog the disk
 	docker rmi metacall/install:${test}
 done
 
