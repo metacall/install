@@ -543,6 +543,86 @@ uninstall() {
 	fi
 }
 
+install_metacall_deploy() {
+
+	title "\n Metacall Deploy CLI Installation"
+
+    # Installation directory
+    local install_dir="/gnu/local/metacall-deploy"
+
+    # Create the directory if it does not exist
+    mkdir -p ${install_dir}
+
+    # Install @metacall/deploy
+    metacall npm install --global --prefix=${install_dir} @metacall/deploy
+
+    # Change to the /gnu/bin directory
+    cd /gnu/bin
+
+    # Create the deploy script
+	# We can remove "node" from next line once "--" operator is implemented
+    echo '#!/bin/bash' > deploy
+    echo "node ${install_dir}/lib/node_modules/@metacall/deploy/dist/index.js \$@" >> deploy
+
+    # Make the deploy script executable
+    chmod +x deploy
+
+	# Check if the installation was successful
+    if metacall deploy --version &> /dev/null; then
+		printf "%b\n"
+        success "metcall deploy has been installed." \
+		"Run 'metacall deploy --help' command for more information about metcall deploy cli commands."
+    else
+        err "\n Failed to install metacall deploy"
+    fi
+}
+
+install_metacall_faas() {
+
+	title "\n Metacall FAAS Installation"
+
+    # Installation directory
+    local install_dir="/gnu/local/metacall-faas"
+    local faas_zip="/tmp/faas.zip"
+    local faas_url="https://github.com/metacall/faas/archive/refs/heads/master.zip"
+
+    # Create the installation directory if it does not exist
+    mkdir -p ${install_dir}
+
+    # Download the metacall/faas repository as a zip file
+	if curl -L -o ${faas_zip} ${faas_url}; then
+		# Unzip the downloaded file
+		unzip ${faas_zip} -d ${install_dir}
+
+		# Move to the unzipped directory
+		cd "${install_dir}/faas-master"
+
+		# Install dependencies and build the project
+		metacall npm install
+		metacall npm run build
+
+		# Check if metacall faas was built successfully
+		if [ -f "${install_dir}/faas-master/dist/index.js" ]; then
+
+			# Create the faas script in /gnu/bin
+			echo '#!/bin/bash' > /gnu/bin/faas
+			echo "node ${install_dir}/faas-master/dist/index.js" >> /gnu/bin/faas
+			chmod +x /gnu/bin/faas
+
+			printf "%b\n"
+			success "metcall faas has been installed." \
+			"Run 'metacall faas to run the local FAAS server."
+		else
+			err "Failed to build metacall faas"
+		fi
+	else
+		err "Failed to download Metacall FAAS. Check your network connection and try again."
+	fi
+
+    # Cleanup
+    rm ${faas_zip}
+}
+
 main() {
 	# Check if the tarball is correct
 	if [ $OPT_FROM_PATH -eq 1 ]; then
@@ -641,6 +721,10 @@ main() {
 			"  The command 'metacall' will be available in your subsequent terminal instances." \
 			"  Run 'source /etc/profile' to make 'metacall' command available to your current terminal instance."
 	fi
+
+	# Installing Additional Packages
+	install_metacall_deploy
+	install_metacall_faas
 
 	# Show information
 	success "MetaCall has been installed." \
