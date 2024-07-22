@@ -577,50 +577,65 @@ install_metacall_deploy() {
     fi
 }
 
-install_metacall_faas() {
+install_metacall_additional_packages() {
+	local component=$1
+	local install_dir="/gnu/local/${component}"
+	local bin_file="/gnu/bin/${component}"
+	local install_success=false
 
-	title "\n Metacall FAAS Installation"
+	# Locate shebang
+	find_shebang
 
-    # Installation directory
-    local install_dir="/gnu/local/metacall-faas"
-    local faas_zip="/tmp/faas.zip"
-    local faas_url="https://github.com/metacall/faas/archive/refs/heads/master.zip"
+	title "\n Metacall ${component^} Installation"
 
-    # Create the installation directory if it does not exist
-    mkdir -p ${install_dir}
+	# Create the installation directory if it does not exist
+	mkdir -p ${install_dir}
 
-    # Download the metacall/faas repository as a zip file
-	if curl -L -o ${faas_zip} ${faas_url}; then
-		# Unzip the downloaded file
-		unzip ${faas_zip} -d ${install_dir}
+	if [ "$component" == "deploy" ]; then
+		metacall npm install --global --prefix=${install_dir} @metacall/deploy
+		echo -e "#!${CMD_SHEBANG}\nmetacall node ${install_dir}/lib/node_modules/@metacall/deploy/dist/index.js \$@" > ${bin_file}
+		install_success=$(metacall deploy --version &> /dev/null && echo true || echo false)
+	elif [ "$component" == "faas" ]; then
+		local faas_zip="/tmp/faas.zip"
+		local author="metacall"
+		local repo="faas"
 
-		# Move to the unzipped directory
-		cd "${install_dir}/faas-master"
+		local tags=$(curl -s "https://api.github.com/repos/$author/$repo/tags" | jq -r '.[].name')
+		local latest_tag=$(echo "$tags" | head -n 1)
+		local version_number=${latest_tag#v}
+		local faas_url="https://github.com/metacall/faas/archive/refs/tags/$latest_tag.zip"
 
-		# Install dependencies and build the project
-		metacall npm install
-		metacall npm run build
+		if curl -L -o ${faas_zip} ${faas_url}; then
+			unzip ${faas_zip} -d ${install_dir}
+			cd "${install_dir}/${repo}-${version_number}"
+			metacall npm install
+			metacall npm run build
 
-		# Check if metacall faas was built successfully
-		if [ -f "${install_dir}/faas-master/dist/index.js" ]; then
-
-			# Create the faas script in /gnu/bin
-			echo '#!/bin/bash' > /gnu/bin/faas
-			echo "node ${install_dir}/faas-master/dist/index.js" >> /gnu/bin/faas
-			chmod +x /gnu/bin/faas
-
-			printf "%b\n"
-			success "metcall faas has been installed." \
-			"Run 'metacall faas to run the local FAAS server."
+			if [ -f "${install_dir}/${repo}-${version_number}/dist/index.js" ]; then
+				echo -e "#!${CMD_SHEBANG}\nmetacall node ${install_dir}/${repo}-${version_number}/dist/index.js" > ${bin_file}
+				install_success=true
+			else
+				install_success=false
+			fi
+			rm ${faas_zip}
 		else
-			err "Failed to build metacall faas"
+			err "Failed to download Metacall FAAS. Check your network connection and try again."
+			return
 		fi
 	else
-		err "Failed to download Metacall FAAS. Check your network connection and try again."
+		err "Unknown Package: ${component}"
+		return
 	fi
 
-    # Cleanup
-    rm ${faas_zip}
+	chmod +x ${bin_file}
+
+	if [ "$install_success" == "true" ]; then
+		printf "%b\n"
+		success "metcall ${component} has been installed." \
+		"Run 'metacall ${component} --help' for more information about Metacall ${component} commands."
+	else
+		err "Failed to install Metacall ${component}"
+	fi
 }
 
 main() {
@@ -722,9 +737,6 @@ main() {
 			"  Run 'source /etc/profile' to make 'metacall' command available to your current terminal instance."
 	fi
 
-	# Installing Additional Packages
-	install_metacall_deploy
-	install_metacall_faas
 
 	# Show information
 	success "MetaCall has been installed." \
@@ -733,3 +745,7 @@ main() {
 
 # Run main
 main
+
+# Installing Additional Packages
+install_metacall_additional_packages deploy
+install_metacall_additional_packages faas
