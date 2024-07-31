@@ -543,6 +543,65 @@ uninstall() {
 	fi
 }
 
+install_metacall_additional_packages() {
+	local component=$1
+	local install_dir="/gnu/local/${component}"
+	local bin_file="/gnu/bin/${component}"
+	local install_success=false
+
+	# Locate shebang
+	find_shebang
+
+	title "\n Metacall ${component^} Installation"
+
+	# Create the installation directory if it does not exist
+	mkdir -p ${install_dir}
+
+	if [ "$component" == "deploy" ]; then
+		metacall npm install --global --prefix=${install_dir} @metacall/deploy
+		echo -e "#!${CMD_SHEBANG}\nmetacall node ${install_dir}/lib/node_modules/@metacall/deploy/dist/index.js \$@" > ${bin_file}
+	elif [ "$component" == "faas" ]; then
+		local faas_zip="/tmp/faas.zip"
+		local author="metacall"
+		local repo="faas"
+
+		local tags=$(curl -s "https://api.github.com/repos/$author/$repo/tags" | jq -r '.[].name')
+		local latest_tag=$(echo "$tags" | head -n 1)
+		local version_number=${latest_tag#v}
+		local faas_url="https://github.com/metacall/faas/archive/refs/tags/$latest_tag.zip"
+
+		if curl -L -o ${faas_zip} ${faas_url}; then
+			unzip ${faas_zip} -d ${install_dir}
+			cd "${install_dir}/${repo}-${version_number}"
+			metacall npm install
+			metacall npm run build
+
+			if [ -f "${install_dir}/${repo}-${version_number}/dist/index.js" ]; then
+				echo -e "#!${CMD_SHEBANG}\nmetacall node ${install_dir}/${repo}-${version_number}/dist/index.js \$@" > ${bin_file}
+			fi
+
+			rm ${faas_zip}
+		else
+			err "Failed to download Metacall FAAS. Check your network connection and try again."
+			return
+		fi
+	else
+		err "Unknown Package: ${component}"
+		return
+	fi
+
+	chmod +x ${bin_file}
+	install_success=$(metacall $component --version | grep -E '^v|^V' > /dev/null && echo true || echo false)
+
+	if [ "$install_success" == "true" ]; then
+		printf "%b\n"
+		success "metcall ${component} has been installed." \
+		"Run 'metacall ${component} --help' for more information about Metacall ${component} commands."
+	else
+		err "Failed to install Metacall ${component}"
+	fi
+}
+
 main() {
 	# Check if the tarball is correct
 	if [ $OPT_FROM_PATH -eq 1 ]; then
@@ -642,6 +701,7 @@ main() {
 			"  Run 'source /etc/profile' to make 'metacall' command available to your current terminal instance."
 	fi
 
+
 	# Show information
 	success "MetaCall has been installed." \
 		"  Run 'metacall' command for start the CLI and type help for more information about CLI commands."
@@ -649,3 +709,7 @@ main() {
 
 # Run main
 main
+
+# Installing Additional Packages
+install_metacall_additional_packages deploy
+install_metacall_additional_packages faas
