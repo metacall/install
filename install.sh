@@ -543,40 +543,6 @@ uninstall() {
 	fi
 }
 
-install_metacall_deploy() {
-
-	title "\n Metacall Deploy CLI Installation"
-
-    # Installation directory
-    local install_dir="/gnu/local/metacall-deploy"
-
-    # Create the directory if it does not exist
-    mkdir -p ${install_dir}
-
-    # Install @metacall/deploy
-    metacall npm install --global --prefix=${install_dir} @metacall/deploy
-
-    # Change to the /gnu/bin directory
-    cd /gnu/bin
-
-    # Create the deploy script
-	# We can remove "node" from next line once "--" operator is implemented
-    echo '#!/bin/bash' > deploy
-    echo "node ${install_dir}/lib/node_modules/@metacall/deploy/dist/index.js \$@" >> deploy
-
-    # Make the deploy script executable
-    chmod +x deploy
-
-	# Check if the installation was successful
-    if metacall deploy --version &> /dev/null; then
-		printf "%b\n"
-        success "metcall deploy has been installed." \
-		"Run 'metacall deploy --help' command for more information about metcall deploy cli commands."
-    else
-        err "\n Failed to install metacall deploy"
-    fi
-}
-
 install_metacall_additional_packages() {
 	local component=$1
 	local install_dir="/gnu/local/${component}"
@@ -594,7 +560,6 @@ install_metacall_additional_packages() {
 	if [ "$component" == "deploy" ]; then
 		metacall npm install --global --prefix=${install_dir} @metacall/deploy
 		echo -e "#!${CMD_SHEBANG}\nmetacall node ${install_dir}/lib/node_modules/@metacall/deploy/dist/index.js \$@" > ${bin_file}
-		install_success=$(metacall deploy --version &> /dev/null && echo true || echo false)
 	elif [ "$component" == "faas" ]; then
 		local faas_zip="/tmp/faas.zip"
 		local author="metacall"
@@ -612,11 +577,9 @@ install_metacall_additional_packages() {
 			metacall npm run build
 
 			if [ -f "${install_dir}/${repo}-${version_number}/dist/index.js" ]; then
-				echo -e "#!${CMD_SHEBANG}\nmetacall node ${install_dir}/${repo}-${version_number}/dist/index.js" > ${bin_file}
-				install_success=true
-			else
-				install_success=false
+				echo -e "#!${CMD_SHEBANG}\nmetacall node ${install_dir}/${repo}-${version_number}/dist/index.js \$@" > ${bin_file}
 			fi
+
 			rm ${faas_zip}
 		else
 			err "Failed to download Metacall FAAS. Check your network connection and try again."
@@ -628,6 +591,7 @@ install_metacall_additional_packages() {
 	fi
 
 	chmod +x ${bin_file}
+	install_success=$(metacall $component --version | grep -E '^v|^V' > /dev/null && echo true || echo false)
 
 	if [ "$install_success" == "true" ]; then
 		printf "%b\n"
