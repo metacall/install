@@ -561,17 +561,19 @@ install_metacall_additional_packages() {
 		metacall npm install --global --prefix=${install_dir} @metacall/deploy
 		echo -e "#!${CMD_SHEBANG}\nmetacall node ${install_dir}/lib/node_modules/@metacall/deploy/dist/index.js \$@" > ${bin_file}
 	elif [ "$component" == "faas" ]; then
-		local faas_zip="/tmp/faas.zip"
+		local faas_tarball="/tmp/faas.tar.gz"
 		local author="metacall"
 		local repo="faas"
 
-		local tags=$(curl -s "https://api.github.com/repos/$author/$repo/tags" | jq -r '.[].name')
+		# Fetch tags using curl and grep instead of jq
+		local tags=$(curl -s "https://api.github.com/repos/$author/$repo/tags" | grep '"name"' | sed -E 's/.*"([^"]+)".*/\1/')
 		local latest_tag=$(echo "$tags" | head -n 1)
 		local version_number=${latest_tag#v}
-		local faas_url="https://github.com/metacall/faas/archive/refs/tags/$latest_tag.zip"
+		local faas_url="https://github.com/metacall/faas/archive/refs/tags/${latest_tag}.tar.gz"
 
-		if curl -L -o ${faas_zip} ${faas_url}; then
-			unzip ${faas_zip} -d ${install_dir}
+		# Download and extract using tar
+		if curl -L -o ${faas_tarball} ${faas_url}; then
+			tar -xzf ${faas_tarball} -C ${install_dir}
 			cd "${install_dir}/${repo}-${version_number}"
 			metacall npm install
 			metacall npm run build
@@ -580,7 +582,7 @@ install_metacall_additional_packages() {
 				echo -e "#!${CMD_SHEBANG}\nmetacall node ${install_dir}/${repo}-${version_number}/dist/index.js \$@" > ${bin_file}
 			fi
 
-			rm ${faas_zip}
+			rm ${faas_tarball}
 		else
 			err "Failed to download Metacall FAAS. Check your network connection and try again."
 			return
