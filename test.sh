@@ -17,15 +17,54 @@
 #	See the License for the specific language governing permissions and
 #	limitations under the License.
 
+set -euox pipefail
+
 # Run with Buildkit
 export DOCKER_BUILDKIT=1
+
+# Get current root folder
+SCRIPT_DIR=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" &> /dev/null && pwd)
 
 # Get test list (any target prefixed by 'test_')
 TEST_LIST=$(cat Dockerfile | grep -v '^#' | grep 'AS test_' | awk '{print $4}')
 
+# Run a local server static file server for tricking the tests into using the
+# current version of install.sh script instead the one from GitHub URL
+docker build -t metacall/install_nginx -f proxy/Dockerfile .
+
+# Stop the container if it is already running
+if [[ $(docker ps -f "name=metacall_install_nginx" --format '{{.Names}}') == "metacall_install_nginx" ]]; then
+	docker stop metacall_install_nginx
+fi
+
+# Run the proxy for serving install.sh locally under raw.githubusercontent.com domain
+docker run --rm \
+	--name metacall_install_nginx \
+	-p 80:80 \
+	-p 443:443 \
+	--network host \
+	-d metacall/install_nginx
+
+# Define default certificate setup
+METACALL_INSTALL_CERTS="${METACALL_INSTALL_CERTS:-certificates_local}"
+
+# Fake the DNS entry pointing to our interceptor proxy when testing locally
+if [[ "${METACALL_INSTALL_CERTS}" == "certificates_local" ]]; then
+	METACALL_INSTALL_DNS=--add-host="raw.githubusercontent.com:127.0.0.1"
+else
+	METACALL_INSTALL_DNS=
+fi
+
 # Run tests
 for test in ${TEST_LIST}; do
-	docker build --no-cache --progress=plain --target ${test} -t metacall/install:${test} .
+	docker build \
+		--no-cache \
+		--progress=plain \
+		--target ${test} \
+		--build-arg "METACALL_INSTALL_CERTS=${METACALL_INSTALL_CERTS}" \
+		--network host \
+		${METACALL_INSTALL_DNS} \
+		-t metacall/install:${test} .
 	result=$?
 	if [[ $result -ne 0 ]]; then
 		echo "Test ${test} failed. Abort."
@@ -36,8 +75,11 @@ for test in ${TEST_LIST}; do
 	docker system prune -f --all
 done
 
+# Clear the proxy
+docker stop metacall_install_nginx
+
 # Test Docker Install
-DOCKER_HOST_PATH=`pwd`/test
+DOCKER_HOST_PATH="${SCRIPT_DIR}/test"
 
 # Run Docker install with --docker-install parameter
 docker run --rm \
