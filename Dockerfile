@@ -114,7 +114,7 @@ RUN metacall /test/async.py | grep 'Async Done'
 # Fedora Base (root)
 FROM fedora:latest AS fedora_root
 
-COPY --from=certificates /etc/ssl/certs/ /etc/ssl/certs/
+COPY --from=certificates /etc/ssl/certs/ /etc/pki/ca-trust/source/anchors/
 
 COPY test/ /test/
 
