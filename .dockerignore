@@ -1,2 +1,4 @@
 **
 !test
+!proxy/nginx.conf
+!install.sh

@@ -17,6 +17,8 @@
 #	limitations under the License.
 #
 
+ARG METACALL_INSTALL_CERTS=debian_certs_local
+
 FROM scratch AS testing
 
 # Image descriptor
@@ -27,8 +29,20 @@ LABEL copyright.name="Vicente Eduardo Ferrer Garcia" \
 	vendor="MetaCall Inc." \
 	version="0.1"
 
+# Proxy certificates
+FROM metacall/install_nginx AS debian_certs_local
+
+# Remote certificates
+FROM debian:bookworm-slim AS debian_certs_remote
+
+RUN mkdir -p /etc/ssl/certs/
+
+FROM ${METACALL_INSTALL_CERTS} AS debian_certs
+
 # Debian Base (root)
 FROM debian:bookworm-slim AS debian_root
+
+COPY --from=debian_certs /etc/ssl/certs/ /etc/ssl/certs/
 
 COPY test/ /test/
 
@@ -36,6 +50,7 @@ COPY test/ /test/
 RUN apt-get update \
 	&& apt-get install -y --no-install-recommends sudo curl wget ca-certificates \
 	&& apt-get clean && rm -rf /var/lib/apt/lists/ \
+	&& update-ca-certificates \
 	&& adduser --disabled-password --gecos "" user \
 	&& usermod -aG sudo user \
 	&& echo "user ALL=(ALL) NOPASSWD:ALL" >> /etc/sudoers \
