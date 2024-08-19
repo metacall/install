@@ -17,6 +17,8 @@
 #	limitations under the License.
 #
 
+ARG METACALL_INSTALL_CERTS=certificates_local
+
 FROM scratch AS testing
 
 # Image descriptor
@@ -27,8 +29,20 @@ LABEL copyright.name="Vicente Eduardo Ferrer Garcia" \
 	vendor="MetaCall Inc." \
 	version="0.1"
 
+# Proxy certificates
+FROM metacall/install_nginx AS certificates_local
+
+# Remote certificates
+FROM debian:bookworm-slim AS certificates_remote
+
+RUN mkdir -p /etc/ssl/certs/
+
+FROM ${METACALL_INSTALL_CERTS} AS certificates
+
 # Debian Base (root)
 FROM debian:bookworm-slim AS debian_root
+
+COPY --from=certificates /etc/ssl/certs/ /etc/ssl/certs/
 
 COPY test/ /test/
 
@@ -36,6 +50,8 @@ COPY test/ /test/
 RUN apt-get update \
 	&& apt-get install -y --no-install-recommends sudo curl wget ca-certificates \
 	&& apt-get clean && rm -rf /var/lib/apt/lists/ \
+	&& printf "\nca_directory=/etc/ssl/certs" | tee -a /etc/wgetrc \
+	&& update-ca-certificates \
 	&& adduser --disabled-password --gecos "" user \
 	&& usermod -aG sudo user \
 	&& echo "user ALL=(ALL) NOPASSWD:ALL" >> /etc/sudoers \
@@ -64,6 +80,13 @@ RUN curl -sL https://raw.githubusercontent.com/metacall/install/master/install.s
 	&& metacall deploy --version | grep -e '^v.*\..*\..*' \
 	&& metacall faas --version | grep -e '^v.*\..*\..*'
 
+# Test certificates in Debian with root (comparing against <!doctype html> in buffer format)
+FROM test_debian_root_curl AS test_debian_root_certificates
+
+RUN export WEB_RESULT="`printf 'load py /test/script.py\ninspect\ncall fetch_https(\"www.google.com\")\nexit' | metacall`" \
+	&& export WEB_BUFFER="[\n   60,  33, 100, 111, 99,\n  116, 121, 112, 101, 32,\n  104, 116, 109, 108, 62\n]" \
+	&& [ -z "${WEB_RESULT##*$WEB_BUFFER*}" ] || exit 1
+
 # Test install Debian with root and wget
 FROM debian_root AS test_debian_root_wget
 
@@ -79,6 +102,13 @@ RUN curl -sL https://raw.githubusercontent.com/metacall/install/master/install.s
 	&& metacall /test/script.js | grep '123456' \
 	&& metacall deploy --version | grep -e '^v.*\..*\..*' \
 	&& metacall faas --version | grep -e '^v.*\..*\..*'
+
+# Test certificates in Debian with user (comparing against <!doctype html> in buffer format)
+FROM test_debian_user_curl AS test_debian_user_certificates
+
+RUN export WEB_RESULT="`printf 'load py /test/script.py\ninspect\ncall fetch_https(\"www.google.com\")\nexit' | metacall`" \
+	&& export WEB_BUFFER="[\n   60,  33, 100, 111, 99,\n  116, 121, 112, 101, 32,\n  104, 116, 109, 108, 62\n]" \
+	&& [ -z "${WEB_RESULT##*$WEB_BUFFER*}" ] || exit 1
 
 # Test install Debian without root and wget
 FROM debian_user AS test_debian_user_wget
@@ -110,12 +140,16 @@ RUN metacall /test/async.py | grep 'Async Done'
 # Fedora Base (root)
 FROM fedora:latest AS fedora_root
 
+COPY --from=certificates /etc/ssl/certs/ /etc/pki/ca-trust/source/anchors/
+
 COPY test/ /test/
 
 # Install dependencies and set up a sudo user without password
 RUN dnf update -y \
 	&& dnf install -y sudo curl wget ca-certificates findutils util-linux \
 	&& dnf clean all \
+	&& printf "\nca_directory=/etc/ssl/certs" | tee -a /etc/wgetrc \
+	&& update-ca-trust extract \
 	&& adduser user \
 	&& usermod -aG wheel user \
 	&& echo "user ALL=(ALL) NOPASSWD:ALL" >> /etc/sudoers \
@@ -163,12 +197,16 @@ RUN wget -O - https://raw.githubusercontent.com/metacall/install/master/install.
 # Alpine Base (root)
 FROM alpine:latest AS alpine_root
 
+COPY --from=certificates /etc/ssl/certs/ /etc/ssl/certs/
+
 COPY test/ /test/
 
 # Install dependencies and set up a sudo user without password
 RUN apk update \
 	&& apk add --no-cache sudo curl wget ca-certificates \
 	&& rm -rf /var/cache/apk/* \
+	&& printf "\nca_directory=/etc/ssl/certs" | tee -a /etc/wgetrc \
+	&& update-ca-certificates \
 	&& adduser --disabled-password --gecos "" user \
 	&& echo "user ALL=(ALL) NOPASSWD:ALL" >> /etc/sudoers \
 	&& chown -R user /test \
@@ -214,6 +252,20 @@ RUN wget -O - https://raw.githubusercontent.com/metacall/install/master/install.
 	&& metacall deploy --version | grep -e '^v.*\..*\..*' \
 	&& metacall faas --version | grep -e '^v.*\..*\..*'
 
+
+# Test update Alpine
+FROM test_alpine_user_wget AS test_alpine_user_wget_update
+
+RUN wget -O - https://raw.githubusercontent.com/metacall/install/master/install.sh \
+	| sh -s -- --update \
+	| grep 'MetaCall has been installed'
+
+# Test uninstall alpine
+FROM test_alpine_user_wget AS test_alpine_user_wget_uninstall
+
+RUN wget -O - https://raw.githubusercontent.com/metacall/install/master/install.sh \
+	| sh -s -- --uninstall \
+	| grep 'MetaCall has been successfully uninstalled'
 
 # BusyBox Base
 FROM busybox:stable-uclibc AS test_busybox
