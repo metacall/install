@@ -32,6 +32,12 @@ TEST_LIST=$(cat Dockerfile | grep -v '^#' | grep 'AS test_' | awk '{print $4}')
 # current version of install.sh script instead the one from GitHub URL
 docker build -t metacall/install_nginx -f proxy/Dockerfile .
 
+# Stop the container if it is already running
+if [[ $(docker ps -f "name=metacall_install_nginx" --format '{{.Names}}') == "metacall_install_nginx" ]]; then
+	docker stop metacall_install_nginx
+fi
+
+# Run the proxy for serving install.sh locally under raw.githubusercontent.com domain
 docker run --rm \
 	--name metacall_install_nginx \
 	-p 80:80 \
@@ -43,7 +49,7 @@ docker run --rm \
 METACALL_INSTALL_CERTS="${METACALL_INSTALL_CERTS:-certificates_local}"
 
 # Fake the DNS entry pointing to our interceptor proxy when testing locally
-if [[ "${METACALL_INSTALL_CERTS}" = "certificates_local" ]]; then
+if [[ "${METACALL_INSTALL_CERTS}" == "certificates_local" ]]; then
 	METACALL_INSTALL_DNS=--add-host="raw.githubusercontent.com:127.0.0.1"
 else
 	METACALL_INSTALL_DNS=
