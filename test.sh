@@ -40,9 +40,10 @@ docker run --rm \
 	-d metacall/install_nginx
 
 # Define default certificate setup
-METACALL_INSTALL_CERTS="${METACALL_INSTALL_CERTS:-debian_certs_remote}"
+METACALL_INSTALL_CERTS="${METACALL_INSTALL_CERTS:-certificates_local}"
 
-if [[ "${METACALL_INSTALL_CERTS}" = "debian_certs_local" ]]; then
+# Fake the DNS entry pointing to our interceptor proxy when testing locally
+if [[ "${METACALL_INSTALL_CERTS}" = "certificates_local" ]]; then
 	METACALL_INSTALL_DNS=--add-host="raw.githubusercontent.com:127.0.0.1"
 else
 	METACALL_INSTALL_DNS=

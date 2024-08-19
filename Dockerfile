@@ -17,7 +17,7 @@
 #	limitations under the License.
 #
 
-ARG METACALL_INSTALL_CERTS=debian_certs_local
+ARG METACALL_INSTALL_CERTS=certificates_local
 
 FROM scratch AS testing
 
@@ -30,19 +30,19 @@ LABEL copyright.name="Vicente Eduardo Ferrer Garcia" \
 	version="0.1"
 
 # Proxy certificates
-FROM metacall/install_nginx AS debian_certs_local
+FROM metacall/install_nginx AS certificates_local
 
 # Remote certificates
-FROM debian:bookworm-slim AS debian_certs_remote
+FROM debian:bookworm-slim AS certificates_remote
 
 RUN mkdir -p /etc/ssl/certs/
 
-FROM ${METACALL_INSTALL_CERTS} AS debian_certs
+FROM ${METACALL_INSTALL_CERTS} AS certificates
 
 # Debian Base (root)
 FROM debian:bookworm-slim AS debian_root
 
-COPY --from=debian_certs /etc/ssl/certs/ /etc/ssl/certs/
+COPY --from=certificates /etc/ssl/certs/ /etc/ssl/certs/
 
 COPY test/ /test/
 
@@ -50,6 +50,7 @@ COPY test/ /test/
 RUN apt-get update \
 	&& apt-get install -y --no-install-recommends sudo curl wget ca-certificates \
 	&& apt-get clean && rm -rf /var/lib/apt/lists/ \
+	&& printf "\nca_directory=/etc/ssl/certs" | tee -a /etc/wgetrc \
 	&& update-ca-certificates \
 	&& adduser --disabled-password --gecos "" user \
 	&& usermod -aG sudo user \
@@ -113,12 +114,16 @@ RUN metacall /test/async.py | grep 'Async Done'
 # Fedora Base (root)
 FROM fedora:latest AS fedora_root
 
+COPY --from=certificates /etc/ssl/certs/ /etc/ssl/certs/
+
 COPY test/ /test/
 
 # Install dependencies and set up a sudo user without password
 RUN dnf update -y \
 	&& dnf install -y sudo curl wget ca-certificates findutils util-linux \
 	&& dnf clean all \
+	&& printf "\nca_directory=/etc/ssl/certs" | tee -a /etc/wgetrc \
+	&& update-ca-trust extract \
 	&& adduser user \
 	&& usermod -aG wheel user \
 	&& echo "user ALL=(ALL) NOPASSWD:ALL" >> /etc/sudoers \
@@ -157,12 +162,16 @@ RUN wget -O - https://raw.githubusercontent.com/metacall/install/master/install.
 # Alpine Base (root)
 FROM alpine:latest AS alpine_root
 
+COPY --from=certificates /etc/ssl/certs/ /etc/ssl/certs/
+
 COPY test/ /test/
 
 # Install dependencies and set up a sudo user without password
 RUN apk update \
 	&& apk add --no-cache sudo curl wget ca-certificates \
 	&& rm -rf /var/cache/apk/* \
+	&& printf "\nca_directory=/etc/ssl/certs" | tee -a /etc/wgetrc \
+	&& update-ca-certificates \
 	&& adduser --disabled-password --gecos "" user \
 	&& echo "user ALL=(ALL) NOPASSWD:ALL" >> /etc/sudoers \
 	&& chown -R user /test \
