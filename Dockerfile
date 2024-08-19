@@ -237,20 +237,30 @@ RUN wget -O - https://raw.githubusercontent.com/metacall/install/master/install.
 # BusyBox Base
 FROM busybox:stable-uclibc AS test_busybox
 
+# Busybox wget fails with self signed certificates so we avoid the tests
+FROM test_busybox AS busybox_fail_certificates_local
+
 # Test install BusyBox fail due to lack of SSL implementation in wget (if it fails, then the test passes)
-FROM test_busybox AS test_busybox_fail
+FROM test_busybox AS busybox_fail_certificates_remote
 
 RUN wget -O - https://raw.githubusercontent.com/metacall/install/master/install.sh | sh \
 	|| if [ $? -ne 0 ]; then exit 0; else exit 1; fi
+
+FROM busybox_fail_${METACALL_INSTALL_CERTS} AS test_busybox_fail
 
 # BusyBox Base (with sources)
 FROM test_busybox AS test_busybox_base
 
 COPY test/ /test/
 
+# Busybox wget fails with self signed certificates so we avoid the tests
+FROM test_busybox_base AS busybox_without_certificates_local
+
 # Test install BusyBox without certificates
-FROM test_busybox_base AS test_busybox_without_certificates
+FROM test_busybox_base AS busybox_without_certificates_remote
 
 RUN wget --no-check-certificate -O - https://raw.githubusercontent.com/metacall/install/master/install.sh | sh \
 	-s -- --no-check-certificate \
 	&& sh /usr/local/bin/metacall /test/script.js | grep '123456'
+
+FROM busybox_without_${METACALL_INSTALL_CERTS} AS test_busybox_without_certificates
