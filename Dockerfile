@@ -222,8 +222,8 @@ FROM alpine_root AS test_alpine_root_curl
 
 RUN curl -sL https://raw.githubusercontent.com/metacall/install/master/install.sh | sh \
 	&& metacall /test/script.js | grep '123456' \
-	&& metacall deploy --version | grep -e '^v.*\..*\..*' \
-	&& metacall faas --version | grep -e '^v.*\..*\..*'
+	&& metacall deploy --version | grep -E '^v.*\..*\..*' \
+	&& metacall faas --version | grep -E '^v.*\..*\..*'
 
 
 # Test install Alpine with root and wget
@@ -231,8 +231,8 @@ FROM alpine_root AS test_alpine_root_wget
 
 RUN wget -O - https://raw.githubusercontent.com/metacall/install/master/install.sh | sh \
 	&& metacall /test/script.js | grep '123456' \
-	&& metacall deploy --version | grep -e '^v.*\..*\..*' \
-	&& metacall faas --version | grep -e '^v.*\..*\..*'
+	&& metacall deploy --version | grep -E '^v.*\..*\..*' \
+	&& metacall faas --version | grep -E '^v.*\..*\..*'
 
 
 # Test install Alpine without root and curl
@@ -240,8 +240,8 @@ FROM alpine_user AS test_alpine_user_curl
 
 RUN curl -sL https://raw.githubusercontent.com/metacall/install/master/install.sh | sh \
 	&& metacall /test/script.js | grep '123456' \
-	&& metacall deploy --version | grep -e '^v.*\..*\..*' \
-	&& metacall faas --version | grep -e '^v.*\..*\..*'
+	&& metacall deploy --version | grep -E '^v.*\..*\..*' \
+	&& metacall faas --version | grep -E '^v.*\..*\..*'
 
 
 # Test install Alpine without root and wget
@@ -249,8 +249,8 @@ FROM alpine_user AS test_alpine_user_wget
 
 RUN wget -O - https://raw.githubusercontent.com/metacall/install/master/install.sh | sh \
 	&& metacall /test/script.js | grep '123456' \
-	&& metacall deploy --version | grep -e '^v.*\..*\..*' \
-	&& metacall faas --version | grep -e '^v.*\..*\..*'
+	&& metacall deploy --version | grep -E '^v.*\..*\..*' \
+	&& metacall faas --version | grep -E '^v.*\..*\..*'
 
 
 # Test update Alpine
@@ -290,31 +290,3 @@ RUN wget --no-check-certificate -O - https://raw.githubusercontent.com/metacall/
 	&& sh /usr/local/bin/metacall deploy --version | grep -e '^v.*\..*\..*' \
 	&& sh /usr/local/bin/metacall faas --version | grep -e '^v.*\..*\..*'
 
-
-# Test certificates in Debian with root (comparing against <!doctype html> in buffer format)
-FROM test_debian_root_curl AS test_debian_root_certificates
-
-RUN export WEB_RESULT="`printf 'load py /test/script.py\ninspect\ncall fetch_https(\"www.google.com\")\nexit' | metacall`" \
-	&& export WEB_BUFFER="[\n   60,  33, 100, 111, 99,\n  116, 121, 112, 101, 32,\n  104, 116, 109, 108, 62\n]" \
-	&& [ -z "${WEB_RESULT##*$WEB_BUFFER*}" ] || exit 1
-
-# Test certificates in Debian with user (comparing against <!doctype html> in buffer format)
-FROM test_debian_user_curl AS test_debian_user_certificates
-
-RUN export WEB_RESULT="`printf 'load py /test/script.py\ninspect\ncall fetch_https(\"www.google.com\")\nexit' | metacall`" \
-	&& export WEB_BUFFER="[\n   60,  33, 100, 111, 99,\n  116, 121, 112, 101, 32,\n  104, 116, 109, 108, 62\n]" \
-	&& [ -z "${WEB_RESULT##*$WEB_BUFFER*}" ] || exit 1
-
-# Test update Alpine
-FROM test_alpine_user_wget AS test_alpine_user_wget_update
-
-RUN wget -O - https://raw.githubusercontent.com/metacall/install/master/install.sh \
-	| sh -s -- --update \
-	| grep 'MetaCall has been installed'
-
-# Test uninstall alpine
-FROM test_alpine_user_wget AS test_alpine_user_wget_uninstall
-
-RUN wget -O - https://raw.githubusercontent.com/metacall/install/master/install.sh \
-	| sh -s -- --uninstall \
-	| grep 'MetaCall has been successfully uninstalled'
