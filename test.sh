@@ -47,8 +47,8 @@ docker run --rm \
 		&& mkdir -p ${DOCKER_HOST_PATH} \
 		&& cd ${DOCKER_HOST_PATH} \
 		&& metacall script.js | grep '123456'" \
-		&& metacall deploy --version | grep -E -q '^v|^V' \
-        && metacall faas --version | grep -E -q '^v|^V'
+		&& metacall deploy --version | grep '^v.*\..*\..*' \
+        && metacall faas --version | grep '^v.*\..*\..*'
 
 
 result=$?
@@ -68,8 +68,8 @@ docker run --rm \
 		&& mkdir -p ${DOCKER_HOST_PATH} \
 		&& cd ${DOCKER_HOST_PATH} \
 		&& metacall script.js | grep '123456'" \
-		&& metacall deploy --version | grep -E -q '^v|^V' \
-        && metacall faas --version | grep -E -q '^v|^V'
+		&& metacall deploy --version | grep '^v.*\..*\..*' \
+        && metacall faas --version | grep '^v.*\..*\..*'
 
 result=$?
 if [[ $result -ne 0 ]]; then
