@@ -473,6 +473,9 @@ binary_install() {
 
 	# Install CLI
 	cli
+
+	# Install additional dependencies
+	additional_packages_install
 }
 
 docker_install() {
@@ -541,6 +544,27 @@ uninstall() {
 		sudo rm -rf /usr/local/bin/metacall || true
 		sudo rm -rf /gnu || true
 	fi
+}
+
+additional_packages_install() {
+	local install_dir="/gnu/deps"
+	local bin_dir="/gnu/bin"
+
+	print "Installing additional dependencies."
+
+	# Install Deploy
+	metacall npm install --global --prefix="${install_dir}/deploy" @metacall/deploy
+	echo "#!${CMD_SHEBANG}" &> ${bin_dir}/deploy
+	echo "metacall node ${install_dir}/deploy/lib/node_modules/@metacall/deploy/dist/index.js \$@" >> ${bin_dir}/deploy
+	chmod 755 "${bin_dir}/deploy"
+
+	# Install FaaS
+	metacall npm install --global --prefix="${install_dir}/faas" @metacall/faas
+	echo "#!${CMD_SHEBANG}" &> ${bin_dir}/faas
+	echo "metacall node ${install_dir}/faas/lib/node_modules/@metacall/faas/dist/index.js \$@" >> ${bin_dir}/faas
+	chmod 755 "${bin_dir}/faas"
+
+	success "Additional dependencies installed."
 }
 
 main() {

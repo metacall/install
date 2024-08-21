@@ -88,7 +88,9 @@ docker run --rm \
 	sh -c "wget -O - https://raw.githubusercontent.com/metacall/install/master/install.sh | sh -s -- --docker-install \
 		&& mkdir -p ${DOCKER_HOST_PATH} \
 		&& cd ${DOCKER_HOST_PATH} \
-		&& metacall script.js | grep '123456'"
+		&& metacall script.js | grep '123456' \
+		&& metacall deploy --version | grep -e '^v.*\..*\..*' \
+		&& metacall faas --version | grep -e '^v.*\..*\..*'"
 
 result=$?
 if [[ $result -ne 0 ]]; then
@@ -106,7 +108,9 @@ docker run --rm \
 		&& sh ./install.sh \
 		&& mkdir -p ${DOCKER_HOST_PATH} \
 		&& cd ${DOCKER_HOST_PATH} \
-		&& metacall script.js | grep '123456'"
+		&& metacall script.js | grep '123456' \
+		&& metacall deploy --version | grep -e '^v.*\..*\..*' \
+		&& metacall faas --version | grep -e '^v.*\..*\..*'"
 
 result=$?
 if [[ $result -ne 0 ]]; then

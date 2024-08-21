@@ -68,13 +68,17 @@ FROM debian_root AS test_debian_root_wget_from_path
 
 RUN wget https://github.com/metacall/distributable-linux/releases/download/v0.7.0/metacall-tarball-linux-amd64.tar.gz \
 	&& wget -O - https://raw.githubusercontent.com/metacall/install/master/install.sh | bash -s -- --from-path /metacall-tarball-linux-amd64.tar.gz \
-	&& metacall /test/script.js | grep '123456'
+	&& metacall /test/script.js | grep '123456' \
+	&& metacall deploy --version | grep -e '^v.*\..*\..*' \
+	&& metacall faas --version | grep -e '^v.*\..*\..*'
 
 # Test install Debian with root and curl
 FROM debian_root AS test_debian_root_curl
 
 RUN curl -sL https://raw.githubusercontent.com/metacall/install/master/install.sh | bash \
-	&& metacall /test/script.js | grep '123456'
+	&& metacall /test/script.js | grep '123456' \
+	&& metacall deploy --version | grep -e '^v.*\..*\..*' \
+	&& metacall faas --version | grep -e '^v.*\..*\..*'
 
 # Test certificates in Debian with root (comparing against <!doctype html> in buffer format)
 FROM test_debian_root_curl AS test_debian_root_certificates
@@ -87,13 +91,17 @@ RUN export WEB_RESULT="`printf 'load py /test/script.py\ninspect\ncall fetch_htt
 FROM debian_root AS test_debian_root_wget
 
 RUN wget -O - https://raw.githubusercontent.com/metacall/install/master/install.sh | bash \
-	&& metacall /test/script.js | grep '123456'
+	&& metacall /test/script.js | grep '123456' \
+	&& metacall deploy --version | grep -e '^v.*\..*\..*' \
+	&& metacall faas --version | grep -e '^v.*\..*\..*'
 
 # Test install Debian without root and curl
 FROM debian_user AS test_debian_user_curl
 
 RUN curl -sL https://raw.githubusercontent.com/metacall/install/master/install.sh | bash \
-	&& metacall /test/script.js | grep '123456'
+	&& metacall /test/script.js | grep '123456' \
+	&& metacall deploy --version | grep -e '^v.*\..*\..*' \
+	&& metacall faas --version | grep -e '^v.*\..*\..*'
 
 # Test certificates in Debian with user (comparing against <!doctype html> in buffer format)
 FROM test_debian_user_curl AS test_debian_user_certificates
@@ -106,13 +114,17 @@ RUN export WEB_RESULT="`printf 'load py /test/script.py\ninspect\ncall fetch_htt
 FROM debian_user AS test_debian_user_wget
 
 RUN wget -O - https://raw.githubusercontent.com/metacall/install/master/install.sh | bash \
-	&& metacall /test/script.js | grep '123456'
+	&& metacall /test/script.js | grep '123456' \
+	&& metacall deploy --version | grep -e '^v.*\..*\..*' \
+	&& metacall faas --version | grep -e '^v.*\..*\..*'
 
 # Test reinstall Debian without root and wget
 FROM test_debian_user_wget AS test_debian_user_wget_reinstall
 
 RUN wget -O - https://raw.githubusercontent.com/metacall/install/master/install.sh | bash -s -- --update \
-	&& metacall /test/script.js | grep '123456'
+	&& metacall /test/script.js | grep '123456' \
+	&& metacall deploy --version | grep -e '^v.*\..*\..*' \
+	&& metacall faas --version | grep -e '^v.*\..*\..*'
 
 # Test pip installation
 FROM test_debian_user_wget AS test_debian_user_pip
@@ -159,19 +171,25 @@ RUN curl -sL https://raw.githubusercontent.com/metacall/install/master/install.s
 FROM fedora_root AS test_fedora_root_wget
 
 RUN wget -O - https://raw.githubusercontent.com/metacall/install/master/install.sh | bash \
-	&& metacall /test/script.js | grep '123456'
+	&& metacall /test/script.js | grep '123456' \
+	&& metacall deploy --version | grep -e '^v.*\..*\..*' \
+	&& metacall faas --version | grep -e '^v.*\..*\..*'
 
 # Test install Fedora without root and curl
 FROM fedora_user AS test_fedora_user_curl
 
 RUN curl -sL https://raw.githubusercontent.com/metacall/install/master/install.sh | bash \
-	&& metacall /test/script.js | grep '123456'
+	&& metacall /test/script.js | grep '123456' \
+	&& metacall deploy --version | grep -e '^v.*\..*\..*' \
+	&& metacall faas --version | grep -e '^v.*\..*\..*'
 
 # Test install Fedora without root and wget
 FROM fedora_user AS test_fedora_user_wget
 
 RUN wget -O - https://raw.githubusercontent.com/metacall/install/master/install.sh | bash \
-	&& metacall /test/script.js | grep '123456'
+	&& metacall /test/script.js | grep '123456' \
+	&& metacall deploy --version | grep -e '^v.*\..*\..*' \
+	&& metacall faas --version | grep -e '^v.*\..*\..*'
 
 # Alpine Base (root)
 FROM alpine:latest AS alpine_root
@@ -200,25 +218,33 @@ USER user
 FROM alpine_root AS test_alpine_root_curl
 
 RUN curl -sL https://raw.githubusercontent.com/metacall/install/master/install.sh | sh \
-	&& metacall /test/script.js | grep '123456'
+	&& metacall /test/script.js | grep '123456' \
+	&& metacall deploy --version | grep -e '^v.*\..*\..*' \
+	&& metacall faas --version | grep -e '^v.*\..*\..*'
 
 # Test install Alpine with root and wget
 FROM alpine_root AS test_alpine_root_wget
 
 RUN wget -O - https://raw.githubusercontent.com/metacall/install/master/install.sh | sh \
-	&& metacall /test/script.js | grep '123456'
+	&& metacall /test/script.js | grep '123456' \
+	&& metacall deploy --version | grep -e '^v.*\..*\..*' \
+	&& metacall faas --version | grep -e '^v.*\..*\..*'
 
 # Test install Alpine without root and curl
 FROM alpine_user AS test_alpine_user_curl
 
 RUN curl -sL https://raw.githubusercontent.com/metacall/install/master/install.sh | sh \
-	&& metacall /test/script.js | grep '123456'
+	&& metacall /test/script.js | grep '123456' \
+	&& metacall deploy --version | grep -e '^v.*\..*\..*' \
+	&& metacall faas --version | grep -e '^v.*\..*\..*'
 
 # Test install Alpine without root and wget
 FROM alpine_user AS test_alpine_user_wget
 
 RUN wget -O - https://raw.githubusercontent.com/metacall/install/master/install.sh | sh \
-	&& metacall /test/script.js | grep '123456'
+	&& metacall /test/script.js | grep '123456' \
+	&& metacall deploy --version | grep -e '^v.*\..*\..*' \
+	&& metacall faas --version | grep -e '^v.*\..*\..*'
 
 # Test update Alpine
 FROM test_alpine_user_wget AS test_alpine_user_wget_update
@@ -261,6 +287,8 @@ FROM test_busybox_base AS busybox_without_certificates_remote
 
 RUN wget --no-check-certificate -O - https://raw.githubusercontent.com/metacall/install/master/install.sh | sh \
 	-s -- --no-check-certificate \
-	&& sh /usr/local/bin/metacall /test/script.js | grep '123456'
+	&& sh /usr/local/bin/metacall /test/script.js | grep '123456' \
+	&& metacall deploy --version | grep -e '^v.*\..*\..*' \
+	&& metacall faas --version | grep -e '^v.*\..*\..*'
 
 FROM busybox_without_${METACALL_INSTALL_CERTS} AS test_busybox_without_certificates
