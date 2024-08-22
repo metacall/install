@@ -12,12 +12,24 @@ jobs:
         run: |
           cmd.exe /c "powershell -NoProfile -ExecutionPolicy unrestricted ./install.ps1"
       - name: Run Metacall
+        shell: cmd
         run: |
           metacall ./test/script.js | findstr "123456"
+          IF %ERRORLEVEL% NEQ 0 exit /B 1
       - name: Python Test
+        shell: cmd
         run: |
           metacall pip install -r test/requirements.txt | findstr "Successfully installed"
+          IF %ERRORLEVEL% NEQ 0 exit /B 1
           metacall ./test/requirements.py | findstr "123456"
+          IF %ERRORLEVEL% NEQ 0 exit /B 1
+      - name: Deploy & FaaS Test
+        shell: cmd
+        run: |
+          metacall deploy --version | findstr /R "^v.*\..*\..*"
+          IF %ERRORLEVEL% NEQ 0 exit /B 1
+          metacall faas --version | findstr /R "^v.*\..*\..*"
+          IF %ERRORLEVEL% NEQ 0 exit /B 1
   install-from-path:
     name: Install Metacall via Path Installation
     runs-on: windows-latest
@@ -35,9 +47,21 @@ jobs:
         run: |
           cmd.exe /c "powershell -NoProfile -ExecutionPolicy unrestricted ./install.ps1 -FromPath metacall-tarball-win-x64.zip"
       - name: Run Metacall
+        shell: cmd
         run: |
           metacall ./test/script.js | findstr "123456"
+          IF %ERRORLEVEL% NEQ 0 exit /B 1
       - name: Python Test
+        shell: cmd
         run: |
           metacall pip install -r test/requirements.txt | findstr "Successfully installed"
+          IF %ERRORLEVEL% NEQ 0 exit /B 1
           metacall ./test/requirements.py | findstr "123456"
+          IF %ERRORLEVEL% NEQ 0 exit /B 1
+      - name: Deploy & FaaS Test
+        shell: cmd
+        run: |
+          metacall deploy --version | findstr /R "^v.*\..*\..*"
+          IF %ERRORLEVEL% NEQ 0 exit /B 1
+          metacall faas --version | findstr /R "^v.*\..*\..*"
+          IF %ERRORLEVEL% NEQ 0 exit /B 1
