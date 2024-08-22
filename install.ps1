@@ -272,6 +272,5 @@ function Install-MetaCall-AdditionalPackages {
     Write-Host "MetaCall $Component has been installed."
 }
 
-
 # Install the tarball and post scripts
 Install-Tarball $InstallDir $Version
