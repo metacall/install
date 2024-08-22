@@ -256,7 +256,7 @@ function Install-MetaCall-AdditionalPackages {
         [string]$Component
     )
     $InstallRoot = Resolve-Installation-Path $InstallDir
-    $InstallDir = Join-Path -Path $InstallRoot -ChildPath "AdditionalPackages\$Component"
+    $InstallDir = Join-Path -Path $InstallRoot -ChildPath "deps\$Component"
 
     if (-not (Test-Path $InstallDir)) {
         New-Item -ItemType Directory -Force -Path $InstallDir | Out-Null
