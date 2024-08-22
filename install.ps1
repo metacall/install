@@ -161,6 +161,10 @@ endlocal
 	$InstallPythonScriptOneLine = $($InstallPythonScript.Trim()).replace("`n", " && ")
 	cmd /V /C "$InstallPythonScriptOneLine"
 
+	# Install Additional Packages
+	Install-MetaCall-AdditionalPackages -Component "deploy"
+	Install-MetaCall-AdditionalPackages -Component "faas"
+
 	# TODO: Replace in the files D:/ and D:\
 }
 
@@ -271,7 +275,3 @@ function Install-MetaCall-AdditionalPackages {
 
 # Install the tarball and post scripts
 Install-Tarball $InstallDir $Version
-
-# Install Additional Packages
-Install-MetaCall-AdditionalPackages -Component "deploy"
-Install-MetaCall-AdditionalPackages -Component "faas"
