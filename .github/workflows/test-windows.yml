@@ -14,19 +14,19 @@ jobs:
       - name: Run Metacall
         run: |
           metacall ./test/script.js | findstr "123456"
-          if not %ERRORLEVEL% EQU 0 (exit /B 1)
+          IF %ERRORLEVEL% NEQ 0 exit /B 1
       - name: Python Test
         run: |
           metacall pip install -r test/requirements.txt | findstr "Successfully installed"
-          if not %ERRORLEVEL% EQU 0 (exit /B 1)
+          IF %ERRORLEVEL% NEQ 0 exit /B 1
           metacall ./test/requirements.py | findstr "123456"
-          if not %ERRORLEVEL% EQU 0 (exit /B 1)
+          IF %ERRORLEVEL% NEQ 0 exit /B 1
       - name: Deploy & FaaS Test
         run: |
           metacall deploy --version | findstr /R "^v.*\..*\..*"
-          if not %ERRORLEVEL% EQU 0 (exit /B 1)
+          IF %ERRORLEVEL% NEQ 0 exit /B 1
           metacall faas --version | findstr /R "^v.*\..*\..*"
-          if not %ERRORLEVEL% EQU 0 (exit /B 1)
+          IF %ERRORLEVEL% NEQ 0 exit /B 1
   install-from-path:
     name: Install Metacall via Path Installation
     runs-on: windows-latest
@@ -46,16 +46,16 @@ jobs:
       - name: Run Metacall
         run: |
           metacall ./test/script.js | findstr "123456"
-          if not %ERRORLEVEL% EQU 0 (exit /B 1)
+          IF %ERRORLEVEL% NEQ 0 exit /B 1
       - name: Python Test
         run: |
           metacall pip install -r test/requirements.txt | findstr "Successfully installed"
-          if not %ERRORLEVEL% EQU 0 (exit /B 1)
+          IF %ERRORLEVEL% NEQ 0 exit /B 1
           metacall ./test/requirements.py | findstr "123456"
-          if not %ERRORLEVEL% EQU 0 (exit /B 1)
+          IF %ERRORLEVEL% NEQ 0 exit /B 1
       - name: Deploy & FaaS Test
         run: |
           metacall deploy --version | findstr /R "^v.*\..*\..*"
-          if not %ERRORLEVEL% EQU 0 (exit /B 1)
+          IF %ERRORLEVEL% NEQ 0 exit /B 1
           metacall faas --version | findstr /R "^v.*\..*\..*"
-          if not %ERRORLEVEL% EQU 0 (exit /B 1)
+          IF %ERRORLEVEL% NEQ 0 exit /B 1
