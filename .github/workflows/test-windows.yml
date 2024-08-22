@@ -18,6 +18,12 @@ jobs:
         run: |
           metacall pip install -r test/requirements.txt | findstr "Successfully installed"
           metacall ./test/requirements.py | findstr "123456"
+      - name: Deploy Test
+        run: |
+          metacall deploy --version | findstr /R "^v.*\..*\..*"
+      - name: Faas Test
+        run: |
+          metacall faas --version | findstr /R "^v.*\..*\..*"
   install-from-path:
     name: Install Metacall via Path Installation
     runs-on: windows-latest
@@ -41,3 +47,9 @@ jobs:
         run: |
           metacall pip install -r test/requirements.txt | findstr "Successfully installed"
           metacall ./test/requirements.py | findstr "123456"
+      - name: Deploy Test
+        run: |
+          metacall deploy --version | findstr /R "^v.*\..*\..*"
+      - name: Faas Test
+        run: |
+          metacall faas --version | findstr /R "^v.*\..*\..*"
