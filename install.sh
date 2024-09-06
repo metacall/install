@@ -29,6 +29,7 @@ OPT_FROM_PATH_TARGET=""
 # Program commands
 CMD_DOWNLOAD=""
 CMD_SHEBANG=""
+CMD_SUDO=""
 
 # Check for command line arguments
 while [ $# -ne 0 ]
@@ -161,23 +162,29 @@ find_shebang() {
 	fi
 }
 
+# Detect sudo or run with root
+find_sudo() {
+	if ! program sudo && [ $(id -u) -ne 0 ]; then
+		err "You need either having sudo installed or running this script as root. Aborting installation."
+		exit 1
+	fi
+
+	if [ $(id -u) -ne 0 ]; then
+		CMD_SUDO="sudo"
+	fi
+}
+
 # Check all dependencies
 dependencies() {
 	print "Checking system dependencies."
 
 	# Check if required programs are installed
-	if [ $OPT_FROM_PATH -eq 0 ]; then
-		programs_required tar grep tail awk rev cut uname echo printf rm id head chmod chown ln
-	else
-		programs_required tar grep echo printf rm id head chmod chown ln
-	fi
-
-	if [ $(id -u) -ne 0 ]; then
-		programs_required tee
-	fi
+	programs_required tar grep echo printf rm id head chmod chown ln tee
 
 	# Check if download programs are installed
 	if [ $OPT_FROM_PATH -eq 0 ]; then
+		programs_required tail awk rev cut uname
+
 		local download_program=$(programs_required_one curl wget)
 
 		if [ -z "${download_program}" ]; then
@@ -192,11 +199,8 @@ dependencies() {
 	# Locate shebang
 	find_shebang
 
-	# Detect sudo or run with root
-	if ! program sudo && [ $(id -u) -ne 0 ]; then
-		err "You need either having sudo installed or running this script as root. Aborting installation."
-		exit 1
-	fi
+	# Check for sudo permissions
+	find_sudo
 
 	success "Dependencies satisfied."
 }
@@ -205,7 +209,7 @@ dependencies() {
 operative_system() {
 	local os=$(uname)
 
-	# TODO: Implement other operative systems in metacall/distributable-linux
+	# TODO: Implement other operative systems
 	case ${os} in
 		Darwin)
 			echo "osx"
@@ -314,16 +318,11 @@ uncompress() {
 		local tmp="/tmp/metacall-tarball.tar.gz"
 	fi
 
-	print "Uncompress the tarball (needs sudo or root permissions)."
+	print "Uncompress the tarball."
 
-	if [ $(id -u) -eq 0 ]; then
-		tar xzf ${tmp} -C /
-		chmod -R 755 /gnu
-	else
-		sudo tar xzf ${tmp} -C /
-		sudo chmod -R 755 /gnu
-		sudo chown -R $(id -u):$(id -g) /gnu
-	fi
+	${CMD_SUDO} tar xzf ${tmp} -C /
+	${CMD_SUDO} chmod -R 755 /gnu
+	${CMD_SUDO} chown -R $(id -u):$(id -g) /gnu
 
 	success "Tarball uncompressed successfully."
 
@@ -338,15 +337,9 @@ uncompress() {
 	print "Linking certificates: ${openssl_cert_dir} => ${nss_cert_dir}"
 	print "Linking certificate CA: ${openssl_cert_file} => ${nss_cert_file}"
 
-	if [ $(id -u) -eq 0 ]; then
-		rmdir ${openssl_cert_dir}
-		ln -s ${nss_cert_dir} ${openssl_cert_dir}
-		ln -s ${nss_cert_file} ${openssl_cert_file}
-	else
-		sudo rmdir ${openssl_cert_dir}
-		sudo ln -s ${nss_cert_dir} ${openssl_cert_dir}
-		sudo ln -s ${nss_cert_file} ${openssl_cert_file}
-	fi
+	${CMD_SUDO} rmdir ${openssl_cert_dir}
+	${CMD_SUDO} ln -s ${nss_cert_dir} ${openssl_cert_dir}
+	${CMD_SUDO} ln -s ${nss_cert_file} ${openssl_cert_file}
 
 	# Clean the tarball
 	if [ $OPT_FROM_PATH -eq 0 ]; then
@@ -361,84 +354,42 @@ cli() {
 	local pythonpath_base="/gnu/store/`ls /gnu/store/ | grep python-3 | head -n 1`/lib"
 	local pythonpath_dynlink="`ls -d ${pythonpath_base}/*/ | grep 'python3\.[0-9]*\/$'`lib-dynload"
 
-	print "Installing the Command Line Interface shortcut (needs sudo or root permissions)."
-
 	# Write shell script pointing to MetaCall CLI
-	if [ $(id -u) -eq 0 ]; then
-		# Create folder if it does not exist
-		mkdir -p /usr/local/bin/
+	print "Installing the Command Line Interface shortcut."
 
-		# Write the shebang
-		printf '#!' > /usr/local/bin/metacall
-		echo "${CMD_SHEBANG}" >> /usr/local/bin/metacall
+	# Write the shebang
+	printf "#!" | ${CMD_SUDO} tee /usr/local/bin/metacall > /dev/null
+	echo "${CMD_SHEBANG}" | ${CMD_SUDO} tee -a /usr/local/bin/metacall > /dev/null
 
-		# MetaCall Environment
-		echo "export LOADER_SCRIPT_PATH=\"\${LOADER_SCRIPT_PATH:-\`pwd\`}\"" >> /usr/local/bin/metacall
+	# MetaCall Environment
+	echo "export LOADER_SCRIPT_PATH=\"\${LOADER_SCRIPT_PATH:-\`pwd\`}\"" | ${CMD_SUDO} tee -a /usr/local/bin/metacall > /dev/null
 
-		# Certificates
-		echo "export GIT_SSL_FILE=\"/gnu/etc/ssl/certs/ca-certificates.crt\"" >> /usr/local/bin/metacall
-		echo "export GIT_SSL_CAINFO=\"/gnu/etc/ssl/certs/ca-certificates.crt\"" >> /usr/local/bin/metacall
+	# Certificates
+	echo "export GIT_SSL_FILE=\"/gnu/etc/ssl/certs/ca-certificates.crt\"" | ${CMD_SUDO} tee -a /usr/local/bin/metacall > /dev/null
+	echo "export GIT_SSL_CAINFO=\"/gnu/etc/ssl/certs/ca-certificates.crt\"" | ${CMD_SUDO} tee -a /usr/local/bin/metacall > /dev/null
 
-		# Locale
-		echo "export GUIX_LOCPATH=\"/gnu/lib/locale\"" >> /usr/local/bin/metacall
-		echo "export LANG=\"en_US.UTF-8\"" >> /usr/local/bin/metacall
+	# Locale
+	echo "export GUIX_LOCPATH=\"/gnu/lib/locale\"" | ${CMD_SUDO} tee -a /usr/local/bin/metacall > /dev/null
+	echo "export LANG=\"en_US.UTF-8\"" | ${CMD_SUDO} tee -a /usr/local/bin/metacall > /dev/null
 
-		# Python
-		echo "export PYTHONPATH=\"${pythonpath_base}:${pythonpath_dynlink}\"" >> /usr/local/bin/metacall
+	# Python
+	echo "export PYTHONPATH=\"${pythonpath_base}:${pythonpath_dynlink}\"" | ${CMD_SUDO} tee -a /usr/local/bin/metacall > /dev/null
 
-		# Guix generated environment variables (TODO: Move all environment variables to metacall/distributable-linux)
-		echo ". /gnu/etc/profile" >> /usr/local/bin/metacall
+	# Guix generated environment variables (TODO: Move all environment variables to metacall/distributable-linux)
+	echo ". /gnu/etc/profile" | ${CMD_SUDO} tee -a /usr/local/bin/metacall > /dev/null
 
-		# Set up command line
-		echo "CMD=\`ls -a /gnu/bin | grep \"\$1\" | head -n 1\`" >> /usr/local/bin/metacall
+	# Set up command line
+	echo "CMD=\`ls -a /gnu/bin | grep \"\$1\" | head -n 1\`" | ${CMD_SUDO} tee -a /usr/local/bin/metacall > /dev/null
 
-		echo "if [ \"\${CMD}\" = \"\$1\" ]; then" >> /usr/local/bin/metacall
-		echo "	if [ -z \"\${PATH-}\" ]; then export PATH=\"/gnu/bin\"; else PATH=\"/gnu/bin:\${PATH}\"; fi" >> /usr/local/bin/metacall
-		echo "	\$@" >> /usr/local/bin/metacall
-		echo "	exit \$?" >> /usr/local/bin/metacall
-		echo "fi" >> /usr/local/bin/metacall
+	echo "if [ \"\${CMD}\" = \"\$1\" ]; then" | ${CMD_SUDO} tee -a /usr/local/bin/metacall > /dev/null
+	echo "	if [ -z \"\${PATH-}\" ]; then export PATH=\"/gnu/bin\"; else PATH=\"/gnu/bin:\${PATH}\"; fi" | ${CMD_SUDO} tee -a /usr/local/bin/metacall > /dev/null
+	echo "	\$@" | ${CMD_SUDO} tee -a /usr/local/bin/metacall > /dev/null
+	echo "	exit \$?" | ${CMD_SUDO} tee -a /usr/local/bin/metacall > /dev/null
+	echo "fi" | ${CMD_SUDO} tee -a /usr/local/bin/metacall > /dev/null
 
-		# CLI
-		echo "/gnu/bin/metacallcli \$@" >> /usr/local/bin/metacall
-		chmod 755 /usr/local/bin/metacall
-	else
-		# Create folder if it does not exist
-		sudo mkdir -p /usr/local/bin/
-
-		# Write the shebang
-		printf "#!" | sudo tee /usr/local/bin/metacall > /dev/null
-		echo "${CMD_SHEBANG}" | sudo tee -a /usr/local/bin/metacall > /dev/null
-
-		# MetaCall Environment
-		echo "export LOADER_SCRIPT_PATH=\"\${LOADER_SCRIPT_PATH:-\`pwd\`}\"" | sudo tee -a /usr/local/bin/metacall > /dev/null
-
-		# Certificates
-		echo "export GIT_SSL_FILE=\"/gnu/etc/ssl/certs/ca-certificates.crt\"" | sudo tee -a /usr/local/bin/metacall > /dev/null
-		echo "export GIT_SSL_CAINFO=\"/gnu/etc/ssl/certs/ca-certificates.crt\"" | sudo tee -a /usr/local/bin/metacall > /dev/null
-
-		# Locale
-		echo "export GUIX_LOCPATH=\"/gnu/lib/locale\"" | sudo tee -a /usr/local/bin/metacall > /dev/null
-		echo "export LANG=\"en_US.UTF-8\"" | sudo tee -a /usr/local/bin/metacall > /dev/null
-
-		# Python
-		echo "export PYTHONPATH=\"${pythonpath_base}:${pythonpath_dynlink}\"" | sudo tee -a /usr/local/bin/metacall > /dev/null
-
-		# Guix generated environment variables (TODO: Move all environment variables to metacall/distributable-linux)
-		echo ". /gnu/etc/profile" | sudo tee -a /usr/local/bin/metacall > /dev/null
-
-		# Set up command line
-		echo "CMD=\`ls -a /gnu/bin | grep \"\$1\" | head -n 1\`" | sudo tee -a /usr/local/bin/metacall > /dev/null
-
-		echo "if [ \"\${CMD}\" = \"\$1\" ]; then" | sudo tee -a /usr/local/bin/metacall > /dev/null
-		echo "	if [ -z \"\${PATH-}\" ]; then export PATH=\"/gnu/bin\"; else PATH=\"/gnu/bin:\${PATH}\"; fi" | sudo tee -a /usr/local/bin/metacall > /dev/null
-		echo "	\$@" | sudo tee -a /usr/local/bin/metacall > /dev/null
-		echo "	exit \$?" | sudo tee -a /usr/local/bin/metacall > /dev/null
-		echo "fi" | sudo tee -a /usr/local/bin/metacall > /dev/null
-
-		# CLI
-		echo "/gnu/bin/metacallcli \$@" | sudo tee -a /usr/local/bin/metacall > /dev/null
-		sudo chmod 755 /usr/local/bin/metacall
-	fi
+	# CLI
+	echo "/gnu/bin/metacallcli \$@" | ${CMD_SUDO} tee -a /usr/local/bin/metacall > /dev/null
+	${CMD_SUDO} chmod 755 /usr/local/bin/metacall
 
 	success "CLI shortcut installed successfully."
 }
@@ -485,11 +436,7 @@ docker_install() {
 	# Check if Docker command is installed
 	print "Checking Docker Dependency."
 
-	programs_required docker echo chmod
-
-	if [ $(id -u) -ne 0 ]; then
-		programs_required tee
-	fi
+	programs_required docker echo chmod tee
 
 	# Locate shebang
 	find_shebang
@@ -507,24 +454,19 @@ docker_install() {
 	fi
 
 	# Install Docker based CLI
-	print "Installing the Command Line Interface shortcut (needs sudo or root permissions)."
+	print "Installing the Command Line Interface shortcut."
+
+	# Check for sudo permissions
+	find_sudo
 
 	local command="docker run --rm --network host -e \"LOADER_SCRIPT_PATH=/metacall/source\" -v \`pwd\`:/metacall/source -w /metacall/source -it metacall/cli \$@"
 
 	# Write shell script wrapping the Docker run of MetaCall CLI image
-	if [ $(id -u) -eq 0 ]; then
-		mkdir -p /usr/local/bin/
-		printf '#!' > /usr/local/bin/metacall
-		echo "${CMD_SHEBANG}" >> /usr/local/bin/metacall
-		echo "${command}" >> /usr/local/bin/metacall
-		chmod 755 /usr/local/bin/metacall
-	else
-		sudo mkdir -p /usr/local/bin/
-		printf '#!' | sudo tee /usr/local/bin/metacall > /dev/null
-		echo "${CMD_SHEBANG}" | sudo tee -a /usr/local/bin/metacall > /dev/null
-		echo "${command}" | sudo tee -a /usr/local/bin/metacall > /dev/null
-		sudo chmod 755 /usr/local/bin/metacall
-	fi
+	${CMD_SUDO} mkdir -p /usr/local/bin/
+	printf '#!' | ${CMD_SUDO} tee /usr/local/bin/metacall > /dev/null
+	echo "${CMD_SHEBANG}" | ${CMD_SUDO} tee -a /usr/local/bin/metacall > /dev/null
+	echo "${command}" | ${CMD_SUDO} tee -a /usr/local/bin/metacall > /dev/null
+	${CMD_SUDO} chmod 755 /usr/local/bin/metacall
 }
 
 check_path_env() {
@@ -536,14 +478,12 @@ check_path_env() {
 }
 
 uninstall() {
+	# Check for sudo permissions
+	find_sudo
+
 	# Delete all the previously installed files
-	if [ $(id -u) -eq 0 ]; then
-		rm -rf /usr/local/bin/metacall || true
-		rm -rf /gnu || true
-	else
-		sudo rm -rf /usr/local/bin/metacall || true
-		sudo rm -rf /gnu || true
-	fi
+	${CMD_SUDO} rm -rf /usr/local/bin/metacall || true
+	${CMD_SUDO} rm -rf /gnu || true
 }
 
 additional_packages_install() {
@@ -651,15 +591,9 @@ main() {
 	# Check if /usr/local/bin is in PATH
 	if [ -z "${path}" ]; then
 		# Add /usr/local/bin to PATH
-		if [ $(id -u) -eq 0 ]; then
-			mkdir -p /etc/profile.d/
-			echo "export PATH=\"\${PATH}:/usr/local/bin\"" > /etc/profile.d/metacall.sh
-			chmod 644 /etc/profile.d/metacall.sh
-		else
-			echo "export PATH=\"\${PATH}:/usr/local/bin\"" | sudo tee /etc/profile.d/metacall.sh > /dev/null
-			sudo mkdir -p /etc/profile.d/
-			sudo chmod 644 /etc/profile.d/metacall.sh
-		fi
+		echo "export PATH=\"\${PATH}:/usr/local/bin\"" | ${CMD_SUDO} tee /etc/profile.d/metacall.sh > /dev/null
+		${CMD_SUDO} mkdir -p /etc/profile.d/
+		${CMD_SUDO} chmod 644 /etc/profile.d/metacall.sh
 
 		warning "MetaCall install path is not present in PATH so we added it for you." \
 			"  The command 'metacall' will be available in your subsequent terminal instances." \
