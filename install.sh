@@ -179,7 +179,7 @@ dependencies() {
 	print "Checking system dependencies."
 
 	# Check if required programs are installed
-	programs_required tar grep echo printf rm id head chmod chown ln tee
+	programs_required tar grep echo printf rm id head chmod chown ln tee touch
 
 	# Check if download programs are installed
 	if [ $OPT_FROM_PATH -eq 0 ]; then
@@ -357,6 +357,10 @@ cli() {
 	# Write shell script pointing to MetaCall CLI
 	print "Installing the Command Line Interface shortcut."
 
+	# Create folder and file
+	${CMD_SUDO} mkdir -p /usr/local/bin/
+	${CMD_SUDO} touch /usr/local/bin/metacall
+
 	# Write the shebang
 	printf "#!" | ${CMD_SUDO} tee /usr/local/bin/metacall > /dev/null
 	echo "${CMD_SHEBANG}" | ${CMD_SUDO} tee -a /usr/local/bin/metacall > /dev/null
@@ -436,7 +440,7 @@ docker_install() {
 	# Check if Docker command is installed
 	print "Checking Docker Dependency."
 
-	programs_required docker echo chmod tee
+	programs_required docker echo chmod tee touch
 
 	# Locate shebang
 	find_shebang
@@ -463,6 +467,7 @@ docker_install() {
 
 	# Write shell script wrapping the Docker run of MetaCall CLI image
 	${CMD_SUDO} mkdir -p /usr/local/bin/
+	${CMD_SUDO} touch /usr/local/bin/metacall
 	printf '#!' | ${CMD_SUDO} tee /usr/local/bin/metacall > /dev/null
 	echo "${CMD_SHEBANG}" | ${CMD_SUDO} tee -a /usr/local/bin/metacall > /dev/null
 	echo "${command}" | ${CMD_SUDO} tee -a /usr/local/bin/metacall > /dev/null
