@@ -475,7 +475,11 @@ docker_install() {
 }
 
 check_path_env() {
-	# Check if the PATH contains the install path
+	# Check if the PATH contains the install path, checks 4 cases:
+	#   1) /usr/local/bin
+	#   2) /usr/local/bin:/usr/bin
+	#   3) /usr/bin:/usr/local/bin
+	#   4) /usr/bin:/usr/local/bin:/bin
 	echo "${PATH}" | grep -e '\(^\|:\)/usr/local/bin\(:\|$\)'
 }
 
