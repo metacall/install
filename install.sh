@@ -476,10 +476,7 @@ docker_install() {
 
 check_path_env() {
 	# Check if the PATH contains the install path
-	echo "${PATH}" | grep -i ":/usr/local/bin:"
-	echo "${PATH}" | grep -i "^/usr/local/bin:"
-	echo "${PATH}" | grep -i ":/usr/local/bin$"
-	echo "${PATH}" | grep -i "^/usr/local/bin$"
+	echo "${PATH}" | grep -e '\(^\|:\)/usr/local/bin\(:\|$\)'
 }
 
 uninstall() {
