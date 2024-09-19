@@ -31,6 +31,11 @@ CMD_DOWNLOAD=""
 CMD_SHEBANG=""
 CMD_SUDO=""
 
+# Platform dependant variables
+PLATFORM_OS=""
+PLATFORM_ARCH=""
+PLATFORM_EXT=""
+
 # Check for command line arguments
 while [ $# -ne 0 ]
 do
@@ -216,18 +221,20 @@ dependencies() {
 operative_system() {
 	local os=$(uname)
 
-	# TODO: Implement other operative systems
+	# TODO: Implement other operative systems (FreeBSD, ...)
 	case ${os} in
 		Darwin)
-			echo "macos"
+			PLATFORM_OS="macos"
+			PLATFORM_EXT="tgz"
 			return
 			;;
 		# FreeBSD)
-		# 	echo "freebsd"
+		# 	PLATFORM_OS="freebsd"
 		# 	return
 		# 	;;
 		Linux)
-			echo "linux"
+			PLATFORM_OS="linux"
+			PLATFORM_EXT="tar.gz"
 			return
 			;;
 	esac
@@ -245,11 +252,11 @@ architecture() {
 	# TODO: Implement other architectures in metacall/distributable-linux (armv7l, aarch64, ...)
 	case ${arch} in
 		x86_64)
-			echo "amd64"
+			PLATFORM_ARCH="amd64"
 			return
 			;;
 		arm64)
-			echo "arm64"
+			PLATFORM_ARCH="arm64"
 			return
 			;;
 	esac
@@ -260,57 +267,38 @@ architecture() {
 	exit 1
 }
 
+# Get download url from tag
+download_url() {
+	local version=$(printf "$1" | rev | cut -d '/' -f1 | rev)
+	printf "https://github.com/metacall/distributable-${PLATFORM_OS}/releases/download/${version}/metacall-tarball-${PLATFORM_OS}-${PLATFORM_ARCH}.${PLATFORM_EXT}"
+}
+
 # Download tarball with cURL
 download_curl() {
-	local os="$1"
-	local arch="$2"
-	local ext="$3"
-	local tag_url=$(${CMD_DOWNLOAD} -Ls -o /dev/null -w %{url_effective} "https://github.com/metacall/distributable-${os}/releases/latest")
-	local version=$(printf "${tag_url}" | rev | cut -d '/' -f1 | rev)
-	local final_url=$(printf "https://github.com/metacall/distributable-${os}/releases/download/${version}/metacall-tarball-${os}-${arch}.${ext}")
-	local fail=false
+	local tag_url=$(${CMD_DOWNLOAD} -Ls -o /dev/null -w %{url_effective} "https://github.com/metacall/distributable-${PLATFORM_OS}/releases/latest")
+	local final_url=$(download_url "${tag_url}")
 
-	${CMD_DOWNLOAD} --retry 10 -f --create-dirs -LS ${final_url} --output "/tmp/metacall-tarball.${ext}" || fail="true"
-
-	echo "${fail}"
+	${CMD_DOWNLOAD} --retry 10 -f --create-dirs -LS ${final_url} --output "/tmp/metacall-tarball.${PLATFORM_EXT}" || echo "true"
 }
 
 # Download tarball with wget
 download_wget() {
-	local os="$1"
-	local arch="$2"
-	local ext="$3"
-	local tag_url=$(${CMD_DOWNLOAD} -S -O /dev/null "https://github.com/metacall/distributable-${os}/releases/latest" 2>&1 | grep Location: | tail -n 1 | awk '{print $2}')
-	local version=$(printf "${tag_url}" | rev | cut -d '/' -f1 | rev)
-	local final_url=$(printf "https://github.com/metacall/distributable-${os}/releases/download/${version}/metacall-tarball-${os}-${arch}.${ext}")
-	local fail=false
+	local tag_url=$(${CMD_DOWNLOAD} -S -O /dev/null "https://github.com/metacall/distributable-${PLATFORM_OS}/releases/latest" 2>&1 | grep Location: | tail -n 1 | awk '{print $2}')
+	local final_url=$(download_url "${tag_url}")
 
-	${CMD_DOWNLOAD} --tries 10 -O "/tmp/metacall-tarball.${ext}" ${final_url} || fail="true"
-
-	echo "${fail}"
+	${CMD_DOWNLOAD} --tries 10 -O "/tmp/metacall-tarball.${PLATFORM_EXT}" ${final_url} || echo "true"
 }
 
 # Download tarball
 download() {
-	local os="$1"
-	local arch="$2"
-
-	# Define extension
-	if [ "$1" = "linux" ]; then
-		local ext="tar.gz"
-	elif [ "$1" = "macos" ]; then
-		# TODO: Add tgz for MacOS too
-		local ext="pkg"
-	fi
-
 	print "Start to download the tarball."
 
 	# Download depending on the program selected
-	local fail="$(eval echo -e \"\$\(download_${CMD_DOWNLOAD} ${os} ${arch} ${ext}\)\")"
+	local fail="$(eval echo -e \"\$\(download_${CMD_DOWNLOAD}\)\")"
 
 	if [ "${fail}" = "true" ]; then
-		rm -rf "/tmp/metacall-tarball.${ext}"
-		err "The tarball metacall-tarball-${os}-${arch}.${ext} could not be downloaded." \
+		rm -rf "/tmp/metacall-tarball.${PLATFORM_EXT}"
+		err "The tarball metacall-tarball-${PLATFORM_OS}-${PLATFORM_ARCH}.${PLATFORM_EXT} could not be downloaded." \
 			"  Please, refer to https://github.com/metacall/install/issues and create a new issue." \
 			"  Aborting installation."
 		exit 1
@@ -418,18 +406,14 @@ binary_install() {
 		# Detect operative system and architecture
 		print "Detecting Operative System and Architecture."
 
-		# Run to check if the operative system is supported
-		operative_system > /dev/null 2>&1
-		architecture > /dev/null 2>&1
+		# Get the operative system and architecture
+		operative_system
+		architecture
 
-		# Get the operative system and architecture into a variable
-		local os="$(operative_system)"
-		local arch="$(architecture)"
-
-		success "Operative System (${os}) and Architecture (${arch}) detected."
+		success "Operative System (${PLATFORM_OS}) and Architecture (${PLATFORM_ARCH}) detected."
 
 		# Download tarball
-		download ${os} ${arch}
+		download
 	fi
 
 	# Extract
@@ -484,7 +468,7 @@ docker_install() {
 }
 
 check_path_env() {
-	# Check if the PATH contains the install path, checks 4 cases:
+	# Check if the PATH contains the install path (/usr/local/bin), checks 4 cases:
 	#   1) /usr/local/bin
 	#   2) /usr/local/bin:/usr/bin
 	#   3) /usr/bin:/usr/local/bin
@@ -499,6 +483,9 @@ uninstall() {
 	# Delete all the previously installed files
 	${CMD_SUDO} rm -rf /usr/local/bin/metacall || true
 	${CMD_SUDO} rm -rf /gnu || true
+
+	# TODO: This is super unsafe, we should store somewhere the list of installed files, and delete the list of files only.
+	# This current methodology is going to destroy any Guix installation if present, we must avoid this...
 }
 
 additional_packages_install() {
@@ -565,6 +552,8 @@ main() {
 		proc=$!
 		wait ${proc}
 		result=$?
+
+		# TODO: Remember to do MacOs install fallback to brew in order to compile metacall
 
 		if [ $result -ne 0 ]; then
 			# Exit if Docker fallback is disabled
