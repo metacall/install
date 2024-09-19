@@ -199,13 +199,6 @@ dependencies() {
 
 		# Set up download command
 		CMD_DOWNLOAD="${download_program}"
-
-		# Skip certificate checks
-		if [ $OPT_NO_CHECK_CERTIFICATE -eq 1 ]; then
-			local insecure_curl="--insecure"
-			local insecure_wget="--no-check-certificate"
-			CMD_DOWNLOAD="$CMD_DOWNLOAD $(eval echo -e \"\$insecure_$CMD_DOWNLOAD\")"
-		fi
 	fi
 
 	# Locate shebang
@@ -291,10 +284,19 @@ download_wget() {
 
 # Download tarball
 download() {
+	local download_func=download_${CMD_DOWNLOAD}
+
 	print "Start to download the tarball."
 
+	# Skip certificate checks
+	if [ $OPT_NO_CHECK_CERTIFICATE -eq 1 ]; then
+		local insecure_curl="--insecure"
+		local insecure_wget="--no-check-certificate"
+		CMD_DOWNLOAD="$CMD_DOWNLOAD $(eval echo -e \"\$insecure_$CMD_DOWNLOAD\")"
+	fi
+
 	# Download depending on the program selected
-	local fail="$(eval echo -e \"\$\(download_${CMD_DOWNLOAD}\)\")"
+	local fail="$(eval echo -e \"\$\(${download_func}\)\")"
 
 	if [ "${fail}" = "true" ]; then
 		rm -rf "/tmp/metacall-tarball.${PLATFORM_EXT}"
