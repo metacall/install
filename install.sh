@@ -35,6 +35,7 @@ CMD_SUDO=""
 PLATFORM_OS=""
 PLATFORM_ARCH=""
 PLATFORM_EXT=""
+PLATFORM_PREFIX=""
 
 # Check for command line arguments
 while [ $# -ne 0 ]
@@ -184,7 +185,7 @@ dependencies() {
 	print "Checking system dependencies."
 
 	# Check if required programs are installed
-	programs_required tar grep echo printf rm id head chmod chown ln tee touch
+	programs_required tar grep echo printf rm id head chmod chown ln tee touch xargs
 
 	# Check if download programs are installed
 	if [ $OPT_FROM_PATH -eq 0 ]; then
@@ -219,6 +220,11 @@ operative_system() {
 		Darwin)
 			PLATFORM_OS="macos"
 			PLATFORM_EXT="tgz"
+			if [ "${PLATFORM_ARCH}" = "arm64" ]; then
+				PLATFORM_PREFIX="/opt/homebrew"
+			elif [ "${PLATFORM_ARCH}" = "amd64" ]; then
+				PLATFORM_PREFIX="/usr/local"
+			fi
 			return
 			;;
 		# FreeBSD)
@@ -228,6 +234,7 @@ operative_system() {
 		Linux)
 			PLATFORM_OS="linux"
 			PLATFORM_EXT="tar.gz"
+			PLATFORM_PREFIX="/gnu"
 			return
 			;;
 	esac
@@ -314,31 +321,50 @@ uncompress() {
 	if [ $OPT_FROM_PATH -eq 1 ]; then
 		local tmp="${OPT_FROM_PATH_TARGET}"
 	else
-		local tmp="/tmp/metacall-tarball.tar.gz"
+		local tmp="/tmp/metacall-tarball.${PLATFORM_EXT}"
 	fi
+
+	local share_dir="${PLATFORM_PREFIX}/share/metacall"
+	local install_list="${share_dir}/metacall-binary-install.txt"
 
 	print "Uncompress the tarball."
 
+	# List the files inside the tar and store them into a txt for running
+	# chmod and chown selectively and for uninstalling it later on
+	${CMD_SUDO} mkdir -p ${share_dir}
+	${CMD_SUDO} tar -tf ${tmp} > ${install_list}
+
+	# Remove first char of the list
+	${CMD_SUDO} sed -i 's/^.//' ${install_list}
+
+	# Store the install list itself
+	echo "${install_list}" | ${CMD_SUDO} tee -a ${install_list} > /dev/null
+
+	# Uncompress the tarball
 	${CMD_SUDO} tar xzf ${tmp} -C /
-	${CMD_SUDO} chmod -R 755 /gnu
-	${CMD_SUDO} chown -R $(id -u):$(id -g) /gnu
+
+	# Give execution permissions and ownership
+	xargs -d '\n' -a ${install_list} -P 4 -I {} chmod 755 "{}"
+	xargs -d '\n' -a ${install_list} -P 4 -I {} chown $(id -u):$(id -g) "{}"
 
 	success "Tarball uncompressed successfully."
 
 	# Add links for certificates
-	local openssl_base="/gnu/store/`ls /gnu/store/ | grep openssl | head -n 1`/share"
-	local openssl_dir="${openssl_base}/`ls ${openssl_base} | grep openssl`"
-	local openssl_cert_dir="${openssl_dir}/certs"
-	local openssl_cert_file="${openssl_dir}/cert.pem"
-	local nss_cert_dir="/gnu/etc/ssl/certs"
-	local nss_cert_file="/gnu/etc/ssl/certs/ca-certificates.crt"
+	if [ "${PLATFORM_OS}" = "linux" ]; then
+		local openssl_base="${PLATFORM_PREFIX}/store/`ls ${PLATFORM_PREFIX}/store/ | grep openssl | head -n 1`/share"
+		local openssl_dir="${openssl_base}/`ls ${openssl_base} | grep openssl`"
+		local openssl_cert_dir="${openssl_dir}/certs"
+		local openssl_cert_file="${openssl_dir}/cert.pem"
+		local nss_cert_dir="${PLATFORM_PREFIX}/etc/ssl/certs"
+		local nss_cert_file="${PLATFORM_PREFIX}/etc/ssl/certs/ca-certificates.crt"
 
-	print "Linking certificates: ${openssl_cert_dir} => ${nss_cert_dir}"
-	print "Linking certificate CA: ${openssl_cert_file} => ${nss_cert_file}"
+		print "Linking certificates: ${openssl_cert_dir} => ${nss_cert_dir}"
+		print "Linking certificate CA: ${openssl_cert_file} => ${nss_cert_file}"
 
-	${CMD_SUDO} rmdir ${openssl_cert_dir}
-	${CMD_SUDO} ln -s ${nss_cert_dir} ${openssl_cert_dir}
-	${CMD_SUDO} ln -s ${nss_cert_file} ${openssl_cert_file}
+		${CMD_SUDO} rmdir ${openssl_cert_dir}
+		${CMD_SUDO} ln -s ${nss_cert_dir} ${openssl_cert_dir}
+		${CMD_SUDO} ln -s ${nss_cert_file} ${openssl_cert_file}
+	fi
 
 	# Clean the tarball
 	if [ $OPT_FROM_PATH -eq 0 ]; then
@@ -409,8 +435,8 @@ binary_install() {
 		print "Detecting Operative System and Architecture."
 
 		# Get the operative system and architecture
-		operative_system
 		architecture
+		operative_system
 
 		success "Operative System (${PLATFORM_OS}) and Architecture (${PLATFORM_ARCH}) detected."
 
