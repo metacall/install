@@ -194,6 +194,13 @@ dependencies() {
 
 		# Set up download command
 		CMD_DOWNLOAD="${download_program}"
+
+		# Skip certificate checks
+		if [ $OPT_NO_CHECK_CERTIFICATE -eq 1 ]; then
+			local insecure_curl="--insecure"
+			local insecure_wget="--no-check-certificate"
+			CMD_DOWNLOAD="$CMD_DOWNLOAD $(eval echo -e \"\$insecure_$CMD_DOWNLOAD\")"
+		fi
 	fi
 
 	# Locate shebang
@@ -212,7 +219,7 @@ operative_system() {
 	# TODO: Implement other operative systems
 	case ${os} in
 		Darwin)
-			echo "osx"
+			echo "macos"
 			return
 			;;
 		# FreeBSD)
@@ -235,20 +242,16 @@ operative_system() {
 architecture() {
 	local arch=$(uname -m)
 
-	# TODO: Implement other architectures in metacall/distributable-linux
+	# TODO: Implement other architectures in metacall/distributable-linux (armv7l, aarch64, ...)
 	case ${arch} in
 		x86_64)
 			echo "amd64"
 			return
 			;;
-		# armv7l)
-		# 	echo "arm"
-		# 	return
-		# 	;;
-		# aarch64)
-		# 	echo "arm64"
-		# 	return
-		# 	;;
+		arm64)
+			echo "arm64"
+			return
+			;;
 	esac
 
 	err "Architecture detected (${arch}) is not supported." \
@@ -257,51 +260,57 @@ architecture() {
 	exit 1
 }
 
+# Download tarball with cURL
+download_curl() {
+	local os="$1"
+	local arch="$2"
+	local ext="$3"
+	local tag_url=$(${CMD_DOWNLOAD} -Ls -o /dev/null -w %{url_effective} "https://github.com/metacall/distributable-${os}/releases/latest")
+	local version=$(printf "${tag_url}" | rev | cut -d '/' -f1 | rev)
+	local final_url=$(printf "https://github.com/metacall/distributable-${os}/releases/download/${version}/metacall-tarball-${os}-${arch}.${ext}")
+	local fail=false
+
+	${CMD_DOWNLOAD} --retry 10 -f --create-dirs -LS ${final_url} --output "/tmp/metacall-tarball.${ext}" || fail="true"
+
+	echo "${fail}"
+}
+
+# Download tarball with wget
+download_wget() {
+	local os="$1"
+	local arch="$2"
+	local ext="$3"
+	local tag_url=$(${CMD_DOWNLOAD} -S -O /dev/null "https://github.com/metacall/distributable-${os}/releases/latest" 2>&1 | grep Location: | tail -n 1 | awk '{print $2}')
+	local version=$(printf "${tag_url}" | rev | cut -d '/' -f1 | rev)
+	local final_url=$(printf "https://github.com/metacall/distributable-${os}/releases/download/${version}/metacall-tarball-${os}-${arch}.${ext}")
+	local fail=false
+
+	${CMD_DOWNLOAD} --tries 10 -O "/tmp/metacall-tarball.${ext}" ${final_url} || fail="true"
+
+	echo "${fail}"
+}
+
 # Download tarball
 download() {
-	local url="https://github.com/metacall/distributable-linux/releases/latest"
-	local tmp="/tmp/metacall-tarball.tar.gz"
 	local os="$1"
 	local arch="$2"
 
+	# Define extension
+	if [ "$1" = "linux" ]; then
+		local ext="tar.gz"
+	elif [ "$1" = "macos" ]; then
+		# TODO: Add tgz for MacOS too
+		local ext="pkg"
+	fi
+
 	print "Start to download the tarball."
 
-	# TODO: Use ${CMD_DOWNLOAD} for improving this code?
+	# Download depending on the program selected
+	local fail="$(eval echo -e \"\$\(download_${CMD_DOWNLOAD} ${os} ${arch} ${ext}\)\")"
 
-	# Skip certificate checks
-	if [ $OPT_NO_CHECK_CERTIFICATE -eq 1 ]; then
-		if program curl; then
-			local curl_cmd='curl --insecure'
-		elif program wget; then
-			local wget_cmd='wget --no-check-certificate'
-		fi
-	else
-		if program curl; then
-			local curl_cmd='curl'
-		elif program wget; then
-			local wget_cmd='wget'
-		fi
-	fi
-
-	if program curl; then
-		local tag_url=$(${curl_cmd} -Ls -o /dev/null -w %{url_effective} ${url})
-	elif program wget; then
-		local tag_url=$(${wget_cmd} -S -O /dev/null ${url} 2>&1 | grep Location: | tail -n 1 | awk '{print $2}')
-	fi
-
-	local version=$(printf "${tag_url}" | rev | cut -d '/' -f1 | rev)
-	local final_url=$(printf "https://github.com/metacall/distributable-linux/releases/download/${version}/metacall-tarball-${os}-${arch}.tar.gz")
-	local fail=false
-
-	if program curl; then
-		${curl_cmd} --retry 10 -f --create-dirs -LS ${final_url} --output ${tmp} || fail=true
-	elif program wget; then
-		${wget_cmd} --tries 10 -O ${tmp} ${final_url} || fail=true
-	fi
-
-	if "${fail}" == true; then
-		rm -rf ${tmp}
-		err "The tarball metacall-tarball-${os}-${arch}.tar.gz could not be downloaded." \
+	if [ "${fail}" = "true" ]; then
+		rm -rf "/tmp/metacall-tarball.${ext}"
+		err "The tarball metacall-tarball-${os}-${arch}.${ext} could not be downloaded." \
 			"  Please, refer to https://github.com/metacall/install/issues and create a new issue." \
 			"  Aborting installation."
 		exit 1
