@@ -344,8 +344,8 @@ uncompress() {
 	${CMD_SUDO} tar xzf ${tmp} -C /
 
 	# Give execution permissions and ownership
-	xargs -d '\n' -a ${install_list} -P 4 -I {} chmod 755 "{}"
-	xargs -d '\n' -a ${install_list} -P 4 -I {} chown $(id -u):$(id -g) "{}"
+	# ${CMD_SUDO} xargs -d '\n' -a ${install_list} -P 4 -I {} chmod 755 "{}"
+	${CMD_SUDO} xargs -d '\n' -a ${install_list} -P 4 -I {} chown $(id -u):$(id -g) "{}"
 
 	success "Tarball uncompressed successfully."
 
