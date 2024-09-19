@@ -1,0 +1,62 @@
+name: Install Metacall on MacOs Test
+
+on: [push, pull_request, workflow_dispatch]
+
+jobs:
+  install-default:
+    name: Install Metacall via Default Installation
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [macos-13, macos-14]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install Metacall
+        run: ./install.sh
+
+      - name: NodeJS Test
+        run: metacall ./test/script.js | grep "123456"
+
+      - name: Python Test
+        run: metacall pip install -r ./test/requirements.txt | grep "Successfully installed"
+
+      - name: Deploy & FaaS Test
+        run: |
+          metacall deploy --version | grep -E "^v.*\..*\..*"
+          metacall faas --version | grep -E "^v.*\..*\..*"
+
+  install-from-path:
+    name: Install Metacall via Path Installation
+    strategy:
+      fail-fast: false
+      matrix:
+        triplet: [
+          {os: macos-13, arch: amd64},
+          {os: macos-14, arch: arm64}
+        ]
+        package: [tgz, pkg]
+    runs-on: ${{ matrix.triplet.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Download Tarball
+        run: |
+          LATEST_VERSION="$(curl -sqI https://github.com/metacall/distributable-macos/releases/latest | awk -F '/' '/^location/ {print substr($NF, 1, length($NF)-1)}')"
+          PACKAGE="metacall-tarball-macos-${{ matrix.triplet.arch }}.${{ matrix.package }}"
+          URL="https://github.com/metacall/distributable-macos/releases/download/$LATEST_VERSION/$PACKAGE"
+          curl -sL "$URL" -o "metacall-tarball-macos.${{ matrix.package }}"
+          ls -la metacall-tarball-macos.${{ matrix.package }}
+
+      - name: Install MetaCall
+        run: ./install.sh --from-path ./metacall-tarball-macos.${{ matrix.package }}
+
+      - name: NodeJS Test
+        run: metacall ./test/script.js | grep "123456"
+
+      - name: Python Test
+        run: metacall pip install -r ./test/requirements.txt | grep "Successfully installed"
+
+      - name: Deploy & FaaS Test
+        run: |
+          metacall deploy --version | grep -E "^v.*\..*\..*"
+          metacall faas --version | grep -E "^v.*\..*\..*"

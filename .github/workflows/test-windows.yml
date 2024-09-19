@@ -7,11 +7,11 @@ jobs:
     name: Install Metacall via Default Installation
     runs-on: windows-latest
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v4
       - name: Install Metacall
         run: |
           cmd.exe /c "powershell -NoProfile -ExecutionPolicy unrestricted ./install.ps1"
-      - name: Run Metacall
+      - name: NodeJS Test
         shell: cmd
         run: |
           metacall ./test/script.js | findstr "123456"
@@ -30,11 +30,12 @@ jobs:
           IF %ERRORLEVEL% NEQ 0 exit /B 1
           metacall faas --version | findstr /R "^v.*\..*\..*"
           IF %ERRORLEVEL% NEQ 0 exit /B 1
+
   install-from-path:
     name: Install Metacall via Path Installation
     runs-on: windows-latest
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v4
       - name: Download Tarball
         shell: pwsh
         run: |
@@ -46,7 +47,7 @@ jobs:
       - name: Install MetaCall
         run: |
           cmd.exe /c "powershell -NoProfile -ExecutionPolicy unrestricted ./install.ps1 -FromPath metacall-tarball-win-x64.zip"
-      - name: Run Metacall
+      - name: NodeJS Test
         shell: cmd
         run: |
           metacall ./test/script.js | findstr "123456"

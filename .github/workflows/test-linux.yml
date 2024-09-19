@@ -7,7 +7,7 @@ jobs:
     name: Install Metacall via Default Installation (local)
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v4
       - name: Tests
         run: ./test.sh
 
@@ -16,7 +16,7 @@ jobs:
     runs-on: ubuntu-latest
     if: github.event_name != 'pull_request'
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v4
       - run: echo "METACALL_INSTALL_CERTS=certificates_remote" >> $GITHUB_ENV
       - name: Tests
         run: ./test.sh
