@@ -8,6 +8,17 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+
+      - name: Trigger metacall/cli Build
+        uses: convictional/trigger-workflow-and-wait@v1.6.1
+          with:
+            owner: metacall
+            repo: cli
+            github_token: ${{ secrets.G_PERSONAL_ACCESS_TOKEN }}
+            workflow_file_name: docker-hub.yml
+            wait_workflow: true
+            ref: master
+
       - name: Tests
         run: ./test.sh
 
@@ -18,5 +29,16 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - run: echo "METACALL_INSTALL_CERTS=certificates_remote" >> $GITHUB_ENV
+
+      - name: Trigger metacall/cli Build
+        uses: convictional/trigger-workflow-and-wait@v1.6.1
+          with:
+            owner: metacall
+            repo: cli
+            github_token: ${{ secrets.G_PERSONAL_ACCESS_TOKEN }}
+            workflow_file_name: docker-hub.yml
+            wait_workflow: true
+            ref: master
+
       - name: Tests
         run: ./test.sh
