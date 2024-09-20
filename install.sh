@@ -339,7 +339,7 @@ uncompress() {
 	${CMD_SUDO} tar xzf ${tmp} -C /
 
 	# Create shared directory
-	if [ ! -d "${share_dir}"]; then
+	if [ ! -d "${share_dir}" ]; then
 		${CMD_SUDO} mkdir -p ${share_dir}
 	fi
 
