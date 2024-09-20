@@ -325,6 +325,7 @@ uncompress() {
 	fi
 
 	local share_dir="${PLATFORM_PREFIX}/share/metacall"
+	local deps_dir="${PLATFORM_PREFIX}/deps"
 	local install_list="${share_dir}/metacall-binary-install.txt"
 	local install_tmp_list="/tmp/metacall-binary-install.txt"
 
@@ -349,11 +350,15 @@ uncompress() {
 	# Remove first char of the list
 	${CMD_SUDO} sed -i 's/^.//' ${install_list}
 
+	# Create additional dependencies folder and add it to the install list
+	${CMD_SUDO} mkdir -p ${deps_dir}
+	echo "${deps_list}" | ${CMD_SUDO} tee -a ${install_list} > /dev/null
+
 	# Store the install list itself
 	echo "${install_list}" | ${CMD_SUDO} tee -a ${install_list} > /dev/null
 
 	# Give execution permissions and ownership
-	${CMD_SUDO} xargs -d '\n' -a ${install_list} -P 4 -I {} chmod 755 "{}" # TODO: Improve this and chmod only the real executable files
+	# ${CMD_SUDO} xargs -d '\n' -a ${install_list} -P 4 -I {} chmod 755 "{}" # TODO: Improve this and chmod only the real executable files
 	${CMD_SUDO} xargs -d '\n' -a ${install_list} -P 4 -I {} chown $(id -u):$(id -g) "{}"
 
 	success "Tarball uncompressed successfully."
@@ -532,16 +537,18 @@ additional_packages_install() {
 	print "Installing additional dependencies."
 
 	# Install Deploy
-	metacall npm install --global --prefix="${install_dir}/deploy" @metacall/deploy
-	echo "#!${CMD_SHEBANG}" &> ${bin_dir}/deploy
-	echo "metacall node ${install_dir}/deploy/lib/node_modules/@metacall/deploy/dist/index.js \$@" >> ${bin_dir}/deploy
-	chmod 755 "${bin_dir}/deploy"
+	${CMD_SUDO} metacall npm install --global --prefix="${install_dir}/deploy" @metacall/deploy
+	echo "#!${CMD_SHEBANG}" | ${CMD_SUDO} tee ${bin_dir}/deploy > /dev/null
+	echo "metacall node ${install_dir}/deploy/lib/node_modules/@metacall/deploy/dist/index.js \$@" | ${CMD_SUDO} tee ${bin_dir}/deploy > /dev/null
 
 	# Install FaaS
-	metacall npm install --global --prefix="${install_dir}/faas" @metacall/faas
-	echo "#!${CMD_SHEBANG}" &> ${bin_dir}/faas
-	echo "metacall node ${install_dir}/faas/lib/node_modules/@metacall/faas/dist/index.js \$@" >> ${bin_dir}/faas
-	chmod 755 "${bin_dir}/faas"
+	${CMD_SUDO} metacall npm install --global --prefix="${install_dir}/faas" @metacall/faas
+	echo "#!${CMD_SHEBANG}" | ${CMD_SUDO} tee ${bin_dir}/faas > /dev/null
+	echo "metacall node ${install_dir}/faas/lib/node_modules/@metacall/faas/dist/index.js \$@" | ${CMD_SUDO} tee ${bin_dir}/faas > /dev/null
+
+	# Give permissions and ownership
+	${CMD_SUDO} chmod -R 755 "${install_dir}"
+	${CMD_SUDO} chown -R $(id -u):$(id -g) "${install_dir}"
 
 	success "Additional dependencies installed."
 }
