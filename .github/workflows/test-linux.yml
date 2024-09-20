@@ -3,22 +3,29 @@ name: Install Metacall on Linux Test
 on: [push, pull_request, workflow_dispatch]
 
 jobs:
-  install-local:
-    name: Install Metacall via Default Installation (local)
+  trigger-cli-build:
+    name: Trigger metacall/cli Build
     runs-on: ubuntu-latest
+    if: github.event_name == 'push'
     steps:
       - uses: actions/checkout@v4
 
-      - name: Trigger metacall/cli Build
+      - name: Trigger metacall/cli Build Workflow
         uses: convictional/trigger-workflow-and-wait@v1.6.1
-          with:
-            owner: metacall
-            repo: cli
-            github_token: ${{ secrets.G_PERSONAL_ACCESS_TOKEN }}
-            workflow_file_name: docker-hub.yml
-            wait_workflow: true
-            ref: master
+        with:
+          owner: metacall
+          repo: cli
+          github_token: ${{ secrets.G_PERSONAL_ACCESS_TOKEN }}
+          workflow_file_name: docker-hub.yml
+          wait_workflow: true
+          ref: master
 
+  install-local:
+    name: Install Metacall via Default Installation (local)
+    runs-on: ubuntu-latest
+    needs: trigger-cli-build
+    steps:
+      - uses: actions/checkout@v4
       - name: Tests
         run: ./test.sh
 
@@ -26,19 +33,9 @@ jobs:
     name: Install Metacall via Default Installation (remote)
     runs-on: ubuntu-latest
     if: github.event_name != 'pull_request'
+    needs: trigger-cli-build
     steps:
       - uses: actions/checkout@v4
       - run: echo "METACALL_INSTALL_CERTS=certificates_remote" >> $GITHUB_ENV
-
-      - name: Trigger metacall/cli Build
-        uses: convictional/trigger-workflow-and-wait@v1.6.1
-          with:
-            owner: metacall
-            repo: cli
-            github_token: ${{ secrets.G_PERSONAL_ACCESS_TOKEN }}
-            workflow_file_name: docker-hub.yml
-            wait_workflow: true
-            ref: master
-
       - name: Tests
         run: ./test.sh
