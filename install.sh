@@ -540,11 +540,15 @@ additional_packages_install() {
 	${CMD_SUDO} metacall npm install --global --prefix="${install_dir}/deploy" @metacall/deploy
 	echo "#!${CMD_SHEBANG}" | ${CMD_SUDO} tee ${bin_dir}/deploy > /dev/null
 	echo "metacall node ${install_dir}/deploy/lib/node_modules/@metacall/deploy/dist/index.js \$@" | ${CMD_SUDO} tee ${bin_dir}/deploy > /dev/null
+	${CMD_SUDO} chmod 755 "${bin_dir}/deploy"
+	${CMD_SUDO} chown $(id -u):$(id -g) "${bin_dir}/deploy"
 
 	# Install FaaS
 	${CMD_SUDO} metacall npm install --global --prefix="${install_dir}/faas" @metacall/faas
 	echo "#!${CMD_SHEBANG}" | ${CMD_SUDO} tee ${bin_dir}/faas > /dev/null
 	echo "metacall node ${install_dir}/faas/lib/node_modules/@metacall/faas/dist/index.js \$@" | ${CMD_SUDO} tee ${bin_dir}/faas > /dev/null
+	${CMD_SUDO} chmod 755 "${bin_dir}/faas"
+	${CMD_SUDO} chown $(id -u):$(id -g) "${bin_dir}/faas"
 
 	# Give permissions and ownership
 	${CMD_SUDO} chmod -R 755 "${install_dir}"
