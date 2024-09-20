@@ -333,12 +333,7 @@ uncompress() {
 	# List the files inside the tar and store them into a txt for running
 	# chmod and chown selectively and for uninstalling it later on
 	${CMD_SUDO} tar -tf ${tmp} > ${install_tmp_list}
-
-	# Remove first char of the list
-	${CMD_SUDO} sed -i 's/^.//' ${install_tmp_list}
-
-	# Store the install list itself
-	echo "${install_list}" | ${CMD_SUDO} tee -a ${install_tmp_list} > /dev/null
+	${CMD_SUDO} chmod 666 ${install_tmp_list}
 
 	# Uncompress the tarball
 	${CMD_SUDO} tar xzf ${tmp} -C /
@@ -350,6 +345,12 @@ uncompress() {
 
 	# Move the install list to the share directory
 	mv "${install_tmp_list}" "${install_list}"
+
+	# Remove first char of the list
+	${CMD_SUDO} sed -i 's/^.//' ${install_list}
+
+	# Store the install list itself
+	echo "${install_list}" | ${CMD_SUDO} tee -a ${install_list} > /dev/null
 
 	# Give execution permissions and ownership
 	${CMD_SUDO} xargs -d '\n' -a ${install_list} -P 4 -I {} chmod 755 "{}" # TODO: Improve this and chmod only the real executable files
