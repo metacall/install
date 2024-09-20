@@ -34,7 +34,6 @@ CMD_SUDO=""
 # Platform dependant variables
 PLATFORM_OS=""
 PLATFORM_ARCH=""
-PLATFORM_EXT=""
 PLATFORM_PREFIX=""
 
 # Check for command line arguments
@@ -185,11 +184,11 @@ dependencies() {
 	print "Checking system dependencies."
 
 	# Check if required programs are installed
-	programs_required tar grep echo printf rm id head chmod chown ln tee touch xargs
+	programs_required uname tar grep echo printf rm id head chmod chown ln tee touch xargs
 
 	# Check if download programs are installed
 	if [ $OPT_FROM_PATH -eq 0 ]; then
-		programs_required tail awk rev cut uname
+		programs_required tail awk rev cut
 
 		local download_program=$(programs_required_one curl wget)
 
@@ -219,7 +218,6 @@ operative_system() {
 	case ${os} in
 		Darwin)
 			PLATFORM_OS="macos"
-			PLATFORM_EXT="tgz"
 			if [ "${PLATFORM_ARCH}" = "arm64" ]; then
 				PLATFORM_PREFIX="/opt/homebrew"
 			elif [ "${PLATFORM_ARCH}" = "amd64" ]; then
@@ -233,7 +231,6 @@ operative_system() {
 		# 	;;
 		Linux)
 			PLATFORM_OS="linux"
-			PLATFORM_EXT="tar.gz"
 			PLATFORM_PREFIX="/gnu"
 			return
 			;;
@@ -267,10 +264,22 @@ architecture() {
 	exit 1
 }
 
+# Detect platform details
+platform() {
+	# Detect operative system and architecture
+	print "Detecting Operative System and Architecture."
+
+	# Get the operative system and architecture
+	architecture
+	operative_system
+
+	success "Operative System (${PLATFORM_OS}) and Architecture (${PLATFORM_ARCH}) detected."
+}
+
 # Get download url from tag
 download_url() {
 	local version=$(printf "$1" | rev | cut -d '/' -f1 | rev)
-	printf "https://github.com/metacall/distributable-${PLATFORM_OS}/releases/download/${version}/metacall-tarball-${PLATFORM_OS}-${PLATFORM_ARCH}.${PLATFORM_EXT}"
+	printf "https://github.com/metacall/distributable-${PLATFORM_OS}/releases/download/${version}/metacall-tarball-${PLATFORM_OS}-${PLATFORM_ARCH}.tar.gz"
 }
 
 # Download tarball with cURL
@@ -278,7 +287,7 @@ download_curl() {
 	local tag_url=$(${CMD_DOWNLOAD} -Ls -o /dev/null -w %{url_effective} "https://github.com/metacall/distributable-${PLATFORM_OS}/releases/latest")
 	local final_url=$(download_url "${tag_url}")
 
-	${CMD_DOWNLOAD} --retry 10 -f --create-dirs -LS ${final_url} --output "/tmp/metacall-tarball.${PLATFORM_EXT}" || echo "true"
+	${CMD_DOWNLOAD} --retry 10 -f --create-dirs -LS ${final_url} --output "/tmp/metacall-tarball.tar.gz" || echo "true"
 }
 
 # Download tarball with wget
@@ -286,7 +295,7 @@ download_wget() {
 	local tag_url=$(${CMD_DOWNLOAD} -S -O /dev/null "https://github.com/metacall/distributable-${PLATFORM_OS}/releases/latest" 2>&1 | grep Location: | tail -n 1 | awk '{print $2}')
 	local final_url=$(download_url "${tag_url}")
 
-	${CMD_DOWNLOAD} --tries 10 -O "/tmp/metacall-tarball.${PLATFORM_EXT}" ${final_url} || echo "true"
+	${CMD_DOWNLOAD} --tries 10 -O "/tmp/metacall-tarball.tar.gz" ${final_url} || echo "true"
 }
 
 # Download tarball
@@ -306,8 +315,8 @@ download() {
 	local fail="$(eval echo -e \"\$\(${download_func}\)\")"
 
 	if [ "${fail}" = "true" ]; then
-		rm -rf "/tmp/metacall-tarball.${PLATFORM_EXT}"
-		err "The tarball metacall-tarball-${PLATFORM_OS}-${PLATFORM_ARCH}.${PLATFORM_EXT} could not be downloaded." \
+		rm -rf "/tmp/metacall-tarball.tar.gz"
+		err "The tarball metacall-tarball-${PLATFORM_OS}-${PLATFORM_ARCH}.tar.gz could not be downloaded." \
 			"  Please, refer to https://github.com/metacall/install/issues and create a new issue." \
 			"  Aborting installation."
 		exit 1
@@ -321,7 +330,7 @@ uncompress() {
 	if [ $OPT_FROM_PATH -eq 1 ]; then
 		local tmp="${OPT_FROM_PATH_TARGET}"
 	else
-		local tmp="/tmp/metacall-tarball.${PLATFORM_EXT}"
+		local tmp="/tmp/metacall-tarball.tar.gz"
 	fi
 
 	local share_dir="${PLATFORM_PREFIX}/share/metacall"
@@ -352,13 +361,12 @@ uncompress() {
 
 	# Create additional dependencies folder and add it to the install list
 	${CMD_SUDO} mkdir -p ${deps_dir}
-	echo "${deps_list}" | ${CMD_SUDO} tee -a ${install_list} > /dev/null
+	echo "${deps_dir}" | ${CMD_SUDO} tee -a ${install_list} > /dev/null
 
 	# Store the install list itself
-	echo "${install_list}" | ${CMD_SUDO} tee -a ${install_list} > /dev/null
+	printf "${install_list}" | ${CMD_SUDO} tee -a ${install_list} > /dev/null
 
 	# Give execution permissions and ownership
-	# ${CMD_SUDO} xargs -d '\n' -a ${install_list} -P 4 -I {} chmod 755 "{}" # TODO: Improve this and chmod only the real executable files
 	${CMD_SUDO} xargs -d '\n' -a ${install_list} -P 4 -I {} chown $(id -u):$(id -g) "{}"
 
 	success "Tarball uncompressed successfully."
@@ -390,49 +398,51 @@ uncompress() {
 
 # Install the CLI
 cli() {
-	local pythonpath_base="/gnu/store/`ls /gnu/store/ | grep python-3 | head -n 1`/lib"
-	local pythonpath_dynlink="`ls -d ${pythonpath_base}/*/ | grep 'python3\.[0-9]*\/$'`lib-dynload"
-
-	# Write shell script pointing to MetaCall CLI
 	print "Installing the Command Line Interface shortcut."
 
-	# Create folder and file
-	${CMD_SUDO} mkdir -p /usr/local/bin/
-	${CMD_SUDO} touch /usr/local/bin/metacall
+	if [ "${PLATFORM_OS}" = "linux" ]; then
+		# Write shell script pointing to MetaCall CLI
+		local pythonpath_base="/gnu/store/`ls /gnu/store/ | grep python-3 | head -n 1`/lib"
+		local pythonpath_dynlink="`ls -d ${pythonpath_base}/*/ | grep 'python3\.[0-9]*\/$'`lib-dynload"
 
-	# Write the shebang
-	printf "#!" | ${CMD_SUDO} tee /usr/local/bin/metacall > /dev/null
-	echo "${CMD_SHEBANG}" | ${CMD_SUDO} tee -a /usr/local/bin/metacall > /dev/null
+		# Create folder and file
+		${CMD_SUDO} mkdir -p /usr/local/bin/
+		${CMD_SUDO} touch /usr/local/bin/metacall
 
-	# MetaCall Environment
-	echo "export LOADER_SCRIPT_PATH=\"\${LOADER_SCRIPT_PATH:-\`pwd\`}\"" | ${CMD_SUDO} tee -a /usr/local/bin/metacall > /dev/null
+		# Write the shebang
+		printf "#!" | ${CMD_SUDO} tee /usr/local/bin/metacall > /dev/null
+		echo "${CMD_SHEBANG}" | ${CMD_SUDO} tee -a /usr/local/bin/metacall > /dev/null
 
-	# Certificates
-	echo "export GIT_SSL_FILE=\"/gnu/etc/ssl/certs/ca-certificates.crt\"" | ${CMD_SUDO} tee -a /usr/local/bin/metacall > /dev/null
-	echo "export GIT_SSL_CAINFO=\"/gnu/etc/ssl/certs/ca-certificates.crt\"" | ${CMD_SUDO} tee -a /usr/local/bin/metacall > /dev/null
+		# MetaCall Environment
+		echo "export LOADER_SCRIPT_PATH=\"\${LOADER_SCRIPT_PATH:-\`pwd\`}\"" | ${CMD_SUDO} tee -a /usr/local/bin/metacall > /dev/null
 
-	# Locale
-	echo "export GUIX_LOCPATH=\"/gnu/lib/locale\"" | ${CMD_SUDO} tee -a /usr/local/bin/metacall > /dev/null
-	echo "export LANG=\"en_US.UTF-8\"" | ${CMD_SUDO} tee -a /usr/local/bin/metacall > /dev/null
+		# Certificates
+		echo "export GIT_SSL_FILE=\"/gnu/etc/ssl/certs/ca-certificates.crt\"" | ${CMD_SUDO} tee -a /usr/local/bin/metacall > /dev/null
+		echo "export GIT_SSL_CAINFO=\"/gnu/etc/ssl/certs/ca-certificates.crt\"" | ${CMD_SUDO} tee -a /usr/local/bin/metacall > /dev/null
 
-	# Python
-	echo "export PYTHONPATH=\"${pythonpath_base}:${pythonpath_dynlink}\"" | ${CMD_SUDO} tee -a /usr/local/bin/metacall > /dev/null
+		# Locale
+		echo "export GUIX_LOCPATH=\"/gnu/lib/locale\"" | ${CMD_SUDO} tee -a /usr/local/bin/metacall > /dev/null
+		echo "export LANG=\"en_US.UTF-8\"" | ${CMD_SUDO} tee -a /usr/local/bin/metacall > /dev/null
 
-	# Guix generated environment variables (TODO: Move all environment variables to metacall/distributable-linux)
-	echo ". /gnu/etc/profile" | ${CMD_SUDO} tee -a /usr/local/bin/metacall > /dev/null
+		# Python
+		echo "export PYTHONPATH=\"${pythonpath_base}:${pythonpath_dynlink}\"" | ${CMD_SUDO} tee -a /usr/local/bin/metacall > /dev/null
 
-	# Set up command line
-	echo "CMD=\`ls -a /gnu/bin | grep \"\$1\" | head -n 1\`" | ${CMD_SUDO} tee -a /usr/local/bin/metacall > /dev/null
+		# Guix generated environment variables (TODO: Move all environment variables to metacall/distributable-linux)
+		echo ". /gnu/etc/profile" | ${CMD_SUDO} tee -a /usr/local/bin/metacall > /dev/null
 
-	echo "if [ \"\${CMD}\" = \"\$1\" ]; then" | ${CMD_SUDO} tee -a /usr/local/bin/metacall > /dev/null
-	echo "	if [ -z \"\${PATH-}\" ]; then export PATH=\"/gnu/bin\"; else PATH=\"/gnu/bin:\${PATH}\"; fi" | ${CMD_SUDO} tee -a /usr/local/bin/metacall > /dev/null
-	echo "	\$@" | ${CMD_SUDO} tee -a /usr/local/bin/metacall > /dev/null
-	echo "	exit \$?" | ${CMD_SUDO} tee -a /usr/local/bin/metacall > /dev/null
-	echo "fi" | ${CMD_SUDO} tee -a /usr/local/bin/metacall > /dev/null
+		# Set up command line
+		echo "CMD=\`ls -a /gnu/bin | grep \"\$1\" | head -n 1\`" | ${CMD_SUDO} tee -a /usr/local/bin/metacall > /dev/null
 
-	# CLI
-	echo "/gnu/bin/metacallcli \$@" | ${CMD_SUDO} tee -a /usr/local/bin/metacall > /dev/null
-	${CMD_SUDO} chmod 755 /usr/local/bin/metacall
+		echo "if [ \"\${CMD}\" = \"\$1\" ]; then" | ${CMD_SUDO} tee -a /usr/local/bin/metacall > /dev/null
+		echo "	if [ -z \"\${PATH-}\" ]; then export PATH=\"/gnu/bin\"; else PATH=\"/gnu/bin:\${PATH}\"; fi" | ${CMD_SUDO} tee -a /usr/local/bin/metacall > /dev/null
+		echo "	\$@" | ${CMD_SUDO} tee -a /usr/local/bin/metacall > /dev/null
+		echo "	exit \$?" | ${CMD_SUDO} tee -a /usr/local/bin/metacall > /dev/null
+		echo "fi" | ${CMD_SUDO} tee -a /usr/local/bin/metacall > /dev/null
+
+		# CLI
+		echo "/gnu/bin/metacallcli \$@" | ${CMD_SUDO} tee -a /usr/local/bin/metacall > /dev/null
+		${CMD_SUDO} chmod 755 /usr/local/bin/metacall
+	fi
 
 	success "CLI shortcut installed successfully."
 }
@@ -444,16 +454,10 @@ binary_install() {
 	# Check dependencies
 	dependencies
 
+	# Check platform
+	platform
+
 	if [ $OPT_FROM_PATH -eq 0 ]; then
-		# Detect operative system and architecture
-		print "Detecting Operative System and Architecture."
-
-		# Get the operative system and architecture
-		architecture
-		operative_system
-
-		success "Operative System (${PLATFORM_OS}) and Architecture (${PLATFORM_ARCH}) detected."
-
 		# Download tarball
 		download
 	fi
