@@ -6,7 +6,7 @@ jobs:
   trigger-cli-build:
     name: Trigger metacall/cli Build
     runs-on: ubuntu-latest
-    if: github.event_name == 'push'
+    if: github.ref == 'refs/heads/master'
     steps:
       - uses: actions/checkout@v4
 
