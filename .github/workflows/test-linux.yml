@@ -4,9 +4,9 @@ on: [push, pull_request, workflow_dispatch]
 
 jobs:
   trigger-cli-build:
-    name: Trigger metacall/cli Build
+    name: Trigger CLI Docker Build
     runs-on: ubuntu-latest
-    if: github.ref == 'refs/heads/master'
+    if: github.event_name != 'pull_request'
     steps:
       - uses: actions/checkout@v4
 
@@ -23,6 +23,7 @@ jobs:
   install-local:
     name: Install Metacall via Default Installation (local)
     runs-on: ubuntu-latest
+    if: always()
     needs: trigger-cli-build
     steps:
       - uses: actions/checkout@v4
