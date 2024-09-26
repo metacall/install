@@ -18,7 +18,7 @@
 #	limitations under the License.
 
 if [ -n "${INSTALL_DEBUG:-}" ]; then
-	set -euxo pipefail
+	set -eux
 else
 	set -eu
 fi
