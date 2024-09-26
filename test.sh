@@ -1,4 +1,4 @@
-#!/usr/bin/env bash
+#!/usr/bin/env sh
 
 #	MetaCall Install Script by Parra Studios
 #	Cross-platform set of scripts to install MetaCall infrastructure.
@@ -28,12 +28,15 @@ SCRIPT_DIR=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" &> /dev/null && pwd)
 # Get test list (any target prefixed by 'test_')
 TEST_LIST=$(cat Dockerfile | grep -v '^#' | grep 'AS test_' | awk '{print $4}')
 
+# Define default certificate setup
+METACALL_INSTALL_CERTS="${METACALL_INSTALL_CERTS:-certificates_local}"
+
 # Run a local server static file server for tricking the tests into using the
 # current version of install.sh script instead the one from GitHub URL
 docker build -t metacall/install_nginx -f proxy/Dockerfile .
 
 # Stop the container if it is already running
-if [[ $(docker ps -f "name=metacall_install_nginx" --format '{{.Names}}') == "metacall_install_nginx" ]]; then
+if [ $(docker ps -f "name=metacall_install_nginx" --format '{{.Names}}') = "metacall_install_nginx" ]; then
 	docker stop metacall_install_nginx
 fi
 
@@ -45,11 +48,8 @@ docker run --rm \
 	--network host \
 	-d metacall/install_nginx
 
-# Define default certificate setup
-METACALL_INSTALL_CERTS="${METACALL_INSTALL_CERTS:-certificates_local}"
-
 # Fake the DNS entry pointing to our interceptor proxy when testing locally
-if [[ "${METACALL_INSTALL_CERTS}" == "certificates_local" ]]; then
+if [ "${METACALL_INSTALL_CERTS}" = "certificates_local" ]; then
 	METACALL_INSTALL_DNS=--add-host="raw.githubusercontent.com:127.0.0.1"
 else
 	METACALL_INSTALL_DNS=
@@ -81,11 +81,23 @@ docker stop metacall_install_nginx
 # Test Docker Install
 DOCKER_HOST_PATH="${SCRIPT_DIR}/test"
 
+if [ "${METACALL_INSTALL_CERTS}" = "certificates_local" ]; then
+	DOCKER_ADDITIONAL_VOLUME="-v ${SCRIPT_DIR}/install.sh:/bin/install.sh"
+	DOCKER_INSTALL_CMD="sh /bin/install.sh"
+	DOCKER_FALLBACK_CMD="echo"
+else
+	DOCKER_ADDITIONAL_VOLUME=""
+	DOCKER_INSTALL_CMD="wget -O - https://raw.githubusercontent.com/metacall/install/master/install.sh | sh -s --"
+	DOCKER_FALLBACK_CMD="wget https://raw.githubusercontent.com/metacall/install/master/install.sh -O /bin/install.sh"
+fi
+
 # Run Docker install with --docker-install parameter
 docker run --rm \
 	-v /var/run/docker.sock:/var/run/docker.sock \
-	-v ${DOCKER_HOST_PATH}:/metacall/source -t docker:19.03.13-dind \
-	sh -c "wget -O - https://raw.githubusercontent.com/metacall/install/master/install.sh | sh -s -- --docker-install \
+	-v ${DOCKER_HOST_PATH}:/metacall/source \
+	${DOCKER_ADDITIONAL_VOLUME} \
+	-t docker:19.03.13-dind \
+	sh -c "${DOCKER_INSTALL_CMD} --docker-install \
 		&& mkdir -p ${DOCKER_HOST_PATH} \
 		&& cd ${DOCKER_HOST_PATH} \
 		&& metacall script.js | grep '123456' \
@@ -101,11 +113,12 @@ fi
 # Run Docker install with fallback (remove wget during the install phase in order to trigger the fallback)
 docker run --rm \
 	-v /var/run/docker.sock:/var/run/docker.sock \
-	-v ${DOCKER_HOST_PATH}:/metacall/source -t docker:19.03.13-dind \
-	sh -c "wget https://raw.githubusercontent.com/metacall/install/master/install.sh \
+	-v ${DOCKER_HOST_PATH}:/metacall/source \
+	${DOCKER_ADDITIONAL_VOLUME} \
+	-t docker:19.03.13-dind \
+	sh -c "${DOCKER_FALLBACK_CMD} \
 		&& rm -rf /usr/bin/wget \
-		&& chmod +x ./install.sh \
-		&& sh ./install.sh \
+		&& sh /bin/install.sh \
 		&& mkdir -p ${DOCKER_HOST_PATH} \
 		&& cd ${DOCKER_HOST_PATH} \
 		&& metacall script.js | grep '123456' \

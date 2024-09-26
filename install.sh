@@ -1,4 +1,4 @@
-#!/usr/bin/env bash
+#!/usr/bin/env sh
 
 #	MetaCall Install Script by Parra Studios
 #	Cross-platform set of scripts to install MetaCall infrastructure.
@@ -502,11 +502,7 @@ docker_install() {
 	# Pull MetaCall CLI Docker Image
 	print "Pulling MetaCall CLI Image."
 
-	docker pull metacall/cli:latest
-
-	result=$?
-
-	if [ $result -ne 0 ]; then
+	if ! (docker pull metacall/cli:latest); then
 		err "Docker image could not be pulled. Aborting installation."
 		exit 1
 	fi
@@ -600,31 +596,17 @@ main() {
 		exit 0
 	fi
 
-	# Required program for recursive calls
-	programs_required wait
-
 	if [ $OPT_DOCKER_INSTALL -eq 1 ]; then
 		# Run docker install
-		docker_install $@ &
-		proc=$!
-		wait ${proc}
-		result=$?
-
-		if [ $result -ne 0 ]; then
-			exit 1
-		fi
+		docker_install
 	else
-		# Run binary install
-		binary_install $@ &
-		proc=$!
-		wait ${proc}
-		result=$?
-
 		# TODO: Remember to do MacOs install fallback to brew in order to compile metacall
 
-		if [ $result -ne 0 ]; then
+		# Run binary install
+		if ! (binary_install); then
 			# Exit if Docker fallback is disabled
 			if [ $OPT_NO_DOCKER_FALLBACK -eq 1 ]; then
+				err "Binary installation has failed and fallback to Docker installation is disabled, exiting..."
 				exit 1
 			fi
 
@@ -646,14 +628,7 @@ main() {
 			fi
 
 			# On error, fallback to docker install
-			docker_install $@ &
-			proc=$!
-			wait ${proc}
-			result=$?
-
-			if [ $result -ne 0 ]; then
-				exit 1
-			fi
+			docker_install
 		fi
 	fi
 
