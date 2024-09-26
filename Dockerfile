@@ -42,6 +42,8 @@ FROM ${METACALL_INSTALL_CERTS} AS certificates
 # Debian Base (root)
 FROM debian:bookworm-slim AS debian_root
 
+ENV INSTALL_DEBUG=1
+
 COPY --from=certificates /etc/ssl/certs/ /etc/ssl/certs/
 
 COPY test/ /test/
@@ -140,6 +142,8 @@ RUN metacall /test/async.py | grep 'Async Done'
 # Fedora Base (root)
 FROM fedora:latest AS fedora_root
 
+ENV INSTALL_DEBUG=1
+
 COPY --from=certificates /etc/ssl/certs/ /etc/pki/ca-trust/source/anchors/
 
 COPY test/ /test/
@@ -193,6 +197,8 @@ RUN wget -O - https://raw.githubusercontent.com/metacall/install/master/install.
 
 # Alpine Base (root)
 FROM alpine:latest AS alpine_root
+
+ENV INSTALL_DEBUG=1
 
 COPY --from=certificates /etc/ssl/certs/ /etc/ssl/certs/
 
@@ -262,6 +268,8 @@ RUN wget -O - https://raw.githubusercontent.com/metacall/install/master/install.
 
 # BusyBox Base
 FROM busybox:stable-uclibc AS test_busybox
+
+ENV INSTALL_DEBUG=1
 
 # Busybox wget fails with self signed certificates so we avoid the tests
 FROM test_busybox AS busybox_fail_certificates_local

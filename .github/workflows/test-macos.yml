@@ -13,6 +13,8 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - name: Install Metacall
+        env:
+          INSTALL_DEBUG: 1
         run: ./install.sh
 
       - name: NodeJS Test
@@ -48,6 +50,8 @@ jobs:
           ls -la metacall-tarball-macos.${{ matrix.package }}
 
       - name: Install MetaCall
+        env:
+          INSTALL_DEBUG: 1
         run: ./install.sh --from-path ./metacall-tarball-macos.${{ matrix.package }}
 
       - name: NodeJS Test

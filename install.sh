@@ -17,6 +17,12 @@
 #	See the License for the specific language governing permissions and
 #	limitations under the License.
 
+if [ -n "${INSTALL_DEBUG:-}" ]; then
+	set -euxo pipefail
+else
+	set -eu
+fi
+
 # Program options
 OPT_DOCKER_INSTALL=0
 OPT_NO_CHECK_CERTIFICATE=0
@@ -70,7 +76,7 @@ program() {
 
 # Set up colors
 if program tput; then
-	ncolors=$(tput colors)
+	ncolors=$(tput colors || echo)
 	if [ -n "$ncolors" ] && [ "$ncolors" -ge 8 ]; then
 		bold="$(tput bold       || echo)"
 		normal="$(tput sgr0     || echo)"
@@ -92,12 +98,12 @@ title() {
 
 # Warning message
 warning() {
-	printf "%b\n" "${yellow:-}‼${normal:-} $@"
+	printf "%b\n" "${yellow:-}⚠️ $@${normal:-}"
 }
 
 # Error message
 err() {
-	printf "%b\n" "${red:-}✘${normal:-} $@"
+	printf "%b\n" "${red:-}✘ $@${normal:-}"
 }
 
 # Print message
@@ -107,7 +113,7 @@ print() {
 
 # Success message
 success() {
-	printf "%b\n" "${green:-}✔${normal:-} $@"
+	printf "%b\n" "${green:-}✔️ $@${normal:-}"
 }
 
 # Ask message
@@ -322,7 +328,7 @@ download() {
 		exit 1
 	fi
 
-	success "Tarball ${version} downloaded."
+	success "Tarball downloaded."
 }
 
 # Extract the tarball (requires root or sudo)
@@ -345,6 +351,9 @@ uncompress() {
 	${CMD_SUDO} tar -tf ${tmp} > ${install_tmp_list}
 	${CMD_SUDO} chmod 666 ${install_tmp_list}
 
+	# TODO: Remove the files from the ${install_tmp_list}
+	# if they already exist on the system
+
 	# Uncompress the tarball
 	${CMD_SUDO} tar xzf ${tmp} -C /
 
@@ -354,7 +363,7 @@ uncompress() {
 	fi
 
 	# Move the install list to the share directory
-	mv "${install_tmp_list}" "${install_list}"
+	${CMD_SUDO} mv "${install_tmp_list}" "${install_list}"
 
 	# Remove first char of the list
 	${CMD_SUDO} sed -i 's/^.//' ${install_list}
@@ -367,7 +376,13 @@ uncompress() {
 	printf "${install_list}" | ${CMD_SUDO} tee -a ${install_list} > /dev/null
 
 	# Give execution permissions and ownership
-	${CMD_SUDO} xargs -d '\n' -a ${install_list} -P 4 -I {} chown $(id -u):$(id -g) "{}"
+	${CMD_SUDO} xargs \
+		-a ${install_list} \
+		-P 4 \
+		-I {} ${CMD_SHEBANG} -c "if [ -e \"{}\" ]; then chown $(id -u):$(id -g) \"{}\"; else printf \"%b\n\" \"${yellow:-}⚠️ Tarball file {} does not exist.${normal:-}\"; fi"
+
+	# TODO: Tag with a timestamp the files in order to uninstall them later on
+	# only if they have not been modified since the install time
 
 	success "Tarball uncompressed successfully."
 
