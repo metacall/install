@@ -17,7 +17,7 @@
 #	See the License for the specific language governing permissions and
 #	limitations under the License.
 
-set -exuo pipefail
+set -xuo pipefail
 
 # Run with Buildkit
 export DOCKER_BUILDKIT=1
