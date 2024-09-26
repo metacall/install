@@ -1,4 +1,4 @@
-#!/usr/bin/env sh
+#!/usr/bin/env bash
 
 #	MetaCall Install Script by Parra Studios
 #	Cross-platform set of scripts to install MetaCall infrastructure.
