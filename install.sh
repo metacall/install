@@ -74,9 +74,21 @@ program() {
 	command -v $1 >/dev/null 2>&1
 }
 
+# List of colors
+bold=""
+normal=""
+black=""
+red=""
+green=""
+yellow=""
+blue=""
+magenta=""
+cyan=""
+white=""
+
 # Set up colors
 if program tput; then
-	ncolors=$(tput colors || echo)
+	ncolors=$(tput colors 2>/dev/null || echo)
 	if [ -n "$ncolors" ] && [ "$ncolors" -ge 8 ]; then
 		bold="$(tput bold       || echo)"
 		normal="$(tput sgr0     || echo)"
@@ -321,7 +333,7 @@ download() {
 	local fail="$(eval echo -e \"\$\(${download_func}\)\")"
 
 	if [ "${fail}" = "true" ]; then
-		rm -rf "/tmp/metacall-tarball.tar.gz"
+		${CMD_SUDO} rm -rf "/tmp/metacall-tarball.tar.gz"
 		err "The tarball metacall-tarball-${PLATFORM_OS}-${PLATFORM_ARCH}.tar.gz could not be downloaded." \
 			"  Please, refer to https://github.com/metacall/install/issues and create a new issue." \
 			"  Aborting installation."
@@ -347,15 +359,37 @@ uncompress() {
 	print "Uncompress the tarball."
 
 	# List the files inside the tar and store them into a txt for running
-	# chmod and chown selectively and for uninstalling it later on
-	${CMD_SUDO} tar -tf ${tmp} > ${install_tmp_list}
+	# chown selectively and for uninstalling it later on, install files
+	# that do not exist already in the system, this will allow to make the
+	# installer idempotent, so later on we delete only our files
+	${CMD_SUDO} rm -rf ${install_tmp_list}
+
+	# The sed is needed in order to store properly the paths because they
+	# are listed always with prefix ./ and we have to check with -e if they
+	# are present as absoulte path / in the system, then we write them again with
+	# the dot . so they are written as ./ for uncompressing them
+	${CMD_SUDO} tar -tf "${tmp}" \
+		| sed 's/^\.//' \
+		| xargs -P 4 -I{} ${CMD_SHEBANG} -c "
+			if [ ! -e \"{}\" ]; then
+				echo \".{}\" >> ${install_tmp_list}
+			fi
+		"
+
+	# Check if the file list was created properly
+	if [ ! -f "${install_tmp_list}" ]; then
+		err "The file list could not be created properly, this means that metacall was already installed but the command is not available. Aborting installation."
+		${CMD_SUDO} rm -rf "/tmp/metacall-tarball.tar.gz"
+		exit 1
+	fi
+
+	# Give read write permissions for all
 	${CMD_SUDO} chmod 666 ${install_tmp_list}
 
-	# TODO: Remove the files from the ${install_tmp_list}
-	# if they already exist on the system
-
-	# Uncompress the tarball
-	${CMD_SUDO} tar xzf ${tmp} -C /
+	# Uncompress the tarball. Use the install list to uncompress only the files
+	# that are new in the filesystem, don't restore mtime (-m) and don't restore user:group (-o).
+	# Ignore stderr and return error, the linux tarball is broken and gives errors
+	${CMD_SUDO} tar xzf "${tmp}" -T ${install_tmp_list} -m -o -C / 2>/dev/null || true
 
 	# Create shared directory
 	if [ ! -d "${share_dir}" ]; then
@@ -365,8 +399,8 @@ uncompress() {
 	# Move the install list to the share directory
 	${CMD_SUDO} mv "${install_tmp_list}" "${install_list}"
 
-	# Remove first char of the list
-	${CMD_SUDO} sed -i 's/^.//' ${install_list}
+	# Remove first char of each path in the list
+	${CMD_SUDO} sed -i 's/^\.//' "${install_list}"
 
 	# Create additional dependencies folder and add it to the install list
 	${CMD_SUDO} mkdir -p ${deps_dir}
@@ -376,10 +410,20 @@ uncompress() {
 	printf "${install_list}" | ${CMD_SUDO} tee -a ${install_list} > /dev/null
 
 	# Give execution permissions and ownership
+	local user="$(id -u)"
+	local group="$(id -g)"
+
 	${CMD_SUDO} xargs \
-		-a ${install_list} \
+		-a "${install_list}" \
 		-P 4 \
-		-I {} ${CMD_SHEBANG} -c "if [ -e \"{}\" ]; then chown $(id -u):$(id -g) \"{}\"; else printf \"%b\n\" \"${yellow:-}⚠️ Tarball file {} does not exist.${normal:-}\"; fi"
+		-I {} ${CMD_SHEBANG} -c "
+			if [ -e \"{}\" ]; then
+				${CMD_SUDO} chmod 775 \"{}\"
+				${CMD_SUDO} chown ${user}:${group} \"{}\"
+			else
+				printf \"%b\n\" \"${yellow:-}⚠️ Tarball file {} does not exist.${normal:-}\"
+			fi
+		"
 
 	# TODO: Tag with a timestamp the files in order to uninstall them later on
 	# only if they have not been modified since the install time
@@ -406,7 +450,7 @@ uncompress() {
 	# Clean the tarball
 	if [ $OPT_FROM_PATH -eq 0 ]; then
 		print "Cleaning the tarball."
-		rm -rf ${tmp}
+		${CMD_SUDO} rm -rf "${tmp}"
 		success "Tarball cleaned successfully."
 	fi
 }
@@ -456,7 +500,7 @@ cli() {
 
 		# CLI
 		echo "/gnu/bin/metacallcli \$@" | ${CMD_SUDO} tee -a /usr/local/bin/metacall > /dev/null
-		${CMD_SUDO} chmod 755 /usr/local/bin/metacall
+		${CMD_SUDO} chmod 775 /usr/local/bin/metacall
 	fi
 
 	success "CLI shortcut installed successfully."
@@ -521,7 +565,8 @@ docker_install() {
 	printf '#!' | ${CMD_SUDO} tee /usr/local/bin/metacall > /dev/null
 	echo "${CMD_SHEBANG}" | ${CMD_SUDO} tee -a /usr/local/bin/metacall > /dev/null
 	echo "${command}" | ${CMD_SUDO} tee -a /usr/local/bin/metacall > /dev/null
-	${CMD_SUDO} chmod 755 /usr/local/bin/metacall
+	${CMD_SUDO} chmod 775 /usr/local/bin/metacall
+	${CMD_SUDO} chown $(id -u):$(id -g) /usr/local/bin/metacall
 }
 
 check_path_env() {
@@ -555,18 +600,18 @@ additional_packages_install() {
 	${CMD_SUDO} metacall npm install --global --prefix="${install_dir}/deploy" @metacall/deploy
 	echo "#!${CMD_SHEBANG}" | ${CMD_SUDO} tee ${bin_dir}/deploy > /dev/null
 	echo "metacall node ${install_dir}/deploy/lib/node_modules/@metacall/deploy/dist/index.js \$@" | ${CMD_SUDO} tee ${bin_dir}/deploy > /dev/null
-	${CMD_SUDO} chmod 755 "${bin_dir}/deploy"
+	${CMD_SUDO} chmod 775 "${bin_dir}/deploy"
 	${CMD_SUDO} chown $(id -u):$(id -g) "${bin_dir}/deploy"
 
 	# Install FaaS
 	${CMD_SUDO} metacall npm install --global --prefix="${install_dir}/faas" @metacall/faas
 	echo "#!${CMD_SHEBANG}" | ${CMD_SUDO} tee ${bin_dir}/faas > /dev/null
 	echo "metacall node ${install_dir}/faas/lib/node_modules/@metacall/faas/dist/index.js \$@" | ${CMD_SUDO} tee ${bin_dir}/faas > /dev/null
-	${CMD_SUDO} chmod 755 "${bin_dir}/faas"
+	${CMD_SUDO} chmod 775 "${bin_dir}/faas"
 	${CMD_SUDO} chown $(id -u):$(id -g) "${bin_dir}/faas"
 
 	# Give permissions and ownership
-	${CMD_SUDO} chmod -R 755 "${install_dir}"
+	${CMD_SUDO} chmod -R 775 "${install_dir}"
 	${CMD_SUDO} chown -R $(id -u):$(id -g) "${install_dir}"
 
 	success "Additional dependencies installed."

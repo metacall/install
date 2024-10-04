@@ -105,6 +105,23 @@ RUN curl -sL https://raw.githubusercontent.com/metacall/install/master/install.s
 	&& metacall deploy --version | grep -e '^v.*\..*\..*' \
 	&& metacall faas --version | grep -e '^v.*\..*\..*'
 
+# # Test uninstall Debian without root and curl, checking if it preserves existing files
+# FROM debian_user AS test_debian_user_curl_uninstall
+
+# RUN mkdir -p /gnu \
+# 	&& curl -sL https://raw.githubusercontent.com/metacall/install/master/install.sh | bash \
+# 	&& metacall /test/script.js | grep '123456' \
+# 	&& curl -sL https://raw.githubusercontent.com/metacall/install/master/install.sh
+# 	| bash -s -- --uninstall \
+# 	| grep 'MetaCall has been successfully uninstalled' \
+# 	&& [ "$(command -v metacall || echo '1')" = "1" ] \
+# 	&& [ -d /gnu ]
+
+# # TODO:
+# # Create a test that has a /gnu folder, then install metacall, then update the mtime of a random file
+# # from metacall installation, then uninstall and then verify that /gnu and the random file that has been
+# # update are still present after the uninstall process
+
 # Test certificates in Debian with user (comparing against <!doctype html> in buffer format)
 FROM test_debian_user_curl AS test_debian_user_certificates
 
@@ -264,7 +281,8 @@ FROM test_alpine_user_wget AS test_alpine_user_wget_uninstall
 
 RUN wget -O - https://raw.githubusercontent.com/metacall/install/master/install.sh \
 	| sh -s -- --uninstall \
-	| grep 'MetaCall has been successfully uninstalled'
+	| grep 'MetaCall has been successfully uninstalled' \
+	&& [ "$(command -v metacall || echo '1')" = "1" ]
 
 # BusyBox Base
 FROM busybox:stable-uclibc AS test_busybox
