@@ -391,7 +391,7 @@ uncompress() {
 	fi
 
 	# remove first char of each path in the list and move the install list to the share directory
-	${CMD_SUDO} cut -c2- "${install_tmp_list}" > "${install_list}"
+	${CMD_SUDO} cut -c2- "${install_tmp_list}" | ${CMD_SUDO} tee -a ${install_list} > /dev/null
 	${CMD_SUDO} rm "${install_tmp_list}"
 
 	# Create additional dependencies folder and add it to the install list
