@@ -199,7 +199,7 @@ dependencies() {
 	print "Checking system dependencies."
 
 	# Check if required programs are installed
-	programs_required uname tar grep echo printf rm id head chmod chown ln tee touch xargs
+	programs_required uname tar grep echo printf rm id head chmod chown ln tee touch xargs find comm
 
 	# Check if download programs are installed
 	if [ $OPT_FROM_PATH -eq 0 ]; then
@@ -390,11 +390,9 @@ uncompress() {
 		${CMD_SUDO} mkdir -p ${share_dir}
 	fi
 
-	# Move the install list to the share directory
-	${CMD_SUDO} mv "${install_tmp_list}" "${install_list}"
-
-	# Remove first char of each path in the list
-	${CMD_SUDO} sed -i 's/^\.//' "${install_list}"
+	# remove first char of each path in the list and move the install list to the share directory
+	${CMD_SUDO} cut -c2- "${install_tmp_list}" > "${install_list}"
+	${CMD_SUDO} rm "${install_tmp_list}"
 
 	# Create additional dependencies folder and add it to the install list
 	${CMD_SUDO} mkdir -p ${deps_dir}
