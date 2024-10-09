@@ -163,25 +163,22 @@ programs_required_one() {
 
 # Find proper shebang for the launcher script
 find_shebang() {
+	# Check common shells
+	local sh_program=$(programs_required_one bash dash sh)
+
+	if [ -z "${sh_program:-}" ]; then
+		err "None of the following programs are installed: 'bash' 'dash' 'sh'. One of them is required at least to find the shell. Aborting installation."
+		exit 1
+	fi
+
 	# Detect where is the 'env' found in order to set properly the shebang
-	local shebang_program=$(programs_required_one /usr/bin/env /bin/env)
+	local env_program=$(programs_required_one env)
 
-	if [ -z "${shebang_program}" ]; then
-		warning "None of the following programs are installed: /usr/bin/env /bin/env. Trying to detect common shells..."
-
-		# Check common shells
-		local shebang_program=$(programs_required_one /bin/bash /bin/dash /bin/sh)
-		
-		if [ -z "${shebang_program}" ]; then
-			err "None of the following programs are installed: /bin/bash /bin/dash /bin/sh. One of them is required at least to find the shell. Aborting installation."
-			exit 1
-		else
-			# Set up shebang command
-			CMD_SHEBANG="${shebang_program}"
-		fi
+	if [ -z "${env_program:-}" ]; then
+		CMD_SHEBANG="${env_program} ${sh_program}"
 	else
-		# Set up shebang command based on env
-		CMD_SHEBANG="${shebang_program} sh"
+		# Set up shebang command by default
+		CMD_SHEBANG="/usr/bin/env ${sh_program}"
 	fi
 }
 
@@ -370,7 +367,7 @@ uncompress() {
 	# the dot . so they are written as ./ for uncompressing them
 	${CMD_SUDO} tar -tf "${tmp}" \
 		| sed 's/^\.//' \
-		| xargs -n 1 -P 4 -I{} ${CMD_SHEBANG} -c "if [ ! -e \"{}\" ]; then echo \".{}\" >> ${install_tmp_list}; fi"
+		| xargs -n 1 -P 4 -I{} bash -c "if [ ! -e \"{}\" ]; then echo \".{}\" >> ${install_tmp_list}; fi"
 
 	# Check if the file list was created properly
 	if [ ! -f "${install_tmp_list}" ]; then
