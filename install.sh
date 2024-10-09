@@ -370,11 +370,7 @@ uncompress() {
 	# the dot . so they are written as ./ for uncompressing them
 	${CMD_SUDO} tar -tf "${tmp}" \
 		| sed 's/^\.//' \
-		| xargs -P 4 -I{} ${CMD_SHEBANG} -c "
-			if [ ! -e \"{}\" ]; then
-				echo \".{}\" >> ${install_tmp_list}
-			fi
-		"
+		| xargs -P 4 -I{} ${CMD_SHEBANG} -c "if [ ! -e \"{}\" ]; then echo \".{}\" >> ${install_tmp_list}; fi"
 
 	# Check if the file list was created properly
 	if [ ! -f "${install_tmp_list}" ]; then
@@ -415,14 +411,7 @@ uncompress() {
 
 	${CMD_SUDO} xargs \
 		-P 4 \
-		-I {} ${CMD_SHEBANG} -c "
-			if [ -e \"{}\" ]; then
-				${CMD_SUDO} chmod 775 \"{}\"
-				${CMD_SUDO} chown ${user}:${group} \"{}\"
-			else
-				printf \"%b\n\" \"${yellow:-}⚠️ Tarball file {} does not exist.${normal:-}\"
-			fi
-		" < "${install_list}"
+		-I {} ${CMD_SHEBANG} -c "if [ -e \"{}\" ]; then ${CMD_SUDO} chmod 775 \"{}\" && ${CMD_SUDO} chown ${user}:${group} \"{}\"; else printf \"%b\n\" \"${yellow:-}⚠️ Tarball file {} does not exist.${normal:-}\"; fi" < "${install_list}"
 
 	# TODO: Tag with a timestamp the files in order to uninstall them later on
 	# only if they have not been modified since the install time
