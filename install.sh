@@ -367,7 +367,7 @@ uncompress() {
 	# the dot . so they are written as ./ for uncompressing them
 	${CMD_SUDO} tar -tf "${tmp}" \
 		| sed 's/^\.//' \
-		| xargs -n 1 -P 4 -I{} bash -c "if [ ! -e \"{}\" ]; then echo \".{}\" >> ${install_tmp_list}; fi"
+		| xargs -n 1 -P 4 -I{} ${CMD_SHEBANG} -c "if [ ! -e \"{}\" ]; then echo \".{}\" >> ${install_tmp_list}; fi"
 
 	# Check if the file list was created properly
 	if [ ! -f "${install_tmp_list}" ]; then
