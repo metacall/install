@@ -365,9 +365,9 @@ uncompress() {
 	# are listed always with prefix ./ and we have to check with -e if they
 	# are present as absoulte path / in the system, then we write them again with
 	# the dot . so they are written as ./ for uncompressing them
-	${CMD_SUDO} tar -tf "${tmp}" \
-		| sed 's/^\.//' \
-		| xargs -n 1 -P 4 -I{} ${CMD_SHEBANG} -c "if [ ! -e \"{}\" ]; then echo \".{}\" >> ${install_tmp_list}; fi"
+	${CMD_SUDO} tar -tf "${tmp}" | sed 's/^\.//' > ${install_tmp_list}.tmp
+	${CMD_SUDO} cat ${install_tmp_list}.tmp | xargs -n 1 -P 4 -I{} ${CMD_SHEBANG} -c "if [ ! -e \"{}\" ]; then echo \".{}\" >> ${install_tmp_list}; fi"
+	${CMD_SUDO} rm -rf ${install_tmp_list}.tmp
 
 	# Check if the file list was created properly
 	if [ ! -f "${install_tmp_list}" ]; then
