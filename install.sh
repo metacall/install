@@ -170,10 +170,10 @@ find_shebang() {
 		warning "None of the following programs are installed: /usr/bin/env /bin/env. Trying to detect common shells..."
 
 		# Check common shells
-		local shebang_program=$(programs_required_one /bin/sh /bin/bash /bin/dash)
+		local shebang_program=$(programs_required_one /bin/bash /bin/dash /bin/sh)
 		
 		if [ -z "${shebang_program}" ]; then
-			err "None of the following programs are installed: /bin/sh /bin/bash /bin/dash. One of them is required at least to find the shell. Aborting installation."
+			err "None of the following programs are installed: /bin/bash /bin/dash /bin/sh. One of them is required at least to find the shell. Aborting installation."
 			exit 1
 		else
 			# Set up shebang command
