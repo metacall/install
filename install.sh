@@ -414,7 +414,6 @@ uncompress() {
 	local group="$(id -g)"
 
 	${CMD_SUDO} xargs \
-		-a "${install_list}" \
 		-P 4 \
 		-I {} ${CMD_SHEBANG} -c "
 			if [ -e \"{}\" ]; then
@@ -423,7 +422,7 @@ uncompress() {
 			else
 				printf \"%b\n\" \"${yellow:-}⚠️ Tarball file {} does not exist.${normal:-}\"
 			fi
-		"
+		" < "${install_list}"
 
 	# TODO: Tag with a timestamp the files in order to uninstall them later on
 	# only if they have not been modified since the install time
