@@ -244,15 +244,15 @@ function Set-NodePath {
 	param (
 		[string]$FilePath
 	)
-	$NodePath = "$env:LocalAppData\MetaCall\metacall\runtimes\nodejs\node.exe"
+	$NodePath = "`"$env:LocalAppData\MetaCall\metacall\runtimes\nodejs\node.exe`""
 	if (-not (Test-Path $FilePath)) {
 		Write-Error "The file $FilePath does not exist."
 		return
 	}
-	$content = Get-Content -Path $FilePath
-	$content = $content -replace '%dp0%\\node.exe', $NodePath
+	$content = Get-Content -Path "$FilePath"
+	$content = $content -replace '%dp0%\\node.exe', "$NodePath"
 	$content = $content -replace '""', '"'
-	Set-Content -Path $FilePath -Value $content
+	Set-Content -Path "$FilePath" -Value "$content"
 }
 
 function Install-MetaCall-AdditionalPackages {
@@ -268,7 +268,7 @@ function Install-MetaCall-AdditionalPackages {
 
 	Write-Host "MetaCall $($Component) Installation"
 	Invoke-Expression "npm install --global --prefix=`"$InstallDir`" @metacall/$Component"
-	Set-NodePath  "$InstallDir\metacall-$Component.cmd"
+	Set-NodePath "$InstallDir\metacall-$Component.cmd"
 	Write-Host "MetaCall $Component has been installed."
 }
 
