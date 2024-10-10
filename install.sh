@@ -401,6 +401,9 @@ uncompress() {
 	# Store the install list itself
 	printf "${install_list}" | ${CMD_SUDO} tee -a ${install_list} > /dev/null
 
+	# TODO: Remove this
+	cat ${install_list}
+
 	# Give execution permissions and ownership
 	local user="$(id -u)"
 	local group="$(id -g)"
