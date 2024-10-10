@@ -2,6 +2,10 @@ name: Install Metacall on Windows Test
 
 on: [push, pull_request, workflow_dispatch]
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
 jobs:
   install-default:
     name: Install Metacall via Default Installation
