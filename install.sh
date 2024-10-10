@@ -361,6 +361,11 @@ uncompress() {
 	# installer idempotent, so later on we delete only our files
 	${CMD_SUDO} rm -rf ${install_tmp_list}
 
+	# Disable debug info
+	if [ -n "${INSTALL_DEBUG:-}" ]; then
+		set +x
+	fi
+
 	# The sed is needed in order to store properly the paths because they
 	# are listed always with prefix ./ and we have to check with -e if they
 	# are present as absoulte path / in the system, then we write them again with
@@ -370,6 +375,10 @@ uncompress() {
 			echo ".${file}" >> ${install_tmp_list}
 		fi
 	done
+
+	if [ -n "${INSTALL_DEBUG:-}" ]; then
+		set -x
+	fi
 
 	# Check if the file list was created properly
 	if [ ! -f "${install_tmp_list}" ]; then
@@ -405,16 +414,25 @@ uncompress() {
 	# TODO: Remove this
 	cat "${install_list}"
 
+	# Disable debug info
+	if [ -n "${INSTALL_DEBUG:-}" ]; then
+		set +x
+	fi
+
 	# Give execution permissions and ownership
 	local user="$(id -u)"
 	local group="$(id -g)"
 
 	${CMD_SUDO} cat ${install_list} | sed 's/^\.//' | while IFS= read -r file; do
-		if [ e "${file}" ]; then
+		if [ -e "${file}" ]; then
 			${CMD_SUDO} chmod 775 "${file}"
 			${CMD_SUDO} chown ${user}:${group} "${file}"
 		fi
 	done
+
+	if [ -n "${INSTALL_DEBUG:-}" ]; then
+		set -x
+	fi
 
 	# TODO: Tag with a timestamp the files in order to uninstall them later on
 	# only if they have not been modified since the install time
