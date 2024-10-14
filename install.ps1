@@ -59,7 +59,7 @@ function Print-With-Fallback([string]$Message) {
 # }
 
 function Print-Info([string]$Message) {
-	Print-With-Fallback "▷ $Message"
+	Print-With-Fallback "$([char]0x25B7) $Message"
 }
 
 # function Print-Success([string]$Message) {
