@@ -54,27 +54,27 @@ function Print-With-Fallback([string]$Message) {
 	}
 }
 
-# function Title([string]$Message) {
+# function Print-Title([string]$Message) {
 # 	Print-With-Fallback "$Message`n"
 # }
 
-# function Print([string]$Message) {
-# 	Print-With-Fallback "▷ $Message"
-# }
+function Print-Info([string]$Message) {
+	Print-With-Fallback "▷ $Message"
+}
 
-# function Success([string]$Message) {
+# function Print-Success([string]$Message) {
 # 	Print-With-Fallback "✔️ $Message"
 # }
 
-# function Warning([string]$Message) {
+# function Print-Warning([string]$Message) {
 # 	Print-With-Fallback "⚠️ $Message"
 # }
 
-# function Error([string]$Message) {
+# function Print-Error([string]$Message) {
 # 	Print-With-Fallback "✘ $Message"
 # }
 
-# function Debug([string]$Message) {
+# function Print-Debug([string]$Message) {
 # 	if ($env:METACALL_INSTALL_DEBUG) {
 # 		Print-With-Fallback "🐞 $Message"
 # 	}
@@ -240,7 +240,7 @@ function Path-Uninstall([string]$Path) {
 }
 
 function Install-Tarball([string]$InstallDir, [string]$Version) {
-	Write-Output "MetaCall Binary Installation."
+	Print-Info "MetaCall Binary Installation."
 
 	$InstallRoot = Resolve-Installation-Path $InstallDir
 	$InstallOutput = Join-Path -Path $InstallRoot -ChildPath "metacall-tarball-win.zip"
@@ -254,7 +254,7 @@ function Install-Tarball([string]$InstallDir, [string]$Version) {
 	New-Item -ItemType Directory -Force -Path $InstallRoot | Out-Null
 	
 	if (!$FromPath) {
-		Write-Output "Downloading tarball..."
+		Print-Info "Downloading tarball..."
 
 		$InstallVersion = Resolve-Version $Version
 		$InstallArchitecture = Get-CLI-Architecture
@@ -263,33 +263,33 @@ function Install-Tarball([string]$InstallDir, [string]$Version) {
 		# Download the tarball
 		Invoke-WebRequest -Uri $DownloadUri -OutFile $InstallOutput
 
-		Write-Output "Tarball downloaded."
+		Print-Info "Tarball downloaded."
 	} else {
 		# Copy the tarball from the path
 		Copy-Item -Path $FromPath -Destination $InstallOutput
 	}
 
-	Write-Output "Uncompressing tarball..."
+	Print-Info "Uncompressing tarball..."
 
 	# Unzip the tarball
 	Expand-Archive -Path $InstallOutput -DestinationPath $InstallRoot -Force
 
-	Write-Output "Tarball extracted correctly."
+	Print-Info "Tarball extracted correctly."
 
 	# Delete the tarball
 	Remove-Item -Force $InstallOutput | Out-Null
 
-	Write-Output "Running post-install scripts..."
+	Print-Info "Running post-install scripts..."
 
 	# Run post install scripts
 	Post-Install $InstallRoot
 
-	Write-Output "Adding MetaCall to PATH..."
+	Print-Info "Adding MetaCall to PATH..."
 
 	# Add MetaCall CLI to PATH
 	Path-Install $InstallRoot
 
-	Write-Output "MetaCall installed successfully."
+	Print-Info "MetaCall installed successfully."
 }
 
 function Set-NodePath {
@@ -300,18 +300,18 @@ function Set-NodePath {
 	$NodePath = "$env:LocalAppData\MetaCall\metacall\runtimes\nodejs\node.exe"
 
 	if (-not (Test-Path "$FilePath")) {
-		Write-Output "Failed to set up an additional package, the file $FilePath does not exist."
+		Print-Info "Failed to set up an additional package, the file $FilePath does not exist."
 		return
 	}
 
 	$Content = Get-Content -Path $FilePath
 
-	Write-Output "Replace $FilePath content:`n$Content"
+	Print-Info "Replace $FilePath content:`n$Content"
 
 	$Content = $Content -replace '%dp0%\\node.exe', $NodePath
 	$Content = $Content -replace '""', '"'
 
-	Write-Output "With new content:`n$Content"
+	Print-Info "With new content:`n$Content"
 
 	Set-Content -Path $FilePath -Value $Content
 }
@@ -328,10 +328,10 @@ function Install-Additional-Packages {
 		New-Item -ItemType Directory -Force -Path $InstallDir | Out-Null
 	}
 
-	Write-Output "Installing '$Component' additional package..."
+	Print-Info "Installing '$Component' additional package..."
 	Invoke-Expression "npm install --global --prefix=`"$InstallDir`" @metacall/$Component"
 	Set-NodePath "$InstallDir\metacall-$Component.cmd"
-	Write-Output "Package '$Component' has been installed."
+	Print-Info "Package '$Component' has been installed."
 }
 
 # Install the tarball and post scripts
