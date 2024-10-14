@@ -515,6 +515,35 @@ binary_install() {
 	if [ $OPT_FROM_PATH -eq 0 ]; then
 		# Download tarball
 		download
+	else
+		# Check if the tarball is correct
+		if [ ! -f "$OPT_FROM_PATH_TARGET" ]; then
+			err "The tarball $OPT_FROM_PATH_TARGET does not exist, exiting..."
+			exit 1
+		fi
+
+		case "$OPT_FROM_PATH_TARGET" in
+			*.tar.gz)
+				# Valid format
+				:
+				;;
+			*.pkg)
+				# Only valid in darwin
+				if [ "${PLATFORM_OS}" != "macos" ]; then
+					err "The tarball $OPT_FROM_PATH_TARGET has pkg format, and this is only valid on MacOS, exiting..."
+					exit 1
+				fi
+
+				# TODO: Implement pkg for MacOS (https://superuser.com/a/525395)
+				err "The tarball $OPT_FROM_PATH_TARGET has pkg format, and it is not implemented, use tar.gz instead for now, exiting..."
+				exit 1
+				;;
+			*)
+				# Invalid format
+				err "The tarball $OPT_FROM_PATH_TARGET has an invalid format, exiting..."
+				exit 1
+				;;
+		esac
 	fi
 
 	# Extract
@@ -532,9 +561,13 @@ docker_install() {
 	title "MetaCall Docker Installer"
 
 	# Check if Docker command is installed
-	print "Checking Docker Dependency."
+	print "Checking Docker dependencies."
 
+	# Dependencies
 	programs_required docker echo chmod tee touch
+
+	# Check platform
+	platform
 
 	# Locate shebang
 	find_shebang
@@ -614,14 +647,6 @@ additional_packages_install() {
 }
 
 main() {
-	# Check if the tarball is correct
-	if [ $OPT_FROM_PATH -eq 1 ]; then
-		if [ ! -f "$OPT_FROM_PATH_TARGET" ]; then
-			err "The tarball $OPT_FROM_PATH_TARGET does not exist, exiting..."
-			exit 1
-		fi
-	fi
-
 	if program metacall; then
 		# Skip asking for updates if the update flag is enabled
 		if [ $OPT_UPDATE -eq 0 ] && [ $OPT_UNINSTALL -eq 0 ]; then
