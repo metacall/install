@@ -17,7 +17,7 @@
 #	See the License for the specific language governing permissions and
 #	limitations under the License.
 
-if [ -n "${INSTALL_DEBUG:-}" ]; then
+if [ -n "${METACALL_INSTALL_DEBUG:-}" ]; then
 	set -euxo pipefail
 else
 	set -eu
@@ -131,7 +131,7 @@ success() {
 
 # Debug message
 debug() {
-	if [ -n "${INSTALL_DEBUG:-}" ]; then
+	if [ -n "${METACALL_INSTALL_DEBUG:-}" ]; then
 		printf "%b\n" "${normal:-}🐞 $@"
 	fi
 }
@@ -372,7 +372,7 @@ uncompress() {
 	${CMD_SUDO} rm -rf ${install_tmp_list}
 
 	# Disable debug info
-	if [ -n "${INSTALL_DEBUG:-}" ]; then
+	if [ -n "${METACALL_INSTALL_DEBUG:-}" ]; then
 		set +x
 	fi
 
@@ -386,7 +386,7 @@ uncompress() {
 		fi
 	done
 
-	if [ -n "${INSTALL_DEBUG:-}" ]; then
+	if [ -n "${METACALL_INSTALL_DEBUG:-}" ]; then
 		set -x
 	fi
 
