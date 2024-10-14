@@ -153,7 +153,7 @@ setlocal
 set "PYTHONHOME=$($InstallLocation)\runtimes\python"
 set "PIP_TARGET=$($InstallLocation)\runtimes\python\Pip"
 set "PATH=$($InstallLocation)\runtimes\python;$($InstallLocation)\runtimes\python\Scripts"
-$($InstallLocation)\runtimes\python\python.exe -m pip install --upgrade --force-reinstall pip
+start "" "$($InstallLocation)\runtimes\python\python.exe" -m pip install --upgrade --force-reinstall pip
 endlocal
 "@
 	# PIP_TARGET here might be incorrect here, for more info check https://github.com/metacall/distributable-windows/pull/20
@@ -289,7 +289,7 @@ function Install-Additional-Packages {
 		New-Item -ItemType Directory -Force -Path $InstallDir | Out-Null
 	}
 
-	Write-Host "Installing additional package: $($Component)"
+	Write-Host "Installing '$Component' additional package..."
 	Invoke-Expression "npm install --global --prefix=`"$InstallDir`" @metacall/$Component"
 	Set-NodePath "$InstallDir\metacall-$Component.cmd"
 	Write-Host "Package '$Component' has been installed."
