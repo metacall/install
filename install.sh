@@ -132,7 +132,7 @@ success() {
 # Debug message
 debug() {
 	if [ -n "${METACALL_INSTALL_DEBUG:-}" ]; then
-		printf "%b\n" "${normal:-}🐞 $@"
+		printf "%b\n" "${normal:-}⚙ $@"
 	fi
 }
 
@@ -621,11 +621,20 @@ check_path_env() {
 }
 
 uninstall() {
+	# Show title
+	title "MetaCall Uninstall"
+
+	# Check dependencies
+	programs_required rm
+
+	# Check platform
+	platform
+
 	# Check for sudo permissions
 	find_sudo
 
 	# Delete all the previously installed files
-	${CMD_SUDO} rm -rf "${PLATFORM_BIN}/metacall" || true
+	${CMD_SUDO} rm -rf "${PLATFORM_BIN}/metacall"
 	${CMD_SUDO} rm -rf /gnu || true
 
 	# TODO: This is super unsafe, we should store somewhere the list of installed files, and delete the list of files only.
