@@ -41,6 +41,7 @@ CMD_SUDO=""
 PLATFORM_OS=""
 PLATFORM_ARCH=""
 PLATFORM_PREFIX=""
+PLATFORM_BIN=""
 
 # Check for command line arguments
 while [ $# -ne 0 ]
@@ -239,6 +240,7 @@ operative_system() {
 				PLATFORM_PREFIX="/usr/local"
 			fi
 			return
+			PLATFORM_BIN="${PLATFORM_PREFIX}/bin"
 			;;
 		# FreeBSD)
 		# 	PLATFORM_OS="freebsd"
@@ -247,6 +249,7 @@ operative_system() {
 		Linux)
 			PLATFORM_OS="linux"
 			PLATFORM_PREFIX="/gnu"
+			PLATFORM_BIN="/usr/local/bin"
 			return
 			;;
 	esac
@@ -454,46 +457,46 @@ cli() {
 
 	if [ "${PLATFORM_OS}" = "linux" ]; then
 		# Write shell script pointing to MetaCall CLI
-		local pythonpath_base="/gnu/store/`ls /gnu/store/ | grep python-3 | head -n 1`/lib"
+		local pythonpath_base="${PLATFORM_PREFIX}/store/`ls ${PLATFORM_PREFIX}/store/ | grep python-3 | head -n 1`/lib"
 		local pythonpath_dynlink="`ls -d ${pythonpath_base}/*/ | grep 'python3\.[0-9]*\/$'`lib-dynload"
 
 		# Create folder and file
-		${CMD_SUDO} mkdir -p /usr/local/bin/
-		${CMD_SUDO} touch /usr/local/bin/metacall
+		${CMD_SUDO} mkdir -p "${PLATFORM_BIN}/"
+		${CMD_SUDO} touch "${PLATFORM_BIN}/metacall"
 
 		# Write the shebang
-		printf "#!" | ${CMD_SUDO} tee /usr/local/bin/metacall > /dev/null
-		echo "${CMD_SHEBANG}" | ${CMD_SUDO} tee -a /usr/local/bin/metacall > /dev/null
+		printf "#!" | ${CMD_SUDO} tee "${PLATFORM_BIN}/metacall" > /dev/null
+		echo "${CMD_SHEBANG}" | ${CMD_SUDO} tee -a "${PLATFORM_BIN}/metacall" > /dev/null
 
 		# MetaCall Environment
-		echo "export LOADER_SCRIPT_PATH=\"\${LOADER_SCRIPT_PATH:-\`pwd\`}\"" | ${CMD_SUDO} tee -a /usr/local/bin/metacall > /dev/null
+		echo "export LOADER_SCRIPT_PATH=\"\${LOADER_SCRIPT_PATH:-\`pwd\`}\"" | ${CMD_SUDO} tee -a "${PLATFORM_BIN}/metacall" > /dev/null
 
 		# Certificates
-		echo "export GIT_SSL_FILE=\"/gnu/etc/ssl/certs/ca-certificates.crt\"" | ${CMD_SUDO} tee -a /usr/local/bin/metacall > /dev/null
-		echo "export GIT_SSL_CAINFO=\"/gnu/etc/ssl/certs/ca-certificates.crt\"" | ${CMD_SUDO} tee -a /usr/local/bin/metacall > /dev/null
+		echo "export GIT_SSL_FILE=\"${PLATFORM_PREFIX}/etc/ssl/certs/ca-certificates.crt\"" | ${CMD_SUDO} tee -a "${PLATFORM_BIN}/metacall" > /dev/null
+		echo "export GIT_SSL_CAINFO=\"${PLATFORM_PREFIX}/etc/ssl/certs/ca-certificates.crt\"" | ${CMD_SUDO} tee -a "${PLATFORM_BIN}/metacall" > /dev/null
 
 		# Locale
-		echo "export GUIX_LOCPATH=\"/gnu/lib/locale\"" | ${CMD_SUDO} tee -a /usr/local/bin/metacall > /dev/null
-		echo "export LANG=\"en_US.UTF-8\"" | ${CMD_SUDO} tee -a /usr/local/bin/metacall > /dev/null
+		echo "export GUIX_LOCPATH=\"${PLATFORM_PREFIX}/lib/locale\"" | ${CMD_SUDO} tee -a "${PLATFORM_BIN}/metacall" > /dev/null
+		echo "export LANG=\"en_US.UTF-8\"" | ${CMD_SUDO} tee -a "${PLATFORM_BIN}/metacall" > /dev/null
 
 		# Python
-		echo "export PYTHONPATH=\"${pythonpath_base}:${pythonpath_dynlink}\"" | ${CMD_SUDO} tee -a /usr/local/bin/metacall > /dev/null
+		echo "export PYTHONPATH=\"${pythonpath_base}:${pythonpath_dynlink}\"" | ${CMD_SUDO} tee -a "${PLATFORM_BIN}/metacall" > /dev/null
 
 		# Guix generated environment variables (TODO: Move all environment variables to metacall/distributable-linux)
-		echo ". /gnu/etc/profile" | ${CMD_SUDO} tee -a /usr/local/bin/metacall > /dev/null
+		echo ". ${PLATFORM_PREFIX}/etc/profile" | ${CMD_SUDO} tee -a "${PLATFORM_BIN}/metacall" > /dev/null
 
 		# Set up command line
-		echo "CMD=\`ls -a /gnu/bin | grep \"\$1\" | head -n 1\`" | ${CMD_SUDO} tee -a /usr/local/bin/metacall > /dev/null
+		echo "CMD=\`ls -a ${PLATFORM_PREFIX}/bin | grep \"\$1\" | head -n 1\`" | ${CMD_SUDO} tee -a "${PLATFORM_BIN}/metacall" > /dev/null
 
-		echo "if [ \"\${CMD}\" = \"\$1\" ]; then" | ${CMD_SUDO} tee -a /usr/local/bin/metacall > /dev/null
-		echo "	if [ -z \"\${PATH-}\" ]; then export PATH=\"/gnu/bin\"; else PATH=\"/gnu/bin:\${PATH}\"; fi" | ${CMD_SUDO} tee -a /usr/local/bin/metacall > /dev/null
-		echo "	\$@" | ${CMD_SUDO} tee -a /usr/local/bin/metacall > /dev/null
-		echo "	exit \$?" | ${CMD_SUDO} tee -a /usr/local/bin/metacall > /dev/null
-		echo "fi" | ${CMD_SUDO} tee -a /usr/local/bin/metacall > /dev/null
+		echo "if [ \"\${CMD}\" = \"\$1\" ]; then" | ${CMD_SUDO} tee -a "${PLATFORM_BIN}/metacall" > /dev/null
+		echo "	if [ -z \"\${PATH-}\" ]; then export PATH=\"${PLATFORM_PREFIX}/bin\"; else PATH=\"${PLATFORM_PREFIX}/bin:\${PATH}\"; fi" | ${CMD_SUDO} tee -a "${PLATFORM_BIN}/metacall" > /dev/null
+		echo "	\$@" | ${CMD_SUDO} tee -a "${PLATFORM_BIN}/metacall" > /dev/null
+		echo "	exit \$?" | ${CMD_SUDO} tee -a "${PLATFORM_BIN}/metacall" > /dev/null
+		echo "fi" | ${CMD_SUDO} tee -a "${PLATFORM_BIN}/metacall" > /dev/null
 
 		# CLI
-		echo "/gnu/bin/metacallcli \$@" | ${CMD_SUDO} tee -a /usr/local/bin/metacall > /dev/null
-		${CMD_SUDO} chmod 775 /usr/local/bin/metacall
+		echo "${PLATFORM_PREFIX}/bin/metacallcli \$@" | ${CMD_SUDO} tee -a "${PLATFORM_BIN}/metacall" > /dev/null
+		${CMD_SUDO} chmod 775 "${PLATFORM_BIN}/metacall"
 	fi
 
 	success "CLI shortcut installed successfully."
@@ -553,22 +556,22 @@ docker_install() {
 	local command="docker run --rm --network host -e \"LOADER_SCRIPT_PATH=/metacall/source\" -v \`pwd\`:/metacall/source -w /metacall/source -it metacall/cli \$@"
 
 	# Write shell script wrapping the Docker run of MetaCall CLI image
-	${CMD_SUDO} mkdir -p /usr/local/bin/
-	${CMD_SUDO} touch /usr/local/bin/metacall
-	printf '#!' | ${CMD_SUDO} tee /usr/local/bin/metacall > /dev/null
-	echo "${CMD_SHEBANG}" | ${CMD_SUDO} tee -a /usr/local/bin/metacall > /dev/null
-	echo "${command}" | ${CMD_SUDO} tee -a /usr/local/bin/metacall > /dev/null
-	${CMD_SUDO} chmod 775 /usr/local/bin/metacall
-	${CMD_SUDO} chown $(id -u):$(id -g) /usr/local/bin/metacall
+	${CMD_SUDO} mkdir -p "${PLATFORM_BIN}/"
+	${CMD_SUDO} touch "${PLATFORM_BIN}/metacall"
+	printf '#!' | ${CMD_SUDO} tee "${PLATFORM_BIN}/metacall" > /dev/null
+	echo "${CMD_SHEBANG}" | ${CMD_SUDO} tee -a "${PLATFORM_BIN}/metacall" > /dev/null
+	echo "${command}" | ${CMD_SUDO} tee -a "${PLATFORM_BIN}/metacall" > /dev/null
+	${CMD_SUDO} chmod 775 "${PLATFORM_BIN}/metacall"
+	${CMD_SUDO} chown $(id -u):$(id -g) "${PLATFORM_BIN}/metacall"
 }
 
 check_path_env() {
-	# Check if the PATH contains the install path (/usr/local/bin), checks 4 cases:
+	# Check if the PATH contains the install path (${PLATFORM_BIN} aka /usr/local/bin on Linux), checks 4 cases:
 	#   1) /usr/local/bin
 	#   2) /usr/local/bin:/usr/bin
 	#   3) /usr/bin:/usr/local/bin
 	#   4) /usr/bin:/usr/local/bin:/bin
-	echo "${PATH}" | grep -e '\(^\|:\)/usr/local/bin\(:\|$\)'
+	echo "${PATH}" | grep -e "\(^\|:\)${PLATFORM_BIN}\(:\|$\)"
 }
 
 uninstall() {
@@ -576,7 +579,7 @@ uninstall() {
 	find_sudo
 
 	# Delete all the previously installed files
-	${CMD_SUDO} rm -rf /usr/local/bin/metacall || true
+	${CMD_SUDO} rm -rf "${PLATFORM_BIN}/metacall" || true
 	${CMD_SUDO} rm -rf /gnu || true
 
 	# TODO: This is super unsafe, we should store somewhere the list of installed files, and delete the list of files only.
@@ -584,8 +587,8 @@ uninstall() {
 }
 
 additional_packages_install() {
-	local install_dir="/gnu/deps"
-	local bin_dir="/gnu/bin"
+	local install_dir="${PLATFORM_PREFIX}/deps"
+	local bin_dir="${PLATFORM_PREFIX}/bin"
 
 	print "Installing additional dependencies."
 
@@ -639,6 +642,7 @@ main() {
 		docker_install
 	else
 		# TODO: Remember to do MacOs install fallback to brew in order to compile metacall
+		# spctl --status
 
 		# Run binary install
 		if ! (binary_install); then
@@ -672,10 +676,10 @@ main() {
 
 	local path="$(check_path_env)"
 
-	# Check if /usr/local/bin is in PATH
+	# Check if ${PLATFORM_BIN} (aka /usr/local/bin in Linux) is in PATH
 	if [ -z "${path}" ]; then
-		# Add /usr/local/bin to PATH
-		echo "export PATH=\"\${PATH}:/usr/local/bin\"" | ${CMD_SUDO} tee /etc/profile.d/metacall.sh > /dev/null
+		# Add ${PLATFORM_BIN} to PATH
+		echo "export PATH=\"\${PATH}:${PLATFORM_BIN}\"" | ${CMD_SUDO} tee /etc/profile.d/metacall.sh > /dev/null
 		${CMD_SUDO} mkdir -p /etc/profile.d/
 		${CMD_SUDO} chmod 644 /etc/profile.d/metacall.sh
 
