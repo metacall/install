@@ -274,7 +274,7 @@ function Install-MetaCall-AdditionalPackages {
 	}
 
 	Write-Host "MetaCall $($Component) installation"
-	Invoke-Expression "npm install --global --prefix="$InstallDir" @metacall/$Component"
+	Invoke-Expression "npm install --global --prefix=`"$InstallDir`" @metacall/$Component"
 	Set-NodePath "$InstallDir\metacall-$Component.cmd"
 	Write-Host "MetaCall $Component has been installed."
 }
