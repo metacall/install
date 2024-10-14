@@ -76,7 +76,7 @@ function Print-Error([string]$Message) {
 
 function Print-Debug([string]$Message) {
 	if ($env:METACALL_INSTALL_DEBUG) {
-		Print-With-Fallback "$([char]0xD83D) $Message"
+		Print-With-Fallback "$([char]0x0001F41E) $Message"
 	}
 }
 
@@ -195,8 +195,8 @@ endlocal
 	cmd /V /C "$InstallPythonScriptOneLine"
 
 	# Install Additional Packages
-	Install-Additional-Packages -Component "deploy"
-	Install-Additional-Packages -Component "faas"
+	Install-Additional-Packages -InstallRoot $InstallRoot -Component "deploy"
+	Install-Additional-Packages -InstallRoot $InstallRoot -Component "faas"
 
 	# TODO: Replace in the files D:/ and D:\
 }
@@ -254,7 +254,7 @@ function Install-Tarball([string]$InstallDir, [string]$Version) {
 	New-Item -ItemType Directory -Force -Path $InstallRoot | Out-Null
 	
 	if (!$FromPath) {
-		Print-Info "Downloading tarball..."
+		Print-Info "Downloading tarball."
 
 		$InstallVersion = Resolve-Version $Version
 		$InstallArchitecture = Get-CLI-Architecture
@@ -269,7 +269,7 @@ function Install-Tarball([string]$InstallDir, [string]$Version) {
 		Copy-Item -Path $FromPath -Destination $InstallOutput
 	}
 
-	Print-Info "Uncompressing tarball..."
+	Print-Info "Uncompressing tarball."
 
 	# Unzip the tarball
 	Expand-Archive -Path $InstallOutput -DestinationPath $InstallRoot -Force
@@ -279,12 +279,12 @@ function Install-Tarball([string]$InstallDir, [string]$Version) {
 	# Delete the tarball
 	Remove-Item -Force $InstallOutput | Out-Null
 
-	Print-Info "Running post-install scripts..."
+	Print-Info "Running post-install scripts."
 
 	# Run post install scripts
 	Post-Install $InstallRoot
 
-	Print-Info "Adding MetaCall to PATH..."
+	Print-Info "Adding MetaCall to PATH."
 
 	# Add MetaCall CLI to PATH
 	Path-Install $InstallRoot
@@ -318,17 +318,17 @@ function Set-NodePath {
 
 function Install-Additional-Packages {
 	param (
+		[string]$InstallRoot,
 		[string]$Component
 	)
 
-	$InstallRoot = Resolve-Installation-Path $InstallDir
 	$InstallDir = Join-Path -Path $InstallRoot -ChildPath "deps\$Component"
 
 	if (-not (Test-Path $InstallDir)) {
 		New-Item -ItemType Directory -Force -Path $InstallDir | Out-Null
 	}
 
-	Print-Info "Installing '$Component' additional package..."
+	Print-Info "Installing '$Component' additional package."
 	Invoke-Expression "npm install --global --prefix=`"$InstallDir`" @metacall/$Component"
 	Set-NodePath "$InstallDir\metacall-$Component.cmd"
 	Print-Success "Package '$Component' has been installed."
