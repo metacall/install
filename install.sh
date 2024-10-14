@@ -653,6 +653,8 @@ additional_packages_install() {
 }
 
 path_install() {
+	print "Checking if ${PLATFORM_BIN} is in PATH environment variable."
+
 	local path="$(check_path_env)"
 
 	# Check if ${PLATFORM_BIN} (aka /usr/local/bin in Linux) is in PATH
