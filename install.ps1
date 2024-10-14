@@ -148,7 +148,7 @@ function Resolve-Version([string]$Version) {
 
 function Post-Install([string]$InstallRoot) {
 	# Reinstall Python Pip to the latest version (needed in order to patch the python.exe location)
-	$InstallLocation = Join-Path -Path "$InstallRoot" -ChildPath "metacall"
+	$InstallLocation = Join-Path -Path $InstallRoot -ChildPath "metacall"
 	$InstallPythonScript = @"
 setlocal
 set "PYTHONHOME=$($InstallLocation)\runtimes\python"
@@ -173,13 +173,13 @@ function Path-Install([string]$InstallRoot) {
 
 	# To add folder containing metacall.bat to PATH
 	$PersistedPaths = [Environment]::GetEnvironmentVariable('PATH', [EnvironmentVariableTarget]::User) -split ';'
-	if ($PersistedPaths -notcontains "$InstallRoot") {
+	if ($PersistedPaths -notcontains $InstallRoot) {
 		[Environment]::SetEnvironmentVariable('PATH', $env:PATH+";"+$InstallRoot, [EnvironmentVariableTarget]::User)
 	}
 
 	# To verify if PATH isn't already added
 	$EnvPaths = $env:Path -split ';'
-	if ($EnvPaths -notcontains "$InstallRoot") {
+	if ($EnvPaths -notcontains $InstallRoot) {
 		$EnvPaths = $EnvPaths + $InstallRoot | where { $_ }
 		$env:Path = $EnvPaths -join ';'
 	}
@@ -206,16 +206,16 @@ function Path-Uninstall([string]$Path) {
 }
 
 function Install-Tarball([string]$InstallDir, [string]$Version) {
-	$InstallRoot = Resolve-Installation-Path "$InstallDir"
-	$InstallOutput = Join-Path -Path "$InstallRoot" -ChildPath "metacall-tarball-win.zip"
+	$InstallRoot = Resolve-Installation-Path $InstallDir
+	$InstallOutput = Join-Path -Path $InstallRoot -ChildPath "metacall-tarball-win.zip"
 
 	# Delete directory contents if any
-	if (Test-Path "$InstallRoot") {
-		Remove-Item -Recurse -Force "$InstallRoot" | Out-Null
+	if (Test-Path $InstallRoot) {
+		Remove-Item -Recurse -Force $InstallRoot | Out-Null
 	}
 
 	# Create directory if it does not exist
-	New-Item -ItemType Directory -Force -Path "$InstallRoot" | Out-Null
+	New-Item -ItemType Directory -Force -Path $InstallRoot | Out-Null
 	
 	if (!$FromPath) {
 		$InstallVersion = Resolve-Version $Version
@@ -223,23 +223,23 @@ function Install-Tarball([string]$InstallDir, [string]$Version) {
 		$DownloadUri = "https://github.com/metacall/distributable-windows/releases/download/$InstallVersion/metacall-tarball-win-$InstallArchitecture.zip"
 
 		# Download the tarball
-		Invoke-WebRequest -Uri "$DownloadUri" -OutFile "$InstallOutput"
+		Invoke-WebRequest -Uri $DownloadUri -OutFile $InstallOutput
 	} else {
 			# Copy the tarball from the path
-			Copy-Item -Path "$FromPath" -Destination "$InstallOutput"
+			Copy-Item -Path $FromPath -Destination $InstallOutput
 	}
 
 	# Unzip the tarball
-	Expand-Archive -Path "$InstallOutput" -DestinationPath "$InstallRoot" -Force
+	Expand-Archive -Path $InstallOutput -DestinationPath $InstallRoot -Force
 
 	# Delete the tarball
-	Remove-Item -Force "$InstallOutput" | Out-Null
+	Remove-Item -Force $InstallOutput | Out-Null
 
 	# Run post install scripts
-	Post-Install "$InstallRoot"
+	Post-Install $InstallRoot
 
 	# Add MetaCall CLI to PATH
-	Path-Install "$InstallRoot"
+	Path-Install $InstallRoot
 }
 
 function Set-NodePath {
@@ -254,11 +254,11 @@ function Set-NodePath {
 		return
 	}
 
-	$Content = Get-Content -Path "$FilePath"
-	$Content = $Content -replace '%dp0%\\node.exe', "$NodePath"
+	$Content = Get-Content -Path $FilePath
+	$Content = $Content -replace '%dp0%\\node.exe', $NodePath
 	$Content = $Content -replace '""', '"'
 
-	Set-Content -Path "$FilePath" -Value "$Content"
+	Set-Content -Path $FilePath -Value $Content
 }
 
 function Install-MetaCall-AdditionalPackages {
@@ -266,11 +266,11 @@ function Install-MetaCall-AdditionalPackages {
 		[string]$Component
 	)
 
-	$InstallRoot = Resolve-Installation-Path "$InstallDir"
-	$InstallDir = Join-Path -Path "$InstallRoot" -ChildPath "deps\$Component"
+	$InstallRoot = Resolve-Installation-Path $InstallDir
+	$InstallDir = Join-Path -Path $InstallRoot -ChildPath "deps\$Component"
 
 	if (-not (Test-Path $InstallDir)) {
-		New-Item -ItemType Directory -Force -Path "$InstallDir" | Out-Null
+		New-Item -ItemType Directory -Force -Path $InstallDir | Out-Null
 	}
 
 	Write-Host "MetaCall $($Component) installation"
