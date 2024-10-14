@@ -140,8 +140,7 @@ function Resolve-Version([string]$Version) {
 	if ($Version.ToLowerInvariant() -eq "latest") {
 		$LatestTag = $(Get-RedirectedUri "https://github.com/metacall/distributable-windows/releases/latest")
 		return $LatestTag.Segments[$LatestTag.Segments.Count - 1]
-	}
-	else {
+	} else {
 		return "v$Version"
 	}
 }
@@ -162,8 +161,8 @@ endlocal
 	cmd /V /C "$InstallPythonScriptOneLine"
 
 	# Install Additional Packages
-	Install-MetaCall-AdditionalPackages -Component "deploy"
-	Install-MetaCall-AdditionalPackages -Component "faas"
+	Install-Additional-Packages -Component "deploy"
+	Install-Additional-Packages -Component "faas"
 
 	# TODO: Replace in the files D:/ and D:\
 }
@@ -199,6 +198,7 @@ function Path-Uninstall([string]$Path) {
 	}
 
 	$EnvPaths = $env:Path -split ';'
+
 	if ($EnvPaths -contains $Path) {
 		$EnvPaths = $EnvPaths | where { $_ -and $_ -ne $Path }
 		$env:Path = $EnvPaths -join ';'
@@ -206,6 +206,8 @@ function Path-Uninstall([string]$Path) {
 }
 
 function Install-Tarball([string]$InstallDir, [string]$Version) {
+	Write-Host "MetaCall Binary Installation."
+
 	$InstallRoot = Resolve-Installation-Path $InstallDir
 	$InstallOutput = Join-Path -Path $InstallRoot -ChildPath "metacall-tarball-win.zip"
 
@@ -218,28 +220,42 @@ function Install-Tarball([string]$InstallDir, [string]$Version) {
 	New-Item -ItemType Directory -Force -Path $InstallRoot | Out-Null
 	
 	if (!$FromPath) {
+		Write-Host "Downloading tarball..."
+
 		$InstallVersion = Resolve-Version $Version
 		$InstallArchitecture = Get-CLI-Architecture
 		$DownloadUri = "https://github.com/metacall/distributable-windows/releases/download/$InstallVersion/metacall-tarball-win-$InstallArchitecture.zip"
 
 		# Download the tarball
 		Invoke-WebRequest -Uri $DownloadUri -OutFile $InstallOutput
+
+		Write-Host "Tarball downloaded."
 	} else {
-			# Copy the tarball from the path
-			Copy-Item -Path $FromPath -Destination $InstallOutput
+		# Copy the tarball from the path
+		Copy-Item -Path $FromPath -Destination $InstallOutput
 	}
+
+	Write-Host "Uncompressing tarball..."
 
 	# Unzip the tarball
 	Expand-Archive -Path $InstallOutput -DestinationPath $InstallRoot -Force
 
+	Write-Host "Tarball extracted correctly."
+
 	# Delete the tarball
 	Remove-Item -Force $InstallOutput | Out-Null
+
+	Write-Host "Running post-install scripts..."
 
 	# Run post install scripts
 	Post-Install $InstallRoot
 
+	Write-Host "Adding MetaCall to PATH..."
+
 	# Add MetaCall CLI to PATH
 	Path-Install $InstallRoot
+
+	Write-Host "MetaCall installed successfully."
 }
 
 function Set-NodePath {
@@ -261,7 +277,7 @@ function Set-NodePath {
 	Set-Content -Path $FilePath -Value $Content
 }
 
-function Install-MetaCall-AdditionalPackages {
+function Install-Additional-Packages {
 	param (
 		[string]$Component
 	)
@@ -273,10 +289,10 @@ function Install-MetaCall-AdditionalPackages {
 		New-Item -ItemType Directory -Force -Path $InstallDir | Out-Null
 	}
 
-	Write-Host "MetaCall $($Component) installation"
+	Write-Host "Installing additional package: $($Component)"
 	Invoke-Expression "npm install --global --prefix=`"$InstallDir`" @metacall/$Component"
 	Set-NodePath "$InstallDir\metacall-$Component.cmd"
-	Write-Host "MetaCall $Component has been installed."
+	Write-Host "Package '$Component' has been installed."
 }
 
 # Install the tarball and post scripts
