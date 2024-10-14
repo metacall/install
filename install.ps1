@@ -54,31 +54,31 @@ function Print-With-Fallback([string]$Message) {
 	}
 }
 
-function Title([string]$Message) {
-	Print-With-Fallback "$Message`n"
-}
+# function Title([string]$Message) {
+# 	Print-With-Fallback "$Message`n"
+# }
 
-function Print([string]$Message) {
-	Print-With-Fallback "▷ $Message"
-}
+# function Print([string]$Message) {
+# 	Print-With-Fallback "▷ $Message"
+# }
 
-function Success([string]$Message) {
-	Print-With-Fallback "✔️ $Message"
-}
+# function Success([string]$Message) {
+# 	Print-With-Fallback "✔️ $Message"
+# }
 
-function Warning([string]$Message) {
-	Print-With-Fallback "⚠️ $Message"
-}
+# function Warning([string]$Message) {
+# 	Print-With-Fallback "⚠️ $Message"
+# }
 
-function Error([string]$Message) {
-	Print-With-Fallback "✘ $Message"
-}
+# function Error([string]$Message) {
+# 	Print-With-Fallback "✘ $Message"
+# }
 
-function Debug([string]$Message) {
-	if ($env:METACALL_INSTALL_DEBUG) {
-		Print-With-Fallback "🐞 $Message"
-	}
-}
+# function Debug([string]$Message) {
+# 	if ($env:METACALL_INSTALL_DEBUG) {
+# 		Print-With-Fallback "🐞 $Message"
+# 	}
+# }
 
 function Get-Machine-Architecture() {
 	# On PS x86, PROCESSOR_ARCHITECTURE reports x86 even on x64 systems.
@@ -86,12 +86,12 @@ function Get-Machine-Architecture() {
 	# PS x64 doesn't define this, so we fall back to PROCESSOR_ARCHITECTURE.
 	# Possible values: amd64, x64, x86, arm64, arm
 
-	if( $ENV:PROCESSOR_ARCHITEW6432 -ne $null )
+	if( $env:PROCESSOR_ARCHITEW6432 -ne $null )
 	{
-		return $ENV:PROCESSOR_ARCHITEW6432
+		return $env:PROCESSOR_ARCHITEW6432
 	}
 
-	return $ENV:PROCESSOR_ARCHITECTURE
+	return $env:PROCESSOR_ARCHITECTURE
 }
 
 function Get-CLI-Architecture() {
@@ -143,30 +143,30 @@ function Get-RedirectedUri {
 	process {
 		do {
 			try {
-				$request = Invoke-WebRequest -UseBasicParsing -Method Head -Uri $Uri
-				if ($request.BaseResponse.ResponseUri -ne $null) {
+				$Request = Invoke-WebRequest -UseBasicParsing -Method Head -Uri $Uri
+				if ($Request.BaseResponse.ResponseUri -ne $null) {
 					# This is for Powershell 5
-					$redirectUri = $request.BaseResponse.ResponseUri
+					$RedirectUri = $Request.BaseResponse.ResponseUri
 				}
-				elseif ($request.BaseResponse.RequestMessage.RequestUri -ne $null) {
+				elseif ($Request.BaseResponse.RequestMessage.RequestUri -ne $null) {
 					# This is for Powershell core
-					$redirectUri = $request.BaseResponse.RequestMessage.RequestUri
+					$RedirectUri = $Request.BaseResponse.RequestMessage.RequestUri
 				}
 
-				$retry = $false
+				$Retry = $false
 			}
 			catch {
 				if (($_.Exception.GetType() -match "HttpResponseException") -and ($_.Exception -match "302")) {
 					$Uri = $_.Exception.Response.Headers.Location.AbsoluteUri
-					$retry = $true
+					$Retry = $true
 				}
 				else {
 					throw $_
 				}
 			}
-		} while ($retry)
+		} while ($Retry)
 
-		$redirectUri
+		$RedirectUri
 	}
 }
 
@@ -211,7 +211,7 @@ function Path-Install([string]$InstallRoot) {
 	}
 
 	# To verify if PATH isn't already added
-	$EnvPaths = $env:Path -split ';'
+	$EnvPaths = $env:PATH -split ';'
 	if ($EnvPaths -notcontains $InstallRoot) {
 		$EnvPaths = $EnvPaths + $InstallRoot | where { $_ }
 		$env:Path = $EnvPaths -join ';'
@@ -231,7 +231,7 @@ function Path-Uninstall([string]$Path) {
 		[Environment]::SetEnvironmentVariable('PATH', $PersistedPaths -join ';', [EnvironmentVariableTarget]::User)
 	}
 
-	$EnvPaths = $env:Path -split ';'
+	$EnvPaths = $env:PATH -split ';'
 
 	if ($EnvPaths -contains $Path) {
 		$EnvPaths = $EnvPaths | where { $_ -and $_ -ne $Path }
@@ -254,7 +254,7 @@ function Install-Tarball([string]$InstallDir, [string]$Version) {
 	New-Item -ItemType Directory -Force -Path $InstallRoot | Out-Null
 	
 	if (!$FromPath) {
-		Print "Downloading tarball..."
+		Write-Output "Downloading tarball..."
 
 		$InstallVersion = Resolve-Version $Version
 		$InstallArchitecture = Get-CLI-Architecture
@@ -263,33 +263,33 @@ function Install-Tarball([string]$InstallDir, [string]$Version) {
 		# Download the tarball
 		Invoke-WebRequest -Uri $DownloadUri -OutFile $InstallOutput
 
-		Success "Tarball downloaded."
+		Write-Output "Tarball downloaded."
 	} else {
 		# Copy the tarball from the path
 		Copy-Item -Path $FromPath -Destination $InstallOutput
 	}
 
-	Print "Uncompressing tarball..."
+	Write-Output "Uncompressing tarball..."
 
 	# Unzip the tarball
 	Expand-Archive -Path $InstallOutput -DestinationPath $InstallRoot -Force
 
-	Success "Tarball extracted correctly."
+	Write-Output "Tarball extracted correctly."
 
 	# Delete the tarball
 	Remove-Item -Force $InstallOutput | Out-Null
 
-	Print "Running post-install scripts..."
+	Write-Output "Running post-install scripts..."
 
 	# Run post install scripts
 	Post-Install $InstallRoot
 
-	Print "Adding MetaCall to PATH..."
+	Write-Output "Adding MetaCall to PATH..."
 
 	# Add MetaCall CLI to PATH
 	Path-Install $InstallRoot
 
-	Success "MetaCall installed successfully."
+	Write-Output "MetaCall installed successfully."
 }
 
 function Set-NodePath {
@@ -300,18 +300,18 @@ function Set-NodePath {
 	$NodePath = "$env:LocalAppData\MetaCall\metacall\runtimes\nodejs\node.exe"
 
 	if (-not (Test-Path "$FilePath")) {
-		Error "Failed to set up an additional package, the file $FilePath does not exist."
+		Write-Output "Failed to set up an additional package, the file $FilePath does not exist."
 		return
 	}
 
 	$Content = Get-Content -Path $FilePath
 
-	Debug "Replace $FilePath content:`n$Content"
+	Write-Output "Replace $FilePath content:`n$Content"
 
 	$Content = $Content -replace '%dp0%\\node.exe', $NodePath
 	$Content = $Content -replace '""', '"'
 
-	Debug "With new content:`n$Content"
+	Write-Output "With new content:`n$Content"
 
 	Set-Content -Path $FilePath -Value $Content
 }
@@ -328,10 +328,10 @@ function Install-Additional-Packages {
 		New-Item -ItemType Directory -Force -Path $InstallDir | Out-Null
 	}
 
-	Print "Installing '$Component' additional package..."
+	Write-Output "Installing '$Component' additional package..."
 	Invoke-Expression "npm install --global --prefix=`"$InstallDir`" @metacall/$Component"
 	Set-NodePath "$InstallDir\metacall-$Component.cmd"
-	Success "Package '$Component' has been installed."
+	Write-Output "Package '$Component' has been installed."
 }
 
 # Install the tarball and post scripts
