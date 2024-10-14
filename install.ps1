@@ -76,7 +76,7 @@ function Print-Error([string]$Message) {
 
 function Print-Debug([string]$Message) {
 	if ($env:METACALL_INSTALL_DEBUG) {
-		Print-With-Fallback "$([char]0x0001F41E) $Message"
+		Print-With-Fallback "$([char]0x2699) $Message"
 	}
 }
 
