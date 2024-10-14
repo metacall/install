@@ -58,7 +58,7 @@ RUN apt-get update \
 	&& usermod -aG sudo user \
 	&& echo "user ALL=(ALL) NOPASSWD:ALL" >> /etc/sudoers \
 	&& chown -R user /test \
-	&& chmod -R 500 /test/*
+	&& chmod -R 700 /test
 
 # Debian Base (user)
 FROM debian_root AS debian_user
@@ -151,6 +151,14 @@ FROM test_debian_user_wget AS test_debian_user_pip
 RUN metacall pip3 install -r /test/requirements.txt \
 	&& metacall /test/requirements.py | grep '123456'
 
+# Test npm installation
+FROM test_debian_user_wget AS test_debian_user_npm
+
+WORKDIR /test
+
+RUN metacall npm install \
+	&& metacall /test/package.js | grep 'eyJhbGciOiJIUzI1NiJ9.eWVldA.bS3dTiCfusUIIqeH3484ByiBZC_cH0y8G5vonpPdqXA'
+
 # Test PYTHONPATH
 FROM test_debian_user_wget AS test_debian_user_pythonpath
 
@@ -175,7 +183,7 @@ RUN dnf update -y \
 	&& usermod -aG wheel user \
 	&& echo "user ALL=(ALL) NOPASSWD:ALL" >> /etc/sudoers \
 	&& chown -R user /test \
-	&& chmod -R 500 /test/*
+	&& chmod -R 700 /test
 
 # Fedora Base (user)
 FROM fedora_root AS fedora_user
@@ -230,7 +238,7 @@ RUN apk update \
 	&& adduser --disabled-password --gecos "" user \
 	&& echo "user ALL=(ALL) NOPASSWD:ALL" >> /etc/sudoers \
 	&& chown -R user /test \
-	&& chmod -R 500 /test/*
+	&& chmod -R 700 /test
 
 # Alpine Base (user)
 FROM alpine_root AS alpine_user

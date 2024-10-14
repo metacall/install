@@ -199,7 +199,7 @@ dependencies() {
 	print "Checking system dependencies."
 
 	# Check if required programs are installed
-	programs_required uname tar grep echo printf rm id head chmod chown ln tee touch read cat
+	programs_required uname tar grep echo printf rm id head chmod chown ln tee touch read
 
 	# Check if download programs are installed
 	if [ $OPT_FROM_PATH -eq 0 ]; then
@@ -372,7 +372,7 @@ uncompress() {
 	# the dot . so they are written as ./ for uncompressing them
 	${CMD_SUDO} tar -tf "${tmp}" | sed 's/^\.//' | while IFS= read -r file; do
 		if [ ! -e "${file}" ]; then
-			echo ".${file}" >> ${install_tmp_list}
+			echo "${file}" >> ${install_tmp_list}
 		fi
 	done
 
@@ -390,19 +390,26 @@ uncompress() {
 	# Give read write permissions for all
 	${CMD_SUDO} chmod 666 ${install_tmp_list}
 
-	# Uncompress the tarball. Use the install list to uncompress only the files
-	# that are new in the filesystem, don't restore mtime (-m) and don't restore user:group (-o).
-	# Ignore stderr and return error, the linux tarball is broken and gives errors
-	${CMD_SUDO} tar xzf "${tmp}" -T ${install_tmp_list} -m -o -C / 2>/dev/null || true
+	# Uncompress the tarball. Use the install list to uncompress only the files that are new in the filesystem,
+	# don't restore mtime (-m), don't restore user:group (-o) and avoid overwriting existing files (-k).
+	local user="$(id -u)"
+	local group="$(id -g)"
+	${CMD_SUDO} tar xzf "${tmp}" -m -o -k -C /
+
+	# Check for valid uncompression
+	if [ ! -e "${PLATFORM_PREFIX}" ]; then
+		err "The tarball could not be uncompressed properly. Aborting installation."
+		${CMD_SUDO} rm -rf "/tmp/metacall-tarball.tar.gz"
+		exit 1
+	fi
 
 	# Create shared directory
 	if [ ! -d "${share_dir}" ]; then
 		${CMD_SUDO} mkdir -p ${share_dir}
 	fi
 
-	# Remove first char of each path in the list and move the install list to the share directory
-	${CMD_SUDO} cut -c2- "${install_tmp_list}" | ${CMD_SUDO} tee -a ${install_list} > /dev/null
-	${CMD_SUDO} rm "${install_tmp_list}"
+	# Move the install list to the share directory
+	${CMD_SUDO} mv "${install_tmp_list}" "${install_list}"
 
 	# Create additional dependencies folder and add it to the install list
 	${CMD_SUDO} mkdir -p ${deps_dir}
@@ -410,29 +417,6 @@ uncompress() {
 
 	# Store the install list itself
 	printf "${install_list}" | ${CMD_SUDO} tee -a ${install_list} > /dev/null
-
-	# TODO: Remove this
-	cat "${install_list}"
-
-	# Disable debug info
-	if [ -n "${INSTALL_DEBUG:-}" ]; then
-		set +x
-	fi
-
-	# Give execution permissions and ownership
-	local user="$(id -u)"
-	local group="$(id -g)"
-
-	${CMD_SUDO} cat ${install_list} | sed 's/^\.//' | while IFS= read -r file; do
-		if [ -e "${file}" ]; then
-			${CMD_SUDO} chmod 775 "${file}"
-			${CMD_SUDO} chown ${user}:${group} "${file}"
-		fi
-	done
-
-	if [ -n "${INSTALL_DEBUG:-}" ]; then
-		set -x
-	fi
 
 	# TODO: Tag with a timestamp the files in order to uninstall them later on
 	# only if they have not been modified since the install time

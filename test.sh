@@ -65,6 +65,7 @@ for test in ${TEST_LIST}; do
 		--network host \
 		${METACALL_INSTALL_DNS} \
 		-t metacall/install:${test} .
+
 	result=$?
 	if [[ $result -ne 0 ]]; then
 		echo "Test ${test} failed. Abort."
@@ -72,11 +73,16 @@ for test in ${TEST_LIST}; do
 	fi
 
 	# Clean test on each iteration in order to not clog the disk
-	docker system prune -f --all
+	if [[ "${CI:-}" == "true" ]]; then
+		docker system prune -f --all
+	fi
 done
 
 # Clear the proxy
 docker stop metacall_install_nginx
+
+# Clean
+docker system prune -f --all
 
 # Test Docker Install
 DOCKER_HOST_PATH="${SCRIPT_DIR}/test"
@@ -84,7 +90,7 @@ DOCKER_HOST_PATH="${SCRIPT_DIR}/test"
 if [ "${METACALL_INSTALL_CERTS}" = "certificates_local" ]; then
 	DOCKER_ADDITIONAL_VOLUME="-v ${SCRIPT_DIR}/install.sh:/bin/install.sh"
 	DOCKER_INSTALL_CMD="sh /bin/install.sh"
-	DOCKER_FALLBACK_CMD="echo"
+	DOCKER_FALLBACK_CMD="true"
 else
 	DOCKER_ADDITIONAL_VOLUME=""
 	DOCKER_INSTALL_CMD="wget -O - https://raw.githubusercontent.com/metacall/install/master/install.sh | sh -s --"
