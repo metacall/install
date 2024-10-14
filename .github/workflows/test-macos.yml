@@ -1,4 +1,4 @@
-name: Install Metacall on MacOs Test
+name: Install MetaCall on MacOs Test
 
 on: [push, pull_request, workflow_dispatch]
 
@@ -8,7 +8,7 @@ concurrency:
 
 jobs:
   install-default:
-    name: Install Metacall via Default Installation
+    name: Install MetaCall via Default Installation
     strategy:
       fail-fast: false
       matrix:
@@ -16,7 +16,7 @@ jobs:
     runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v4
-      - name: Install Metacall
+      - name: Install MetaCall
         env:
           INSTALL_DEBUG: 1
         run: ./install.sh
@@ -33,7 +33,7 @@ jobs:
           metacall faas --version | grep -E "^v.*\..*\..*"
 
   install-from-path:
-    name: Install Metacall via Path Installation
+    name: Install MetaCall via Path Installation
     strategy:
       fail-fast: false
       matrix:
