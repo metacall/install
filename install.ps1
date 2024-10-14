@@ -250,6 +250,8 @@ function Install-Tarball([string]$InstallDir, [string]$Version) {
 		Remove-Item -Recurse -Force $InstallRoot | Out-Null
 	}
 
+	Print-Debug "Install MetaCall in folder: $InstallRoot"
+
 	# Create directory if it does not exist
 	New-Item -ItemType Directory -Force -Path $InstallRoot | Out-Null
 	
@@ -294,10 +296,9 @@ function Install-Tarball([string]$InstallDir, [string]$Version) {
 
 function Set-NodePath {
 	param (
+		[string]$NodePath,
 		[string]$FilePath
 	)
-
-	$NodePath = "$env:LocalAppData\MetaCall\metacall\runtimes\nodejs\node.exe"
 
 	if (-not (Test-Path "$FilePath")) {
 		Print-Error "Failed to set up an additional package, the file $FilePath does not exist."
@@ -322,15 +323,18 @@ function Install-Additional-Packages {
 		[string]$Component
 	)
 
-	$InstallDir = Join-Path -Path $InstallRoot -ChildPath "deps\$Component"
+	$ComponentDir = Join-Path -Path $InstallRoot -ChildPath "deps\$Component"
 
-	if (-not (Test-Path $InstallDir)) {
-		New-Item -ItemType Directory -Force -Path $InstallDir | Out-Null
+	if (-not (Test-Path $ComponentDir)) {
+		New-Item -ItemType Directory -Force -Path $ComponentDir | Out-Null
 	}
 
 	Print-Info "Installing '$Component' additional package."
-	Invoke-Expression "npm install --global --prefix=`"$InstallDir`" @metacall/$Component"
-	Set-NodePath "$InstallDir\metacall-$Component.cmd"
+
+	$NodePath = Join-Path -Path $InstallRoot -ChildPath "metacall\runtimes\nodejs\node.exe"
+	Invoke-Expression "npm install --global --prefix=`"$ComponentDir`" @metacall/$Component"
+	Set-NodePath -NodePath $NodePath -FilePath "$ComponentDir\metacall-$Component.cmd"
+
 	Print-Success "Package '$Component' has been installed."
 }
 
