@@ -62,23 +62,23 @@ function Print-Info([string]$Message) {
 	Print-With-Fallback "$([char]0x25B7) $Message"
 }
 
-# function Print-Success([string]$Message) {
-# 	Print-With-Fallback "✔️ $Message"
-# }
+function Print-Success([string]$Message) {
+	Print-With-Fallback "$([char]0x2714) $Message"
+}
 
-# function Print-Warning([string]$Message) {
-# 	Print-With-Fallback "⚠️ $Message"
-# }
+function Print-Warning([string]$Message) {
+	Print-With-Fallback "$([char]0x26A0) $Message"
+}
 
-# function Print-Error([string]$Message) {
-# 	Print-With-Fallback "✘ $Message"
-# }
+function Print-Error([string]$Message) {
+	Print-With-Fallback "$([char]0x2718) $Message"
+}
 
-# function Print-Debug([string]$Message) {
-# 	if ($env:METACALL_INSTALL_DEBUG) {
-# 		Print-With-Fallback "🐞 $Message"
-# 	}
-# }
+function Print-Debug([string]$Message) {
+	if ($env:METACALL_INSTALL_DEBUG) {
+		Print-With-Fallback "$([char]0xD83D) $Message"
+	}
+}
 
 function Get-Machine-Architecture() {
 	# On PS x86, PROCESSOR_ARCHITECTURE reports x86 even on x64 systems.
@@ -263,7 +263,7 @@ function Install-Tarball([string]$InstallDir, [string]$Version) {
 		# Download the tarball
 		Invoke-WebRequest -Uri $DownloadUri -OutFile $InstallOutput
 
-		Print-Info "Tarball downloaded."
+		Print-Success "Tarball downloaded."
 	} else {
 		# Copy the tarball from the path
 		Copy-Item -Path $FromPath -Destination $InstallOutput
@@ -274,7 +274,7 @@ function Install-Tarball([string]$InstallDir, [string]$Version) {
 	# Unzip the tarball
 	Expand-Archive -Path $InstallOutput -DestinationPath $InstallRoot -Force
 
-	Print-Info "Tarball extracted correctly."
+	Print-Success "Tarball extracted correctly."
 
 	# Delete the tarball
 	Remove-Item -Force $InstallOutput | Out-Null
@@ -289,7 +289,7 @@ function Install-Tarball([string]$InstallDir, [string]$Version) {
 	# Add MetaCall CLI to PATH
 	Path-Install $InstallRoot
 
-	Print-Info "MetaCall installed successfully."
+	Print-Success "MetaCall installed successfully."
 }
 
 function Set-NodePath {
@@ -300,18 +300,18 @@ function Set-NodePath {
 	$NodePath = "$env:LocalAppData\MetaCall\metacall\runtimes\nodejs\node.exe"
 
 	if (-not (Test-Path "$FilePath")) {
-		Print-Info "Failed to set up an additional package, the file $FilePath does not exist."
+		Print-Error "Failed to set up an additional package, the file $FilePath does not exist."
 		return
 	}
 
 	$Content = Get-Content -Path $FilePath
 
-	Print-Info "Replace $FilePath content:`n$Content"
+	Print-Debug "Replace $FilePath content:`n$Content"
 
 	$Content = $Content -replace '%dp0%\\node.exe', $NodePath
 	$Content = $Content -replace '""', '"'
 
-	Print-Info "With new content:`n$Content"
+	Print-Debug "With new content:`n$Content"
 
 	Set-Content -Path $FilePath -Value $Content
 }
@@ -331,7 +331,7 @@ function Install-Additional-Packages {
 	Print-Info "Installing '$Component' additional package..."
 	Invoke-Expression "npm install --global --prefix=`"$InstallDir`" @metacall/$Component"
 	Set-NodePath "$InstallDir\metacall-$Component.cmd"
-	Print-Info "Package '$Component' has been installed."
+	Print-Success "Package '$Component' has been installed."
 }
 
 # Install the tarball and post scripts
