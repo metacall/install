@@ -554,6 +554,9 @@ binary_install() {
 
 	# Install additional dependencies
 	additional_packages_install
+
+	# Make metacall available into PATH
+	path_install
 }
 
 docker_install() {
@@ -596,6 +599,9 @@ docker_install() {
 	echo "${command}" | ${CMD_SUDO} tee -a "${PLATFORM_BIN}/metacall" > /dev/null
 	${CMD_SUDO} chmod 775 "${PLATFORM_BIN}/metacall"
 	${CMD_SUDO} chown $(id -u):$(id -g) "${PLATFORM_BIN}/metacall"
+
+	# Make metacall available into PATH
+	path_install
 }
 
 check_path_env() {
@@ -646,20 +652,41 @@ additional_packages_install() {
 	success "Additional dependencies installed."
 }
 
+path_install() {
+	local path="$(check_path_env)"
+
+	# Check if ${PLATFORM_BIN} (aka /usr/local/bin in Linux) is in PATH
+	if [ -z "${path}" ]; then
+		# Add ${PLATFORM_BIN} to PATH
+		echo "export PATH=\"\${PATH}:${PLATFORM_BIN}\"" | ${CMD_SUDO} tee /etc/profile.d/metacall.sh > /dev/null
+		${CMD_SUDO} mkdir -p /etc/profile.d/
+		${CMD_SUDO} chmod 644 /etc/profile.d/metacall.sh
+
+		warning "MetaCall install path is not present in PATH so we added it for you." \
+			"  The command 'metacall' will be available in your subsequent terminal instances." \
+			"  Run 'source /etc/profile' to make 'metacall' command available to your current terminal instance."
+	fi
+}
+
 main() {
-	if program metacall; then
+	if ! program metacall; then
+		if [ $OPT_UPDATE -eq 1 ] || [ $OPT_UNINSTALL -eq 1 ]; then
+			err "MetaCall is not installed."
+			exit 1
+		fi
+	else
 		# Skip asking for updates if the update flag is enabled
 		if [ $OPT_UPDATE -eq 0 ] && [ $OPT_UNINSTALL -eq 0 ]; then
-			ask "MetaCall is already installed. Do you want to update it?\n  ${red:-}${bold:-}Warning: This operation will delete the /gnu folder${normal:-}. Continue"
+			ask "MetaCall is already installed. Do you want to update it?"
 		fi
 
 		uninstall
-	fi
 
-	# Exit if the user only wants to uninstall
-	if [ $OPT_UNINSTALL -eq 1 ]; then
-		success "MetaCall has been successfully uninstalled"
-		exit 0
+		# Exit if the user only wants to uninstall
+		if [ $OPT_UNINSTALL -eq 1 ]; then
+			success "MetaCall has been successfully uninstalled."
+			exit 0
+		fi
 	fi
 
 	if [ $OPT_DOCKER_INSTALL -eq 1 ]; then
@@ -697,20 +724,6 @@ main() {
 			# On error, fallback to docker install
 			docker_install
 		fi
-	fi
-
-	local path="$(check_path_env)"
-
-	# Check if ${PLATFORM_BIN} (aka /usr/local/bin in Linux) is in PATH
-	if [ -z "${path}" ]; then
-		# Add ${PLATFORM_BIN} to PATH
-		echo "export PATH=\"\${PATH}:${PLATFORM_BIN}\"" | ${CMD_SUDO} tee /etc/profile.d/metacall.sh > /dev/null
-		${CMD_SUDO} mkdir -p /etc/profile.d/
-		${CMD_SUDO} chmod 644 /etc/profile.d/metacall.sh
-
-		warning "MetaCall install path is not present in PATH so we added it for you." \
-			"  The command 'metacall' will be available in your subsequent terminal instances." \
-			"  Run 'source /etc/profile' to make 'metacall' command available to your current terminal instance."
 	fi
 
 	# Show information
