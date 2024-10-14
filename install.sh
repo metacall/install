@@ -129,6 +129,13 @@ success() {
 	printf "%b\n" "${green:-}✔️ $@${normal:-}"
 }
 
+# Debug message
+debug() {
+	if [ -n "${INSTALL_DEBUG:-}" ]; then
+		printf "%b\n" "${normal:-}🐞 $@"
+	fi
+}
+
 # Ask message
 ask() {
 	while true; do
@@ -239,8 +246,8 @@ operative_system() {
 			elif [ "${PLATFORM_ARCH}" = "amd64" ]; then
 				PLATFORM_PREFIX="/usr/local"
 			fi
-			return
 			PLATFORM_BIN="${PLATFORM_PREFIX}/bin"
+			return
 			;;
 		# FreeBSD)
 		# 	PLATFORM_OS="freebsd"
@@ -653,7 +660,7 @@ additional_packages_install() {
 }
 
 path_install() {
-	print "Checking if ${PLATFORM_BIN} is in PATH environment variable."
+	debug "Checking if ${PLATFORM_BIN} is in PATH environment variable ($PATH)."
 
 	local path="$(check_path_env)"
 
