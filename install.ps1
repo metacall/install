@@ -240,7 +240,7 @@ function Path-Uninstall([string]$Path) {
 }
 
 function Install-Tarball([string]$InstallDir, [string]$Version) {
-	Title "MetaCall Binary Installation."
+	Write-Output "MetaCall Binary Installation."
 
 	$InstallRoot = Resolve-Installation-Path $InstallDir
 	$InstallOutput = Join-Path -Path $InstallRoot -ChildPath "metacall-tarball-win.zip"
