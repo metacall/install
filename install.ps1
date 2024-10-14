@@ -54,9 +54,9 @@ function Print-With-Fallback([string]$Message) {
 	}
 }
 
-# function Print-Title([string]$Message) {
-# 	Print-With-Fallback "$Message`n"
-# }
+function Print-Title([string]$Message) {
+	Print-With-Fallback "$Message`n"
+}
 
 function Print-Info([string]$Message) {
 	Print-With-Fallback "$([char]0x25B7) $Message"
@@ -240,7 +240,7 @@ function Path-Uninstall([string]$Path) {
 }
 
 function Install-Tarball([string]$InstallDir, [string]$Version) {
-	Print-Info "MetaCall Binary Installation."
+	Print-Title "MetaCall Binary Installation."
 
 	$InstallRoot = Resolve-Installation-Path $InstallDir
 	$InstallOutput = Join-Path -Path $InstallRoot -ChildPath "metacall-tarball-win.zip"
