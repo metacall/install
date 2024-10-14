@@ -148,7 +148,7 @@ function Resolve-Version([string]$Version) {
 
 function Post-Install([string]$InstallRoot) {
 	# Reinstall Python Pip to the latest version (needed in order to patch the python.exe location)
-	$InstallLocation = Join-Path -Path $InstallRoot -ChildPath "metacall"
+	$InstallLocation = Join-Path -Path "$InstallRoot" -ChildPath "metacall"
 	$InstallPythonScript = @"
 setlocal
 set "PYTHONHOME=$($InstallLocation)\runtimes\python"
@@ -172,18 +172,19 @@ function Path-Install([string]$InstallRoot) {
 	# Add safely MetaCall command to the PATH (and persist it)
 
 	# To add folder containing metacall.bat to PATH
-	$persistedPaths = [Environment]::GetEnvironmentVariable('PATH', [EnvironmentVariableTarget]::User) -split ';'
-	if ($persistedPaths -notcontains $InstallRoot) {
+	$PersistedPaths = [Environment]::GetEnvironmentVariable('PATH', [EnvironmentVariableTarget]::User) -split ';'
+	if ($PersistedPaths -notcontains "$InstallRoot") {
 		[Environment]::SetEnvironmentVariable('PATH', $env:PATH+";"+$InstallRoot, [EnvironmentVariableTarget]::User)
 	}
 
 	# To verify if PATH isn't already added
-	$envPaths = $env:Path -split ';'
-	if ($envPaths -notcontains $InstallRoot) {
-		$envPaths = $envPaths + $InstallRoot | where { $_ }
-		$env:Path = $envPaths -join ';'
+	$EnvPaths = $env:Path -split ';'
+	if ($EnvPaths -notcontains "$InstallRoot") {
+		$EnvPaths = $EnvPaths + $InstallRoot | where { $_ }
+		$env:Path = $EnvPaths -join ';'
 	}
 
+	# Support for GitHub actions environment
 	if ($env:GITHUB_ENV -ne $null) {
 		echo "PATH=$env:PATH" >> $env:GITHUB_ENV
 	}
@@ -191,85 +192,91 @@ function Path-Install([string]$InstallRoot) {
 
 # TODO: Use this for implementing uninstall
 function Path-Uninstall([string]$Path) {
-	$persistedPaths = [Environment]::GetEnvironmentVariable('PATH', [EnvironmentVariableTarget]::User) -split ';'
-	if ($persistedPaths -contains $Path) {
-		$persistedPaths = $persistedPaths | where { $_ -and $_ -ne $Path }
-		[Environment]::SetEnvironmentVariable('PATH', $persistedPaths -join ';', [EnvironmentVariableTarget]::User)
+	$PersistedPaths = [Environment]::GetEnvironmentVariable('PATH', [EnvironmentVariableTarget]::User) -split ';'
+	if ($PersistedPaths -contains $Path) {
+		$PersistedPaths = $PersistedPaths | where { $_ -and $_ -ne $Path }
+		[Environment]::SetEnvironmentVariable('PATH', $PersistedPaths -join ';', [EnvironmentVariableTarget]::User)
 	}
 
-	$envPaths = $env:Path -split ';'
-	if ($envPaths -contains $Path) {
-		$envPaths = $envPaths | where { $_ -and $_ -ne $Path }
-		$env:Path = $envPaths -join ';'
+	$EnvPaths = $env:Path -split ';'
+	if ($EnvPaths -contains $Path) {
+		$EnvPaths = $EnvPaths | where { $_ -and $_ -ne $Path }
+		$env:Path = $EnvPaths -join ';'
 	}
 }
 
 function Install-Tarball([string]$InstallDir, [string]$Version) {
-	$InstallRoot = Resolve-Installation-Path $InstallDir
-	$InstallOutput = Join-Path -Path $InstallRoot -ChildPath "metacall-tarball-win.zip"
-        # Delete directory contents if any
-        if (Test-Path $InstallRoot) {
-           Remove-Item -Recurse -Force $InstallRoot | Out-Null
-        }
+	$InstallRoot = Resolve-Installation-Path "$InstallDir"
+	$InstallOutput = Join-Path -Path "$InstallRoot" -ChildPath "metacall-tarball-win.zip"
 
-        # Create directory if it does not exist
-        New-Item -ItemType Directory -Force -Path $InstallRoot | Out-Null
+	# Delete directory contents if any
+	if (Test-Path "$InstallRoot") {
+		Remove-Item -Recurse -Force "$InstallRoot" | Out-Null
+	}
+
+	# Create directory if it does not exist
+	New-Item -ItemType Directory -Force -Path "$InstallRoot" | Out-Null
 	
-        if (!$FromPath) { 
-           $InstallVersion = Resolve-Version $Version
-           $InstallArchitecture = Get-CLI-Architecture
-           $DownloadUri = "https://github.com/metacall/distributable-windows/releases/download/$InstallVersion/metacall-tarball-win-$InstallArchitecture.zip"
+	if (!$FromPath) {
+		$InstallVersion = Resolve-Version $Version
+		$InstallArchitecture = Get-CLI-Architecture
+		$DownloadUri = "https://github.com/metacall/distributable-windows/releases/download/$InstallVersion/metacall-tarball-win-$InstallArchitecture.zip"
 
-           # Download the tarball
-           Invoke-WebRequest -Uri $DownloadUri -OutFile $InstallOutput
+		# Download the tarball
+		Invoke-WebRequest -Uri "$DownloadUri" -OutFile "$InstallOutput"
 	} else {
-           # Copy the tarball from the path
-           Copy-Item -Path $FromPath -Destination $InstallOutput
+			# Copy the tarball from the path
+			Copy-Item -Path "$FromPath" -Destination "$InstallOutput"
 	}
 
 	# Unzip the tarball
-	Expand-Archive -Path $InstallOutput -DestinationPath $InstallRoot -Force
+	Expand-Archive -Path "$InstallOutput" -DestinationPath "$InstallRoot" -Force
 
 	# Delete the tarball
-	Remove-Item -Force $InstallOutput | Out-Null
+	Remove-Item -Force "$InstallOutput" | Out-Null
 
 	# Run post install scripts
-	Post-Install $InstallRoot
+	Post-Install "$InstallRoot"
 
 	# Add MetaCall CLI to PATH
-	Path-Install $InstallRoot
+	Path-Install "$InstallRoot"
 }
 
 function Set-NodePath {
-    param (
-        [string]$FilePath
-    )
+	param (
+		[string]$FilePath
+	)
+
 	$NodePath = "$env:LocalAppData\MetaCall\metacall\runtimes\nodejs\node.exe"
-    if (-not (Test-Path $FilePath)) {
-        Write-Error "The file $FilePath does not exist."
-        return
-    }
-    $content = Get-Content -Path $FilePath
-    $content = $content -replace '%dp0%\\node.exe', $NodePath
-    $content = $content -replace '""', '"'
-    Set-Content -Path $FilePath -Value $content
+
+	if (-not (Test-Path "$FilePath")) {
+		Write-Error "The file $FilePath does not exist."
+		return
+	}
+
+	$Content = Get-Content -Path "$FilePath"
+	$Content = $Content -replace '%dp0%\\node.exe', "$NodePath"
+	$Content = $Content -replace '""', '"'
+
+	Set-Content -Path "$FilePath" -Value "$Content"
 }
 
 function Install-MetaCall-AdditionalPackages {
-    param (
-        [string]$Component
-    )
-    $InstallRoot = Resolve-Installation-Path $InstallDir
-    $InstallDir = Join-Path -Path $InstallRoot -ChildPath "deps\$Component"
+	param (
+		[string]$Component
+	)
 
-    if (-not (Test-Path $InstallDir)) {
-        New-Item -ItemType Directory -Force -Path $InstallDir | Out-Null
-    }
+	$InstallRoot = Resolve-Installation-Path "$InstallDir"
+	$InstallDir = Join-Path -Path "$InstallRoot" -ChildPath "deps\$Component"
 
-    Write-Host "MetaCall $($Component) Installation"
-    Invoke-Expression "npm install --global --prefix=$InstallDir @metacall/$Component"
-	Set-NodePath  "$InstallDir\metacall-$Component.cmd"
-    Write-Host "MetaCall $Component has been installed."
+	if (-not (Test-Path $InstallDir)) {
+		New-Item -ItemType Directory -Force -Path "$InstallDir" | Out-Null
+	}
+
+	Write-Host "MetaCall $($Component) installation"
+	Invoke-Expression "npm install --global --prefix="$InstallDir" @metacall/$Component"
+	Set-NodePath "$InstallDir\metacall-$Component.cmd"
+	Write-Host "MetaCall $Component has been installed."
 }
 
 # Install the tarball and post scripts
