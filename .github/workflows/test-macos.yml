@@ -41,7 +41,7 @@ jobs:
           {os: macos-13, arch: amd64},
           {os: macos-14, arch: arm64}
         ]
-        package: [tgz, pkg]
+        package: [tar.gz, pkg]
     runs-on: ${{ matrix.triplet.os }}
     steps:
       - uses: actions/checkout@v4
