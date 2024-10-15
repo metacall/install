@@ -359,7 +359,6 @@ uncompress() {
 	fi
 
 	local share_dir="${PLATFORM_PREFIX}/share/metacall"
-	local deps_dir="${PLATFORM_PREFIX}/deps"
 	local install_list="${share_dir}/metacall-binary-install.txt"
 	local install_tmp_list="/tmp/metacall-binary-install.txt"
 
@@ -421,12 +420,8 @@ uncompress() {
 	# Move the install list to the share directory
 	${CMD_SUDO} mv "${install_tmp_list}" "${install_list}"
 
-	# Create additional dependencies folder and add it to the install list
-	${CMD_SUDO} mkdir -p ${deps_dir}
-	echo "${deps_dir}" | ${CMD_SUDO} tee -a ${install_list} > /dev/null
-
 	# Store the install list itself
-	printf "${install_list}" | ${CMD_SUDO} tee -a ${install_list} > /dev/null
+	echo "${install_list}" | ${CMD_SUDO} tee -a ${install_list} > /dev/null
 
 	# TODO: Tag with a timestamp the files in order to uninstall them later on
 	# only if they have not been modified since the install time
@@ -625,7 +620,7 @@ uninstall() {
 	title "MetaCall Uninstall"
 
 	# Check dependencies
-	programs_required rm
+	programs_required rm cat awk sort cut read readlink
 
 	# Check platform
 	platform
@@ -633,37 +628,69 @@ uninstall() {
 	# Check for sudo permissions
 	find_sudo
 
-	# Delete all the previously installed files
-	${CMD_SUDO} rm -rf "${PLATFORM_BIN}/metacall"
-	${CMD_SUDO} rm -rf /gnu || true
+	# Delete the launcher
+	${CMD_SUDO} rm -f "${PLATFORM_BIN}/metacall"
 
-	# TODO: This is super unsafe, we should store somewhere the list of installed files, and delete the list of files only.
-	# This current methodology is going to destroy any Guix installation if present, we must avoid this...
+	# Delete shortcuts if any
+	${CMD_SUDO} rm -f "/etc/profile.d/metacall.sh"
+
+	# Delete all the previously installed files
+	local install_list="${PLATFORM_PREFIX}/share/metacall/metacall-binary-install.txt"
+
+	# First delete the files and symbolic links
+	while IFS= read -r line; do
+		if [ -L "${line}" ]; then
+			# If it's a symlink, delete the symlink and the target file it points to
+			local target=$(${CMD_SUDO} readlink "${line}")
+			if [ -e "${target}" ]; then
+				${CMD_SUDO} rm -f "${target}"
+			fi
+			${CMD_SUDO} rm -f "${line}"
+		elif [ -f "${line}" ]; then
+			${CMD_SUDO} rm -f "${line}"
+		fi
+	done < "${install_list}"
+
+	# Now delete empty directories (reverse sort and sort by lenght for deleting in DFS manner)
+	cat "${install_list}" | awk '{ print length, $0 }' | sort -r -n -s | cut -d" " -f2- | while IFS= read -r line; do
+		if [ -d "${line}" ]; then
+			${CMD_SUDO} rmdir "${line}" 2>/dev/null
+		fi
+	done
+}
+
+package_install() {
+	local package_name="$1"
+	local install_dir="${PLATFORM_PREFIX}/lib/node_modules"
+	local bin_dir="${PLATFORM_PREFIX}/bin"
+	local install_list="${PLATFORM_PREFIX}/share/metacall/metacall-binary-install.txt"
+
+	# Create additional dependencies folder
+	${CMD_SUDO} mkdir -p ${install_dir}
+
+	# Install package
+	${CMD_SUDO} metacall npm install --global --prefix="${install_dir}/${package_name}" @metacall/${package_name}
+	echo "#!${CMD_SHEBANG}" | ${CMD_SUDO} tee ${bin_dir}/${package_name} > /dev/null
+	echo "metacall node ${install_dir}/${package_name}/lib/node_modules/@metacall/${package_name}/dist/index.js \$@" | ${CMD_SUDO} tee ${bin_dir}/${package_name} > /dev/null
+	${CMD_SUDO} chmod 775 "${bin_dir}/${package_name}"
+	${CMD_SUDO} chown $(id -u):$(id -g) "${bin_dir}/${package_name}"
+
+	# Give permissions and ownership
+	${CMD_SUDO} chmod -R 775 "${install_dir}/${package_name}"
+	${CMD_SUDO} chown -R $(id -u):$(id -g) "${install_dir}/${package_name}"
+
+	# Add the files to the install list
+	find "${install_dir}/${package_name}" | ${CMD_SUDO} tee -a ${install_list} > /dev/null
 }
 
 additional_packages_install() {
-	local install_dir="${PLATFORM_PREFIX}/deps"
-	local bin_dir="${PLATFORM_PREFIX}/bin"
-
 	print "Installing additional dependencies."
 
 	# Install Deploy
-	${CMD_SUDO} metacall npm install --global --prefix="${install_dir}/deploy" @metacall/deploy
-	echo "#!${CMD_SHEBANG}" | ${CMD_SUDO} tee ${bin_dir}/deploy > /dev/null
-	echo "metacall node ${install_dir}/deploy/lib/node_modules/@metacall/deploy/dist/index.js \$@" | ${CMD_SUDO} tee ${bin_dir}/deploy > /dev/null
-	${CMD_SUDO} chmod 775 "${bin_dir}/deploy"
-	${CMD_SUDO} chown $(id -u):$(id -g) "${bin_dir}/deploy"
+	package_install "deploy"
 
 	# Install FaaS
-	${CMD_SUDO} metacall npm install --global --prefix="${install_dir}/faas" @metacall/faas
-	echo "#!${CMD_SHEBANG}" | ${CMD_SUDO} tee ${bin_dir}/faas > /dev/null
-	echo "metacall node ${install_dir}/faas/lib/node_modules/@metacall/faas/dist/index.js \$@" | ${CMD_SUDO} tee ${bin_dir}/faas > /dev/null
-	${CMD_SUDO} chmod 775 "${bin_dir}/faas"
-	${CMD_SUDO} chown $(id -u):$(id -g) "${bin_dir}/faas"
-
-	# Give permissions and ownership
-	${CMD_SUDO} chmod -R 775 "${install_dir}"
-	${CMD_SUDO} chown -R $(id -u):$(id -g) "${install_dir}"
+	package_install "faas"
 
 	success "Additional dependencies installed."
 }
