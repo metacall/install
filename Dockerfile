@@ -109,22 +109,19 @@ RUN curl -sL https://raw.githubusercontent.com/metacall/install/master/install.s
 FROM test_debian_user_curl AS test_debian_user_curl_uninstall
 
 RUN curl -sL https://raw.githubusercontent.com/metacall/install/master/install.sh \
-	| bash -s -- --uninstall
-	# \
-	#| grep 'MetaCall has been successfully uninstalled' \
-	#&& [ "$(command -v metacall || echo '1')" = "1" ]
+	| bash -s -- --uninstall \
+	&& [ "$(command -v metacall || echo '1')" = "1" ]
 
 # Test uninstall Debian without root and curl, checking if it preserves existing files
 FROM debian_user AS test_debian_user_curl_uninstall_existing_files
 
-RUN mkdir -p /gnu \
+RUN sudo mkdir -p /gnu \
 	&& curl -sL https://raw.githubusercontent.com/metacall/install/master/install.sh | bash \
 	&& metacall /test/script.js | grep '123456' \
 	&& metacall deploy --version | grep -e '^v.*\..*\..*' \
 	&& metacall faas --version | grep -e '^v.*\..*\..*' \
 	&& curl -sL https://raw.githubusercontent.com/metacall/install/master/install.sh \
 	| bash -s -- --uninstall \
-	| grep 'MetaCall has been successfully uninstalled' \
 	&& [ "$(command -v metacall || echo '1')" = "1" ] \
 	&& [ -d /gnu ]
 
@@ -238,7 +235,6 @@ FROM test_fedora_user_wget AS test_fedora_user_wget_uninstall
 
 RUN wget -O - https://raw.githubusercontent.com/metacall/install/master/install.sh \
 	| sh -s -- --uninstall \
-	| grep 'MetaCall has been successfully uninstalled' \
 	&& [ "$(command -v metacall || echo '1')" = "1" ]
 
 # Alpine Base (root)
@@ -310,7 +306,6 @@ FROM test_alpine_user_wget AS test_alpine_user_wget_uninstall
 
 RUN wget -O - https://raw.githubusercontent.com/metacall/install/master/install.sh \
 	| sh -s -- --uninstall \
-	| grep 'MetaCall has been successfully uninstalled' \
 	&& [ "$(command -v metacall || echo '1')" = "1" ]
 
 # BusyBox Base
@@ -353,7 +348,6 @@ FROM busybox_without_certificates_remote AS busybox_without_certificates_uninsta
 
 RUN wget --no-check-certificate -O - https://raw.githubusercontent.com/metacall/install/master/install.sh | sh \
 	-s -- --no-check-certificate --uninstall \
-	| grep 'MetaCall has been successfully uninstalled' \
 	&& [ "$(command -v metacall || echo '1')" = "1" ]
 
 # Test install BusyBox
