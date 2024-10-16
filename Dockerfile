@@ -105,22 +105,35 @@ RUN curl -sL https://raw.githubusercontent.com/metacall/install/master/install.s
 	&& metacall deploy --version | grep -e '^v.*\..*\..*' \
 	&& metacall faas --version | grep -e '^v.*\..*\..*'
 
-# # Test uninstall Debian without root and curl, checking if it preserves existing files
-# FROM debian_user AS test_debian_user_curl_uninstall
+# Test uninstall Debian without root and curl
+FROM test_debian_user_curl AS test_debian_user_curl_uninstall
 
-# RUN mkdir -p /gnu \
-# 	&& curl -sL https://raw.githubusercontent.com/metacall/install/master/install.sh | bash \
-# 	&& metacall /test/script.js | grep '123456' \
-# 	&& curl -sL https://raw.githubusercontent.com/metacall/install/master/install.sh
-# 	| bash -s -- --uninstall \
-# 	| grep 'MetaCall has been successfully uninstalled' \
-# 	&& [ "$(command -v metacall || echo '1')" = "1" ] \
-# 	&& [ -d /gnu ]
+RUN curl -sL https://raw.githubusercontent.com/metacall/install/master/install.sh \
+	| bash -s -- --uninstall
+	# \
+	#| grep 'MetaCall has been successfully uninstalled' \
+	#&& [ "$(command -v metacall || echo '1')" = "1" ]
 
-# # TODO:
-# # Create a test that has a /gnu folder, then install metacall, then update the mtime of a random file
-# # from metacall installation, then uninstall and then verify that /gnu and the random file that has been
-# # update are still present after the uninstall process
+# Test uninstall Debian without root and curl, checking if it preserves existing files
+FROM debian_user AS test_debian_user_curl_uninstall_existing_files
+
+RUN mkdir -p /gnu \
+	&& curl -sL https://raw.githubusercontent.com/metacall/install/master/install.sh | bash \
+	&& metacall /test/script.js | grep '123456' \
+	&& metacall deploy --version | grep -e '^v.*\..*\..*' \
+	&& metacall faas --version | grep -e '^v.*\..*\..*' \
+	&& curl -sL https://raw.githubusercontent.com/metacall/install/master/install.sh \
+	| bash -s -- --uninstall \
+	| grep 'MetaCall has been successfully uninstalled' \
+	&& [ "$(command -v metacall || echo '1')" = "1" ] \
+	&& [ -d /gnu ]
+
+# TODO:
+# When implementing timestamp support:
+#
+# Create a test that has a /gnu folder, then install metacall, then update the mtime of a random file
+# from metacall installation, then uninstall and then verify that /gnu and the random file that has been
+# update are still present after the uninstall process
 
 # Test certificates in Debian with user (comparing against <!doctype html> in buffer format)
 FROM test_debian_user_curl AS test_debian_user_certificates
@@ -220,6 +233,14 @@ RUN wget -O - https://raw.githubusercontent.com/metacall/install/master/install.
 	&& metacall deploy --version | grep -e '^v.*\..*\..*' \
 	&& metacall faas --version | grep -e '^v.*\..*\..*'
 
+# Test uninstall Fedora
+FROM test_fedora_user_wget AS test_fedora_user_wget_uninstall
+
+RUN wget -O - https://raw.githubusercontent.com/metacall/install/master/install.sh \
+	| sh -s -- --uninstall \
+	| grep 'MetaCall has been successfully uninstalled' \
+	&& [ "$(command -v metacall || echo '1')" = "1" ]
+
 # Alpine Base (root)
 FROM alpine:latest AS alpine_root
 
@@ -284,7 +305,7 @@ RUN wget -O - https://raw.githubusercontent.com/metacall/install/master/install.
 	| sh -s -- --update \
 	| grep 'MetaCall has been installed'
 
-# Test uninstall alpine
+# Test uninstall Alpine
 FROM test_alpine_user_wget AS test_alpine_user_wget_uninstall
 
 RUN wget -O - https://raw.githubusercontent.com/metacall/install/master/install.sh \
@@ -316,6 +337,8 @@ COPY test/ /test/
 # Busybox wget fails with self signed certificates so we avoid the tests
 FROM test_busybox_base AS busybox_without_certificates_local
 
+FROM busybox_without_certificates_local AS busybox_without_certificates_uninstall_local
+
 # Test install BusyBox without certificates
 FROM test_busybox_base AS busybox_without_certificates_remote
 
@@ -325,4 +348,16 @@ RUN wget --no-check-certificate -O - https://raw.githubusercontent.com/metacall/
 	&& metacall deploy --version | grep -e '^v.*\..*\..*' \
 	&& metacall faas --version | grep -e '^v.*\..*\..*'
 
+# Test uninstall BusyBox without certificates
+FROM busybox_without_certificates_remote AS busybox_without_certificates_uninstall_remote
+
+RUN wget --no-check-certificate -O - https://raw.githubusercontent.com/metacall/install/master/install.sh | sh \
+	-s -- --no-check-certificate --uninstall \
+	| grep 'MetaCall has been successfully uninstalled' \
+	&& [ "$(command -v metacall || echo '1')" = "1" ]
+
+# Test install BusyBox
 FROM busybox_without_${METACALL_INSTALL_CERTS} AS test_busybox_without_certificates
+
+# Test uninstall BusyBox
+FROM busybox_without_certificates_uninstall_${METACALL_INSTALL_CERTS} AS test_busybox_without_certificates_uninstall

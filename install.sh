@@ -415,13 +415,11 @@ uncompress() {
 	# Create shared directory
 	if [ ! -d "${share_dir}" ]; then
 		${CMD_SUDO} mkdir -p ${share_dir}
+		${CMD_SUDO} chmod 775 ${share_dir}
 	fi
 
 	# Move the install list to the share directory
 	${CMD_SUDO} mv "${install_tmp_list}" "${install_list}"
-
-	# Store the install list itself
-	echo "${install_list}" | ${CMD_SUDO} tee -a ${install_list} > /dev/null
 
 	# TODO: Tag with a timestamp the files in order to uninstall them later on
 	# only if they have not been modified since the install time
@@ -443,6 +441,10 @@ uncompress() {
 		${CMD_SUDO} rmdir ${openssl_cert_dir}
 		${CMD_SUDO} ln -s ${nss_cert_dir} ${openssl_cert_dir}
 		${CMD_SUDO} ln -s ${nss_cert_file} ${openssl_cert_file}
+
+		# Store the certificate links in the install list
+		echo "${openssl_cert_dir}" | ${CMD_SUDO} tee -a ${install_list} > /dev/null
+		echo "${openssl_cert_file}" | ${CMD_SUDO} tee -a ${install_list} > /dev/null
 	fi
 
 	# Clean the tarball
@@ -635,28 +637,70 @@ uninstall() {
 	${CMD_SUDO} rm -f "/etc/profile.d/metacall.sh"
 
 	# Delete all the previously installed files
-	local install_list="${PLATFORM_PREFIX}/share/metacall/metacall-binary-install.txt"
+	local install_list="$(readlink -f "${PLATFORM_PREFIX}/share/metacall/metacall-binary-install.txt")"
+	local install_tmp_list="tmp/metacall-binary-install.txt"
 
-	# First delete the files and symbolic links
+	# Move install list to temp folder
+	${CMD_SUDO} mv "${install_list}" "${install_tmp_list}"
+
+	# Disable debug info
+	if [ -n "${METACALL_INSTALL_DEBUG:-}" ]; then
+		set +x
+	fi
+
+	print "Deleting MetaCall symlinks."
+
+	# First delete the symbolic links and get files and folders
 	while IFS= read -r line; do
-		if [ -L "${line}" ]; then
-			# If it's a symlink, delete the symlink and the target file it points to
-			local target=$(${CMD_SUDO} readlink "${line}")
-			if [ -e "${target}" ]; then
-				${CMD_SUDO} rm -f "${target}"
-			fi
-			${CMD_SUDO} rm -f "${line}"
-		elif [ -f "${line}" ]; then
-			${CMD_SUDO} rm -f "${line}"
-		fi
-	done < "${install_list}"
+		# Reinterpret escaped unicode characters
+		local path="$(printf "%b" "${line}")"
 
-	# Now delete empty directories (reverse sort and sort by lenght for deleting in DFS manner)
-	cat "${install_list}" | awk '{ print length, $0 }' | sort -r -n -s | cut -d" " -f2- | while IFS= read -r line; do
-		if [ -d "${line}" ]; then
-			${CMD_SUDO} rmdir "${line}" 2>/dev/null
+		# Delete symlink
+		if [ -L "${path}" ]; then
+			${CMD_SUDO} rm -f "${path}"
+		fi
+	done < "${install_tmp_list}"
+
+	print "Deleting MetaCall files."
+
+	# Then delete the files
+	while IFS= read -r line; do
+		# Reinterpret escaped unicode characters
+		local path="$(printf "%b" "${line}")"
+
+		# Delete file
+		if [ -f "${path}" ]; then
+			${CMD_SUDO} rm -f "${path}"
+		fi
+	done < "${install_tmp_list}"
+
+	print "Deleting MetaCall folders."
+
+	# Then delete the folders
+	cat "${install_tmp_list}" | awk '{ print length, $0 }' | sort -r -n -s | cut -d ' ' -f2- | while IFS= read -r line; do
+		# Reinterpret escaped unicode characters
+		local path="$(printf "%b" "${line}")"
+
+		# Delete folder only if it is empty
+		if [ -d "${path}" ]; then
+			if [ -n "${METACALL_INSTALL_DEBUG:-}" ]; then
+				# Print debug information if the folder is not empty
+				${CMD_SUDO} rmdir "${path}" || (warning "Invalid file type '${path}', expected empty folder." && ls -la -R "${path}")
+			else
+				# Skip if the folder is not empty
+				${CMD_SUDO} rmdir "${path}" || true
+			fi
 		fi
 	done
+
+	if [ -n "${METACALL_INSTALL_DEBUG:-}" ]; then
+		set -x
+	fi
+
+	# Remove the list itself
+	${CMD_SUDO} rm -f "${install_tmp_list}"
+
+	success "MetaCall uninstalled successfully."
 }
 
 package_install() {
@@ -670,8 +714,8 @@ package_install() {
 
 	# Install package
 	${CMD_SUDO} metacall npm install --global --prefix="${install_dir}/${package_name}" @metacall/${package_name}
-	echo "#!${CMD_SHEBANG}" | ${CMD_SUDO} tee ${bin_dir}/${package_name} > /dev/null
-	echo "metacall node ${install_dir}/${package_name}/lib/node_modules/@metacall/${package_name}/dist/index.js \$@" | ${CMD_SUDO} tee ${bin_dir}/${package_name} > /dev/null
+	echo "#!${CMD_SHEBANG}" | ${CMD_SUDO} tee "${bin_dir}/${package_name}" > /dev/null
+	echo "metacall node ${install_dir}/${package_name}/lib/node_modules/@metacall/${package_name}/dist/index.js \$@" | ${CMD_SUDO} tee -a "${bin_dir}/${package_name}" > /dev/null
 	${CMD_SUDO} chmod 775 "${bin_dir}/${package_name}"
 	${CMD_SUDO} chown $(id -u):$(id -g) "${bin_dir}/${package_name}"
 
@@ -681,6 +725,8 @@ package_install() {
 
 	# Add the files to the install list
 	find "${install_dir}/${package_name}" | ${CMD_SUDO} tee -a ${install_list} > /dev/null
+
+	# TODO: Use readlink or realpath for find ^
 }
 
 additional_packages_install() {
@@ -703,7 +749,7 @@ path_install() {
 	# Check if ${PLATFORM_BIN} (aka /usr/local/bin in Linux) is in PATH
 	if [ -z "${path}" ]; then
 		# Add ${PLATFORM_BIN} to PATH
-		echo "export PATH=\"\${PATH}:${PLATFORM_BIN}\"" | ${CMD_SUDO} tee /etc/profile.d/metacall.sh > /dev/null
+		echo "export PATH=\"\${PATH}:${PLATFORM_BIN}\"" | ${CMD_SUDO} tee "/etc/profile.d/metacall.sh" > /dev/null
 		${CMD_SUDO} mkdir -p /etc/profile.d/
 		${CMD_SUDO} chmod 644 /etc/profile.d/metacall.sh
 
@@ -722,7 +768,19 @@ main() {
 	else
 		# Skip asking for updates if the update flag is enabled
 		if [ $OPT_UPDATE -eq 0 ] && [ $OPT_UNINSTALL -eq 0 ]; then
-			ask "MetaCall is already installed. Do you want to update it?"
+			# Check if the shell is interactive
+			case $- in
+				*i*) local interactive=1;;
+				*) local interactive=0;;
+			esac
+
+			if [ $interactive -ne 0 ]; then
+				# Ask for Docker fallback if we are in a terminal
+				ask "MetaCall is already installed. Do you want to update it?"
+			else
+				warning "MetaCall is already installed."
+				exit 0
+			fi
 		fi
 
 		uninstall
@@ -752,7 +810,7 @@ main() {
 			# Required program for ask question to the user
 			programs_required read
 
-			# Check if the sell is interactive
+			# Check if the shell is interactive
 			case $- in
 				*i*) local interactive=1;;
 				*) local interactive=0;;
@@ -773,7 +831,7 @@ main() {
 
 	# Show information
 	success "MetaCall has been installed." \
-		"  Run 'metacall' command for start the CLI and type help for more information about CLI commands."
+		" Run 'metacall' command for start the CLI and type help for more information about CLI commands."
 }
 
 # Run main
