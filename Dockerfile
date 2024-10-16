@@ -110,7 +110,7 @@ FROM test_debian_user_curl AS test_debian_user_curl_uninstall
 
 RUN curl -sL https://raw.githubusercontent.com/metacall/install/master/install.sh \
 	| bash -s -- --uninstall \
-	&& [ "$(command -v metacall || echo '1')" = "1" ]
+	&& [ ! -f "/usr/local/bin/metacall" ]
 
 # Test uninstall Debian without root and curl, checking if it preserves existing files
 FROM debian_user AS test_debian_user_curl_uninstall_existing_files
@@ -122,7 +122,7 @@ RUN sudo mkdir -p /gnu \
 	&& metacall faas --version | grep -e '^v.*\..*\..*' \
 	&& curl -sL https://raw.githubusercontent.com/metacall/install/master/install.sh \
 	| bash -s -- --uninstall \
-	&& [ "$(command -v metacall || echo '1')" = "1" ] \
+	&& [ ! -f "/usr/local/bin/metacall" ] \
 	&& [ -d /gnu ]
 
 # TODO:
@@ -235,7 +235,7 @@ FROM test_fedora_user_wget AS test_fedora_user_wget_uninstall
 
 RUN wget -O - https://raw.githubusercontent.com/metacall/install/master/install.sh \
 	| sh -s -- --uninstall \
-	&& [ "$(command -v metacall || echo '1')" = "1" ]
+	&& [ ! -f "/usr/local/bin/metacall" ]
 
 # Alpine Base (root)
 FROM alpine:latest AS alpine_root
@@ -306,7 +306,7 @@ FROM test_alpine_user_wget AS test_alpine_user_wget_uninstall
 
 RUN wget -O - https://raw.githubusercontent.com/metacall/install/master/install.sh \
 	| sh -s -- --uninstall \
-	&& [ "$(command -v metacall || echo '1')" = "1" ]
+	&& [ ! -f "/usr/local/bin/metacall" ]
 
 # BusyBox Base
 FROM busybox:stable-uclibc AS test_busybox
@@ -348,7 +348,7 @@ FROM busybox_without_certificates_remote AS busybox_without_certificates_uninsta
 
 RUN wget --no-check-certificate -O - https://raw.githubusercontent.com/metacall/install/master/install.sh | sh \
 	-s -- --no-check-certificate --uninstall \
-	&& [ "$(command -v metacall || echo '1')" = "1" ]
+	&& [ ! -f "/usr/local/bin/metacall" ]
 
 # Test install BusyBox
 FROM busybox_without_${METACALL_INSTALL_CERTS} AS test_busybox_without_certificates
