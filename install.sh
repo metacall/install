@@ -630,6 +630,8 @@ uninstall() {
 	# Check for sudo permissions
 	find_sudo
 
+	print "Deleting MetaCall binary installation, this operation may take a while."
+
 	# Delete the launcher
 	${CMD_SUDO} rm -f "${PLATFORM_BIN}/metacall"
 
@@ -699,34 +701,33 @@ uninstall() {
 
 	# Remove the list itself
 	${CMD_SUDO} rm -f "${install_tmp_list}"
-
-	success "MetaCall uninstalled successfully."
 }
 
 package_install() {
 	local package_name="$1"
 	local install_dir="${PLATFORM_PREFIX}/lib/node_modules"
 	local bin_dir="${PLATFORM_PREFIX}/bin"
+	local package_install_dir="$(readlink -f "${install_dir}/${package_name}")"
+	local package_bin_dir="$(readlink -f "${bin_dir}/${package_name}")"
 	local install_list="${PLATFORM_PREFIX}/share/metacall/metacall-binary-install.txt"
 
 	# Create additional dependencies folder
 	${CMD_SUDO} mkdir -p ${install_dir}
 
 	# Install package
-	${CMD_SUDO} metacall npm install --global --prefix="${install_dir}/${package_name}" @metacall/${package_name}
-	echo "#!${CMD_SHEBANG}" | ${CMD_SUDO} tee "${bin_dir}/${package_name}" > /dev/null
-	echo "metacall node ${install_dir}/${package_name}/lib/node_modules/@metacall/${package_name}/dist/index.js \$@" | ${CMD_SUDO} tee -a "${bin_dir}/${package_name}" > /dev/null
-	${CMD_SUDO} chmod 775 "${bin_dir}/${package_name}"
-	${CMD_SUDO} chown $(id -u):$(id -g) "${bin_dir}/${package_name}"
+	${CMD_SUDO} metacall npm install --global --prefix="${package_install_dir}" @metacall/${package_name}
+	echo "#!${CMD_SHEBANG}" | ${CMD_SUDO} tee "${package_bin_dir}" > /dev/null
+	echo "metacall node ${package_install_dir}/lib/node_modules/@metacall/${package_name}/dist/index.js \$@" | ${CMD_SUDO} tee -a "${package_bin_dir}" > /dev/null
+	${CMD_SUDO} chmod 775 "${package_bin_dir}"
+	${CMD_SUDO} chown $(id -u):$(id -g) "${package_bin_dir}"
 
 	# Give permissions and ownership
-	${CMD_SUDO} chmod -R 775 "${install_dir}/${package_name}"
-	${CMD_SUDO} chown -R $(id -u):$(id -g) "${install_dir}/${package_name}"
+	${CMD_SUDO} chmod -R 775 "${package_install_dir}"
+	${CMD_SUDO} chown -R $(id -u):$(id -g) "${package_install_dir}"
 
 	# Add the files to the install list
-	find "${install_dir}/${package_name}" | ${CMD_SUDO} tee -a ${install_list} > /dev/null
-
-	# TODO: Use readlink or realpath for find ^
+	${CMD_SUDO} find "${package_install_dir}" | ${CMD_SUDO} tee -a ${install_list} > /dev/null
+	${CMD_SUDO} echo "${package_bin_dir}" | ${CMD_SUDO} tee -a ${install_list} > /dev/null
 }
 
 additional_packages_install() {
