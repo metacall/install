@@ -528,7 +528,7 @@ binary_install() {
 
 		case "$OPT_FROM_PATH_TARGET" in
 			*.tar.gz)
-				# Valid format
+				# Valid format (noop)
 				:
 				;;
 			*.pkg)

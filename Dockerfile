@@ -331,8 +331,7 @@ COPY test/ /test/
 
 # Busybox wget fails with self signed certificates so we avoid the tests
 FROM test_busybox_base AS busybox_without_certificates_local
-
-FROM busybox_without_certificates_local AS busybox_without_certificates_uninstall_local
+FROM busybox_without_certificates_local AS busybox_uninstall_without_certificates_local
 
 # Test install BusyBox without certificates
 FROM test_busybox_base AS busybox_without_certificates_remote
@@ -344,7 +343,7 @@ RUN wget --no-check-certificate -O - https://raw.githubusercontent.com/metacall/
 	&& metacall faas --version | grep -e '^v.*\..*\..*'
 
 # Test uninstall BusyBox without certificates
-FROM busybox_without_certificates_remote AS busybox_without_certificates_uninstall_remote
+FROM busybox_without_certificates_remote AS busybox_uninstall_without_certificates_remote
 
 RUN wget --no-check-certificate -O - https://raw.githubusercontent.com/metacall/install/master/install.sh | sh \
 	-s -- --no-check-certificate --uninstall \
@@ -354,4 +353,4 @@ RUN wget --no-check-certificate -O - https://raw.githubusercontent.com/metacall/
 FROM busybox_without_${METACALL_INSTALL_CERTS} AS test_busybox_without_certificates
 
 # Test uninstall BusyBox
-FROM busybox_without_certificates_uninstall_${METACALL_INSTALL_CERTS} AS test_busybox_without_certificates_uninstall
+FROM busybox_uninstall_without_${METACALL_INSTALL_CERTS} AS test_busybox_uninstall_without_certificates
