@@ -520,7 +520,7 @@ cli() {
 		${CMD_SUDO} sed -i '' -e '$d' "${PLATFORM_BIN}/metacall"
 
 		# Set up command line
-		echo "CMD=\`grep \"${PLATFORM_BIN}/\$1\" | head -n 1\`" | ${CMD_SUDO} tee -a "${PLATFORM_BIN}/metacall" > /dev/null
+		echo "CMD=\"\$(grep \"${PLATFORM_BIN}/\$1\" \"${bin_list}\" | head -n 1)\"" | ${CMD_SUDO} tee -a "${PLATFORM_BIN}/metacall" > /dev/null
 
 		# If we find a binary on the list, execute it
 		echo "if [ \"\${CMD}\" != \"\" ]; then" | ${CMD_SUDO} tee -a "${PLATFORM_BIN}/metacall" > /dev/null
@@ -530,7 +530,7 @@ cli() {
 		echo "fi" | ${CMD_SUDO} tee -a "${PLATFORM_BIN}/metacall" > /dev/null
 
 		# Execute the CLI
-		echo "\${PREFIX}/metacallcli \$@\n" | ${CMD_SUDO} tee -a "${PLATFORM_BIN}/metacall" > /dev/null
+		echo "\${PREFIX}/metacallcli \$@" | ${CMD_SUDO} tee -a "${PLATFORM_BIN}/metacall" > /dev/null
 
 		# TODO: Debug, remove this
 		cat "${PLATFORM_BIN}/metacall"
