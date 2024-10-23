@@ -517,7 +517,7 @@ cli() {
 		echo "${bin_list}" | ${CMD_SUDO} tee -a "${install_list}" > /dev/null
 
 		# Remove last line of the script
-		head -n -1 "${PLATFORM_BIN}/metacall" | ${CMD_SUDO} tee "${PLATFORM_BIN}/metacall" > /dev/null
+		${CMD_SUDO} head -n -1 "${PLATFORM_BIN}/metacall" | ${CMD_SUDO} tee "${PLATFORM_BIN}/metacall" > /dev/null
 
 		# Set up command line
 		echo "CMD=\`grep \"${PLATFORM_BIN}/\$1\" | head -n 1\`" | ${CMD_SUDO} tee -a "${PLATFORM_BIN}/metacall" > /dev/null
@@ -531,6 +531,9 @@ cli() {
 
 		# Execute the CLI
 		echo "\${PREFIX}/metacallcli \$@\n" | ${CMD_SUDO} tee -a "${PLATFORM_BIN}/metacall" > /dev/null
+
+		# TODO: Debug, remove this
+		cat "${PLATFORM_BIN}/metacall"
 	fi
 
 	success "CLI shortcut installed successfully."
