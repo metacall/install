@@ -708,12 +708,14 @@ package_install() {
 	local install_dir="${PLATFORM_PREFIX}/lib/node_modules"
 	local bin_dir="${PLATFORM_PREFIX}/bin"
 	local install_list="${PLATFORM_PREFIX}/share/metacall/metacall-binary-install.txt"
-	local package_install_dir="$(readlink -f "${install_dir}")/${package_name}"
-	local package_bin_dir="$(readlink -f "${bin_dir}")/${package_name}"
 
 	# Create additional dependencies folder
-	${CMD_SUDO} mkdir -p "${package_install_dir}"
-	${CMD_SUDO} mkdir -p "${package_bin_dir}"
+	${CMD_SUDO} mkdir -p "${install_dir}"
+	${CMD_SUDO} mkdir -p "${bin_dir}"
+
+	# Get full paths
+	local package_install_dir="$(readlink -f "${install_dir}")/${package_name}"
+	local package_bin_dir="$(readlink -f "${bin_dir}")/${package_name}"
 
 	# Install package
 	${CMD_SUDO} metacall npm install --global --prefix="${package_install_dir}" @metacall/${package_name}
