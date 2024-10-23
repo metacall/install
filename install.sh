@@ -517,7 +517,7 @@ cli() {
 		echo "${bin_list}" | ${CMD_SUDO} tee -a "${install_list}" > /dev/null
 
 		# Remove last line of the script
-		${CMD_SUDO} head -n -1 "${PLATFORM_BIN}/metacall" | ${CMD_SUDO} tee "${PLATFORM_BIN}/metacall" > /dev/null
+		${CMD_SUDO} sed -i '' -e '$d' "${PLATFORM_BIN}/metacall"
 
 		# Set up command line
 		echo "CMD=\`grep \"${PLATFORM_BIN}/\$1\" | head -n 1\`" | ${CMD_SUDO} tee -a "${PLATFORM_BIN}/metacall" > /dev/null
