@@ -397,7 +397,7 @@ uncompress() {
 	fi
 
 	# Give read write permissions for all
-	${CMD_SUDO} chmod 666 ${install_tmp_list}
+	${CMD_SUDO} chmod 666 "${install_tmp_list}"
 
 	# Uncompress the tarball. Use the install list to uncompress only the files that are new in the filesystem,
 	# don't restore mtime (-m), don't restore user:group (-o) and avoid overwriting existing files (-k).
@@ -443,8 +443,8 @@ uncompress() {
 		${CMD_SUDO} ln -s ${nss_cert_file} ${openssl_cert_file}
 
 		# Store the certificate links in the install list
-		echo "${openssl_cert_dir}" | ${CMD_SUDO} tee -a ${install_list} > /dev/null
-		echo "${openssl_cert_file}" | ${CMD_SUDO} tee -a ${install_list} > /dev/null
+		echo "${openssl_cert_dir}" | ${CMD_SUDO} tee -a "${install_list}" > /dev/null
+		echo "${openssl_cert_file}" | ${CMD_SUDO} tee -a "${install_list}" > /dev/null
 	fi
 
 	# Clean the tarball
@@ -501,6 +501,36 @@ cli() {
 		# CLI
 		echo "${PLATFORM_PREFIX}/bin/metacallcli \$@" | ${CMD_SUDO} tee -a "${PLATFORM_BIN}/metacall" > /dev/null
 		${CMD_SUDO} chmod 775 "${PLATFORM_BIN}/metacall"
+
+	elif [ "${PLATFORM_OS}" = "macos" ]; then
+		local share_dir="${PLATFORM_PREFIX}/share/metacall"
+		local install_list="${share_dir}/metacall-binary-install.txt"
+		local bin_list="${share_dir}/metacall-binary-install-bin.txt"
+
+		# Get the binary files installed (do not include metacall itself)
+		${CMD_SUDO} grep "^${PLATFORM_BIN}/" "${install_list}" | grep -v "^${PLATFORM_BIN}/metacall" | ${CMD_SUDO} tee "${bin_list}" > /dev/null
+
+		# Give read write permissions for all
+		${CMD_SUDO} chmod 666 "${bin_list}"
+
+		# Add the bin list to the install list, this helper file will allow to handle package managers from metacall
+		echo "${bin_list}" | ${CMD_SUDO} tee -a "${install_list}" > /dev/null
+
+		# Remove last line of the script
+		head -n -1 "${PLATFORM_BIN}/metacall" | ${CMD_SUDO} tee "${PLATFORM_BIN}/metacall" > /dev/null
+
+		# Set up command line
+		echo "CMD=\`grep \"${PLATFORM_BIN}/\$1\" | head -n 1\`" | ${CMD_SUDO} tee -a "${PLATFORM_BIN}/metacall" > /dev/null
+
+		# If we find a binary on the list, execute it
+		echo "if [ \"\${CMD}\" != \"\" ]; then" | ${CMD_SUDO} tee -a "${PLATFORM_BIN}/metacall" > /dev/null
+		echo "	if [ -z \"\${PATH-}\" ]; then export PATH=\"${PLATFORM_BIN}\"; else PATH=\"${PLATFORM_BIN}:\${PATH}\"; fi" | ${CMD_SUDO} tee -a "${PLATFORM_BIN}/metacall" > /dev/null
+		echo "	\$@" | ${CMD_SUDO} tee -a "${PLATFORM_BIN}/metacall" > /dev/null
+		echo "	exit \$?" | ${CMD_SUDO} tee -a "${PLATFORM_BIN}/metacall" > /dev/null
+		echo "fi" | ${CMD_SUDO} tee -a "${PLATFORM_BIN}/metacall" > /dev/null
+
+		# Execute the CLI
+		echo "\${PREFIX}/metacallcli \$@\n" | ${CMD_SUDO} tee -a "${PLATFORM_BIN}/metacall" > /dev/null
 	fi
 
 	success "CLI shortcut installed successfully."
@@ -729,8 +759,8 @@ package_install() {
 	${CMD_SUDO} chown -R $(id -u):$(id -g) "${package_install_dir}"
 
 	# Add the files to the install list
-	${CMD_SUDO} find "${package_install_dir}" | ${CMD_SUDO} tee -a ${install_list} > /dev/null
-	${CMD_SUDO} echo "${package_bin_dir}" | ${CMD_SUDO} tee -a ${install_list} > /dev/null
+	${CMD_SUDO} find "${package_install_dir}" | ${CMD_SUDO} tee -a "${install_list}" > /dev/null
+	${CMD_SUDO} echo "${package_bin_dir}" | ${CMD_SUDO} tee -a "${install_list}" > /dev/null
 }
 
 additional_packages_install() {
