@@ -678,7 +678,7 @@ uninstall() {
 
 	# Delete all the previously installed files
 	local install_list="$(readlink -f "${PLATFORM_PREFIX}/share/metacall/metacall-binary-install.txt")"
-	local install_tmp_list="tmp/metacall-binary-install.txt"
+	local install_tmp_list="/tmp/metacall-binary-install.txt"
 
 	# Move install list to temp folder
 	${CMD_SUDO} mv "${install_list}" "${install_tmp_list}"
