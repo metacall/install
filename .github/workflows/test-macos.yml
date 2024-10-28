@@ -32,6 +32,20 @@ jobs:
           metacall deploy --version | grep -E "^v.*\..*\..*"
           metacall faas --version | grep -E "^v.*\..*\..*"
 
+      - name: Uninstall MetaCall
+        env:
+          METACALL_INSTALL_DEBUG: 1
+        run: ./install.sh --uninstall
+
+      - name: Check Uninstall
+        run: |
+          if command -v metacall >/dev/null 2>&1; then
+            echo "MetaCall uninstalled correctly"
+          else
+            echo "Failed to unistall MetaCall"
+            exit 1
+          fi
+
   install-from-path:
     name: Install MetaCall via Path Installation
     strategy:
@@ -68,3 +82,17 @@ jobs:
         run: |
           metacall deploy --version | grep -E "^v.*\..*\..*"
           metacall faas --version | grep -E "^v.*\..*\..*"
+
+      - name: Uninstall MetaCall
+        env:
+          METACALL_INSTALL_DEBUG: 1
+        run: ./install.sh --uninstall
+
+      - name: Check Uninstall
+        run: |
+          if command -v metacall >/dev/null 2>&1; then
+            echo "MetaCall uninstalled correctly"
+          else
+            echo "Failed to unistall MetaCall"
+            exit 1
+          fi
