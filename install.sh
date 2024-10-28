@@ -453,7 +453,7 @@ uncompress() {
 		# Get the binary files installed, use the tar directly because if we use the ${install_list} it is
 		# going to exclude the binaries that were already installed, also do not include metacall itself
 		${CMD_SUDO} tar -tf "${tmp}" | sed 's/^\.//' \
-			| grep "^${PLATFORM_BIN}/" \
+			| grep -E "^${PLATFORM_BIN}/.+" \
 			| grep -v "^${PLATFORM_BIN}/metacall" \
 			| ${CMD_SUDO} tee "${bin_list}" > /dev/null
 

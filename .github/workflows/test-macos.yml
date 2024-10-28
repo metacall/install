@@ -1,4 +1,4 @@
-name: Install MetaCall on MacOs Test
+name: Install MetaCall on MacOS Test
 
 on: [push, pull_request, workflow_dispatch]
 
