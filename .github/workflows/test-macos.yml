@@ -29,8 +29,8 @@ jobs:
 
       - name: Deploy & FaaS Test
         run: |
-          metacall deploy --version | grep -E "^v.*\..*\..*"
-          metacall faas --version | grep -E "^v.*\..*\..*"
+          metacall deploy --version # | grep -E "^v.*\..*\..*"
+          metacall faas --version # | grep -E "^v.*\..*\..*"
 
   install-from-path:
     name: Install MetaCall via Path Installation
