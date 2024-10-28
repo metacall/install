@@ -426,7 +426,7 @@ uncompress() {
 
 	success "Tarball uncompressed successfully."
 
-	# Add links for certificates
+	# In Linux, add links for certificates
 	if [ "${PLATFORM_OS}" = "linux" ]; then
 		local openssl_base="${PLATFORM_PREFIX}/store/`ls ${PLATFORM_PREFIX}/store/ | grep openssl | head -n 1`/share"
 		local openssl_dir="${openssl_base}/`ls ${openssl_base} | grep openssl`"
@@ -445,6 +445,23 @@ uncompress() {
 		# Store the certificate links in the install list
 		echo "${openssl_cert_dir}" | ${CMD_SUDO} tee -a "${install_list}" > /dev/null
 		echo "${openssl_cert_file}" | ${CMD_SUDO} tee -a "${install_list}" > /dev/null
+
+	# In MacOS, create a binary list for allowing 'metacall npm ...' and other commands
+	elif [ "${PLATFORM_OS}" = "macos" ]; then
+		local bin_list="${share_dir}/metacall-binary-install-bin.txt"
+
+		# Get the binary files installed, use the tar directly because if we use the ${install_list} it is
+		# going to exclude the binaries that were already installed, also do not include metacall itself
+		${CMD_SUDO} tar -tf "${tmp}" | sed 's/^\.//' \
+			| grep "^${PLATFORM_BIN}/" \
+			| grep -v "^${PLATFORM_BIN}/metacall" \
+			| ${CMD_SUDO} tee "${bin_list}" > /dev/null
+
+		# Give read write permissions for all
+		${CMD_SUDO} chmod 666 "${bin_list}"
+
+		# Add the bin list to the install list, this helper file will allow to handle package managers from metacall
+		echo "${bin_list}" | ${CMD_SUDO} tee -a "${install_list}" > /dev/null
 	fi
 
 	# Clean the tarball
@@ -507,16 +524,7 @@ cli() {
 		local install_list="${share_dir}/metacall-binary-install.txt"
 		local bin_list="${share_dir}/metacall-binary-install-bin.txt"
 
-		# Get the binary files installed (do not include metacall itself)
-		${CMD_SUDO} grep "^${PLATFORM_BIN}/" "${install_list}" | grep -v "^${PLATFORM_BIN}/metacall" | ${CMD_SUDO} tee "${bin_list}" > /dev/null
-
-		# Give read write permissions for all
-		${CMD_SUDO} chmod 666 "${bin_list}"
-
-		# Add the bin list to the install list, this helper file will allow to handle package managers from metacall
-		echo "${bin_list}" | ${CMD_SUDO} tee -a "${install_list}" > /dev/null
-
-		# Remove last line of the script
+		# Remove last line of the shell script for the CLI
 		${CMD_SUDO} sed -i '' -e '$d' "${PLATFORM_BIN}/metacall"
 
 		# Set up command line
@@ -856,7 +864,7 @@ main() {
 		# Run docker install
 		docker_install
 	else
-		# TODO: Remember to do MacOs install fallback to brew in order to compile metacall
+		# TODO: Remember to do MacOS install fallback to brew in order to compile metacall
 		# spctl --status
 
 		# Run binary install
