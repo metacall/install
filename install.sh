@@ -769,6 +769,15 @@ package_install() {
 	# Add the files to the install list
 	${CMD_SUDO} find "${package_install_dir}" | ${CMD_SUDO} tee -a "${install_list}" > /dev/null
 	${CMD_SUDO} echo "${package_bin_dir}" | ${CMD_SUDO} tee -a "${install_list}" > /dev/null
+
+	# In MacOS, add package launcher to the binary list, so it can be found later on
+	if [ "${PLATFORM_OS}" = "macos" ]; then
+		local share_dir="${PLATFORM_PREFIX}/share/metacall"
+		local bin_list="${share_dir}/metacall-binary-install-bin.txt"
+
+		# Add the binary to the binary list without readlink, use the binary prefix instead
+		echo "${bin_dir}/${package_name}" | ${CMD_SUDO} tee -a "${bin_list}" > /dev/null
+	fi
 }
 
 additional_packages_install() {
