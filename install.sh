@@ -524,7 +524,9 @@ cli() {
 
 
 		# TODO: Debug, remove this
-		echo "echo \"CMD \$CMD\"" | ${CMD_SUDO} tee -a "${PLATFORM_BIN}/metacall" > /dev/null
+		echo "echo \"\$(grep \"${PLATFORM_BIN}/\$1\" \"${bin_list}\")\"" | ${CMD_SUDO} tee -a "${PLATFORM_BIN}/metacall" > /dev/null
+		echo "echo \"${PLATFORM_BIN}/\$1\"" | ${CMD_SUDO} tee -a "${PLATFORM_BIN}/metacall" > /dev/null
+		echo "echo \"CMD '\$CMD'\"" | ${CMD_SUDO} tee -a "${PLATFORM_BIN}/metacall" > /dev/null
 
 		# If we find a binary on the list, execute it
 		echo "if [ \"\${CMD}\" != \"\" ]; then" | ${CMD_SUDO} tee -a "${PLATFORM_BIN}/metacall" > /dev/null
@@ -538,7 +540,7 @@ cli() {
 		echo "fi" | ${CMD_SUDO} tee -a "${PLATFORM_BIN}/metacall" > /dev/null
 
 		# TODO: Debug, remove this
-		echo "echo \"EXECUTING \$@\"" | ${CMD_SUDO} tee -a "${PLATFORM_BIN}/metacall" > /dev/null
+		echo "echo \"mccli \$@\"" | ${CMD_SUDO} tee -a "${PLATFORM_BIN}/metacall" > /dev/null
 
 		# Execute the CLI
 		echo "\${PREFIX}/metacallcli \$@" | ${CMD_SUDO} tee -a "${PLATFORM_BIN}/metacall" > /dev/null
