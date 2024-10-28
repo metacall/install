@@ -38,11 +38,11 @@ jobs:
         run: ./install.sh --uninstall
 
       - name: Check Uninstall
+        # TODO: A good test case would be to do a $(find /) and then
+        # compare the filesystems before and after installation
         run: |
           if command -v metacall >/dev/null 2>&1; then
-            echo "MetaCall uninstalled correctly"
-          else
-            echo "Failed to unistall MetaCall"
+            echo "Failed to uninstall MetaCall, the program is still available"
             exit 1
           fi
 
@@ -89,10 +89,10 @@ jobs:
         run: ./install.sh --uninstall
 
       - name: Check Uninstall
+        # TODO: A good test case would be to do a $(find /) and then
+        # compare the filesystems before and after installation
         run: |
           if command -v metacall >/dev/null 2>&1; then
-            echo "MetaCall uninstalled correctly"
-          else
-            echo "Failed to unistall MetaCall"
+            echo "Failed to uninstall MetaCall, the program is still available"
             exit 1
           fi

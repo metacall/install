@@ -10,7 +10,7 @@ jobs:
   trigger-cli-build:
     name: Trigger CLI Docker Build
     runs-on: ubuntu-latest
-    if: github.event_name != 'pull_request'
+    if: github.event_name != 'pull_request' && github.ref == 'refs/heads/master'
     steps:
       - uses: actions/checkout@v4
 
@@ -37,7 +37,7 @@ jobs:
   install-remote:
     name: Install MetaCall via Default Installation (remote)
     runs-on: ubuntu-latest
-    if: github.event_name != 'pull_request'
+    if: github.event_name != 'pull_request' && github.ref == 'refs/heads/master'
     needs: trigger-cli-build
     steps:
       - uses: actions/checkout@v4
