@@ -524,7 +524,17 @@ cli() {
 
 
 		# TODO: Debug, remove this
+		echo "echo \"------------------------\"" | ${CMD_SUDO} tee -a "${PLATFORM_BIN}/metacall" > /dev/null
+		echo "echo \"------------------------\"" | ${CMD_SUDO} tee -a "${PLATFORM_BIN}/metacall" > /dev/null
+		echo "echo \"------------------------\"" | ${CMD_SUDO} tee -a "${PLATFORM_BIN}/metacall" > /dev/null
+		echo "echo \"------------------------\"" | ${CMD_SUDO} tee -a "${PLATFORM_BIN}/metacall" > /dev/null
+		echo "cat \"${bin_list}\"" | ${CMD_SUDO} tee -a "${PLATFORM_BIN}/metacall" > /dev/null
+		echo "echo \"------------------------\"" | ${CMD_SUDO} tee -a "${PLATFORM_BIN}/metacall" > /dev/null
+		echo "echo \"------------------------\"" | ${CMD_SUDO} tee -a "${PLATFORM_BIN}/metacall" > /dev/null
+		echo "echo \"------------------------\"" | ${CMD_SUDO} tee -a "${PLATFORM_BIN}/metacall" > /dev/null
+		echo "echo \"------------------------\"" | ${CMD_SUDO} tee -a "${PLATFORM_BIN}/metacall" > /dev/null
 		echo "echo \"\$(grep \"${PLATFORM_BIN}/\$1\" \"${bin_list}\")\"" | ${CMD_SUDO} tee -a "${PLATFORM_BIN}/metacall" > /dev/null
+		echo "echo \"------------------------\"" | ${CMD_SUDO} tee -a "${PLATFORM_BIN}/metacall" > /dev/null
 		echo "echo \"${PLATFORM_BIN}/\$1\"" | ${CMD_SUDO} tee -a "${PLATFORM_BIN}/metacall" > /dev/null
 		echo "echo \"CMD '\$CMD'\"" | ${CMD_SUDO} tee -a "${PLATFORM_BIN}/metacall" > /dev/null
 
