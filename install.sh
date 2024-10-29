@@ -309,15 +309,15 @@ download_url() {
 
 # Download tarball with cURL
 download_curl() {
-	local tag_url=$(${CMD_DOWNLOAD} -Ls -o /dev/null -w %{url_effective} "https://github.com/metacall/distributable-${PLATFORM_OS}/releases/latest")
+	local tag_url=$(${CMD_DOWNLOAD} --retry 10 -f -sL -o /dev/null -w %{url_effective} "https://github.com/metacall/distributable-${PLATFORM_OS}/releases/latest")
 	local final_url=$(download_url "${tag_url}")
 
-	${CMD_DOWNLOAD} --retry 10 -f --create-dirs -LS ${final_url} --output "/tmp/metacall-tarball.tar.gz" || echo "true"
+	${CMD_DOWNLOAD} --retry 10 -f --create-dirs -L ${final_url} --output "/tmp/metacall-tarball.tar.gz" || echo "true"
 }
 
 # Download tarball with wget
 download_wget() {
-	local tag_url=$(${CMD_DOWNLOAD} -S -O /dev/null "https://github.com/metacall/distributable-${PLATFORM_OS}/releases/latest" 2>&1 | grep Location: | tail -n 1 | awk '{print $2}')
+	local tag_url=$(${CMD_DOWNLOAD} --tries 10 -S -O /dev/null "https://github.com/metacall/distributable-${PLATFORM_OS}/releases/latest" 2>&1 | grep Location: | tail -n 1 | awk '{print $2}')
 	local final_url=$(download_url "${tag_url}")
 
 	${CMD_DOWNLOAD} --tries 10 -O "/tmp/metacall-tarball.tar.gz" ${final_url} || echo "true"
@@ -527,14 +527,18 @@ cli() {
 		# Remove last line of the shell script for the CLI
 		${CMD_SUDO} sed -i '' -e '$d' "${PLATFORM_BIN}/metacall"
 
+		# In case of having an argument
+		echo "if [ \"\$1\" != \"\" ]; then" | ${CMD_SUDO} tee -a "${PLATFORM_BIN}/metacall" > /dev/null
+
 		# Set up command line
-		echo "CMD=\"\$(grep \"${PLATFORM_BIN}/\$1\" \"${bin_list}\" | head -n 1)\"" | ${CMD_SUDO} tee -a "${PLATFORM_BIN}/metacall" > /dev/null
+		echo "	CMD=\"\$(grep \"${PLATFORM_BIN}/\$1\" \"${bin_list}\" | head -n 1)\"" | ${CMD_SUDO} tee -a "${PLATFORM_BIN}/metacall" > /dev/null
 
 		# If we find a binary on the list, execute it
-		echo "if [ \"\${CMD}\" != \"\" ]; then" | ${CMD_SUDO} tee -a "${PLATFORM_BIN}/metacall" > /dev/null
-		echo "	if [ -z \"\${PATH-}\" ]; then export PATH=\"${PLATFORM_BIN}\"; else PATH=\"${PLATFORM_BIN}:\${PATH}\"; fi" | ${CMD_SUDO} tee -a "${PLATFORM_BIN}/metacall" > /dev/null
-		echo "	\$@" | ${CMD_SUDO} tee -a "${PLATFORM_BIN}/metacall" > /dev/null
-		echo "	exit \$?" | ${CMD_SUDO} tee -a "${PLATFORM_BIN}/metacall" > /dev/null
+		echo "	if [ \"\${CMD}\" != \"\" ]; then" | ${CMD_SUDO} tee -a "${PLATFORM_BIN}/metacall" > /dev/null
+		echo "		if [ -z \"\${PATH-}\" ]; then export PATH=\"${PLATFORM_BIN}\"; else PATH=\"${PLATFORM_BIN}:\${PATH}\"; fi" | ${CMD_SUDO} tee -a "${PLATFORM_BIN}/metacall" > /dev/null
+		echo "		\$@" | ${CMD_SUDO} tee -a "${PLATFORM_BIN}/metacall" > /dev/null
+		echo "		exit \$?" | ${CMD_SUDO} tee -a "${PLATFORM_BIN}/metacall" > /dev/null
+		echo "	fi" | ${CMD_SUDO} tee -a "${PLATFORM_BIN}/metacall" > /dev/null
 		echo "fi" | ${CMD_SUDO} tee -a "${PLATFORM_BIN}/metacall" > /dev/null
 
 		# Execute the CLI

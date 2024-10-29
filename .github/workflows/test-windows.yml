@@ -18,11 +18,13 @@ jobs:
           METACALL_INSTALL_DEBUG: 1
         run: |
           powershell -NoProfile -ExecutionPolicy unrestricted ./install.ps1
+
       - name: NodeJS Test
         shell: cmd
         run: |
           metacall ./test/script.js | findstr "123456"
           IF %ERRORLEVEL% NEQ 0 exit /B 1
+
       - name: Python Test
         shell: cmd
         run: |
@@ -30,6 +32,7 @@ jobs:
           IF %ERRORLEVEL% NEQ 0 exit /B 1
           metacall ./test/requirements.py | findstr "123456"
           IF %ERRORLEVEL% NEQ 0 exit /B 1
+
       - name: Deploy & FaaS Test
         shell: cmd
         run: |
@@ -51,17 +54,20 @@ jobs:
           $version = $redirectUri.Segments[$redirectUri.Segments.Count - 1]
           $url = "https://github.com/metacall/distributable-windows/releases/download/$version/metacall-tarball-win-x64.zip"
           Invoke-WebRequest $url -OutFile metacall-tarball-win-x64.zip
+
       - name: Install MetaCall
         shell: cmd
         env:
           METACALL_INSTALL_DEBUG: 1
         run: |
           powershell -NoProfile -ExecutionPolicy unrestricted ./install.ps1 -FromPath metacall-tarball-win-x64.zip
+
       - name: NodeJS Test
         shell: cmd
         run: |
           metacall ./test/script.js | findstr "123456"
           IF %ERRORLEVEL% NEQ 0 exit /B 1
+
       - name: Python Test
         shell: cmd
         run: |
@@ -69,6 +75,7 @@ jobs:
           IF %ERRORLEVEL% NEQ 0 exit /B 1
           metacall ./test/requirements.py | findstr "123456"
           IF %ERRORLEVEL% NEQ 0 exit /B 1
+
       - name: Deploy & FaaS Test
         shell: cmd
         run: |
@@ -86,21 +93,25 @@ jobs:
         shell: cmd
         run: |
           mkdir "install folder with spaces"
+
       - name: Install MetaCall
         shell: cmd
         env:
           METACALL_INSTALL_DEBUG: 1
         run: |
           powershell -NoProfile -ExecutionPolicy unrestricted ./install.ps1 -InstallDir '%cd%\install folder with spaces'
+
       - name: Check MetaCall is installed
         shell: cmd
         run: |
           dir "%cd%\install folder with spaces"
+
       - name: NodeJS Test
         shell: cmd
         run: |
           metacall ./test/script.js | findstr "123456"
           IF %ERRORLEVEL% NEQ 0 exit /B 1
+
       - name: Python Test
         shell: cmd
         run: |
@@ -108,6 +119,7 @@ jobs:
           IF %ERRORLEVEL% NEQ 0 exit /B 1
           metacall ./test/requirements.py | findstr "123456"
           IF %ERRORLEVEL% NEQ 0 exit /B 1
+
       - name: Deploy & FaaS Test
         shell: cmd
         run: |

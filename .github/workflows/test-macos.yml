@@ -32,6 +32,12 @@ jobs:
           metacall deploy --version | grep -E "^v.*\..*\..*"
           metacall faas --version | grep -E "^v.*\..*\..*"
 
+      - name: REPL Test
+        run: |
+          printf "load mock test.mock\ninspect\nexit" \
+            | metacall \
+            | grep -E 'function three_str(a_str, b_str, c_str)'
+
       - name: Uninstall MetaCall
         env:
           METACALL_INSTALL_DEBUG: 1
@@ -82,6 +88,12 @@ jobs:
         run: |
           metacall deploy --version | grep -E "^v.*\..*\..*"
           metacall faas --version | grep -E "^v.*\..*\..*"
+
+      - name: REPL Test
+        run: |
+          printf "load mock test.mock\ninspect\nexit" \
+            | metacall \
+            | grep -E 'function three_str(a_str, b_str, c_str)'
 
       - name: Uninstall MetaCall
         env:
