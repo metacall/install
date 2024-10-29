@@ -131,7 +131,7 @@ RUN sudo mkdir -p /gnu \
 	&& curl -sL https://raw.githubusercontent.com/metacall/install/master/install.sh | bash \
 	&& metacall /test/script.js | grep '123456' \
 	&& metacall deploy --version | grep -e '^v.*\..*\..*' \
-	&& metacall faas --version | grep -e '^v.*\..*\..*' \ \
+	&& metacall faas --version | grep -e '^v.*\..*\..*' \
 	&& printf "load mock test.mock\ninspect\nexit" \
 		| metacall \
 		| grep -e 'function three_str(a_str, b_str, c_str)' \
