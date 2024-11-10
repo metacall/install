@@ -33,13 +33,17 @@
 .PARAMETER FromPath
 	Default: $null
 	Path to the tarball to be installed. If specified, this parameter will override the Version parameter.
+.PARAMETER Uninstall
+    Removes MetaCall from the specified installation directory and clears its entry from the PATH environment variable.
+    If this parameter is specified, the script will perform an uninstallation rather than an installation.
 #>
 
 [cmdletbinding()]
 param(
 	[string]$InstallDir="<auto>",
 	[string]$Version="latest",
-	[string]$FromPath=$null
+	[string]$FromPath=$null,
+	[switch]$Uninstall
 )
 
 Set-StrictMode -Version Latest
@@ -239,6 +243,29 @@ function Path-Uninstall([string]$Path) {
 	}
 }
 
+function Uninstall([string]$InstallDir) {
+    Print-Title "MetaCall Uninstallation"
+
+    Print-Info "Uninstalling MetaCall..."
+
+	$InstallRoot = Resolve-Installation-Path $InstallDir
+
+	Print-Info "Removing MetaCall from PATH."
+
+    # Call the Path-Uninstall function to remove from PATH
+    Path-Uninstall $InstallRoot
+
+    # Delete MetaCall files from the install directory, if they exist
+    if (Test-Path $InstallRoot) {
+        Remove-Item -Recurse -Force $InstallRoot
+        Print-Debug "MetaCall files removed from $InstallRoot."
+    } else {
+        Print-Warning "Installation directory $InstallRoot not found. Skipping file removal."
+    }
+
+    Print-Success "Uninstallation completed."
+}
+
 function Install-Tarball([string]$InstallDir, [string]$Version) {
 	Print-Title "MetaCall Binary Installation."
 
@@ -338,5 +365,11 @@ function Install-Additional-Packages {
 	Print-Success "Package '$Component' has been installed."
 }
 
-# Install the tarball and post scripts
-Install-Tarball $InstallDir $Version
+
+if ($Uninstall) {
+	# Uninstall the metacall and remove path
+    Uninstall $InstallDir
+} else {
+	# Install the tarball and post scripts
+	Install-Tarball $InstallDir $Version
+}
