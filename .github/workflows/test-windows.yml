@@ -127,3 +127,29 @@ jobs:
           IF %ERRORLEVEL% NEQ 0 exit /B 1
           metacall faas --version | findstr /R "^v.*\..*\..*"
           IF %ERRORLEVEL% NEQ 0 exit /B 1
+
+uninstall-default:
+    name: Uninstall MetaCall via Default Uninstallation
+    needs: [install-default]
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Uninstall MetaCall
+        shell: cmd
+        env:
+          METACALL_INSTALL_DEBUG: 1
+        run: |
+          powershell -NoProfile -ExecutionPolicy unrestricted ./install.ps1 -Uninstall
+
+uninstall-path-with-whitespaces:
+    name: Uninstall Metacall from Path with Whitespaces
+    runs-on: windows-latest
+    needs: [install-path-with-whitespaces]
+    steps:
+      - uses: actions/checkout@v4
+      - name: Uninstall MetaCall from Path with Whitespaces
+        shell: cmd
+        env:
+          METACALL_INSTALL_DEBUG: 1
+        run: |
+          powershell -NoProfile -ExecutionPolicy unrestricted ./install.ps1 -Uninstall -InstallDir '%cd%\install folder with spaces'
