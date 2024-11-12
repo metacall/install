@@ -51,6 +51,7 @@ jobs:
       - name: Uninstall Test
         shell: cmd
         run: |
+          DIR "%LocalAppData%\MetaCall"
           WHERE metacall.bat > NUL 2>&1
           IF %ERRORLEVEL% EQU 0 exit /B 1
 
@@ -107,6 +108,7 @@ jobs:
       - name: Uninstall Test
         shell: cmd
         run: |
+          DIR "%LocalAppData%\MetaCall"
           WHERE metacall.bat > NUL 2>&1
           IF %ERRORLEVEL% EQU 0 exit /B 1
 
@@ -164,5 +166,6 @@ jobs:
       - name: Uninstall Test
         shell: cmd
         run: |
+          DIR "%LocalAppData%\MetaCall"
           WHERE metacall.bat > NUL 2>&1
           IF %ERRORLEVEL% EQU 0 exit /B 1
