@@ -43,7 +43,7 @@ param(
 	[string]$InstallDir="<auto>",
 	[string]$Version="latest",
 	[string]$FromPath=$null,
-	[switch]$Uninstall
+	[switch]$Uninstall=$false
 )
 
 Set-StrictMode -Version Latest
@@ -244,26 +244,27 @@ function Path-Uninstall([string]$Path) {
 }
 
 function Uninstall([string]$InstallDir) {
-    Print-Title "MetaCall Uninstallation"
+	Print-Title "MetaCall Uninstallation"
 
-    Print-Info "Uninstalling MetaCall..."
+	Print-Info "Uninstalling MetaCall..."
 
 	$InstallRoot = Resolve-Installation-Path $InstallDir
 
 	Print-Info "Removing MetaCall from PATH."
 
-    # Call the Path-Uninstall function to remove from PATH
-    Path-Uninstall $InstallRoot
+	# Call the Path-Uninstall function to remove from PATH
+	Path-Uninstall $InstallRoot
 
-    # Delete MetaCall files from the install directory, if they exist
-    if (Test-Path $InstallRoot) {
-        Remove-Item -Recurse -Force $InstallRoot
-        Print-Debug "MetaCall files removed from $InstallRoot."
-    } else {
-        Print-Warning "Installation directory $InstallRoot not found. Skipping file removal."
-    }
+	# Delete MetaCall files from the install directory, if they exist
+	if (Test-Path $InstallRoot) {
+		Remove-Item -Recurse -Force $InstallRoot
+		Print-Debug "MetaCall files removed from $InstallRoot."
+	}
+	else {
+		Print-Warning "Installation directory $InstallRoot not found. Skipping file removal."
+	}
 
-    Print-Success "Uninstallation completed."
+	Print-Success "Uninstallation completed."
 }
 
 function Install-Tarball([string]$InstallDir, [string]$Version) {
@@ -368,8 +369,9 @@ function Install-Additional-Packages {
 
 if ($Uninstall) {
 	# Uninstall the metacall and remove path
-    Uninstall $InstallDir
-} else {
+	Uninstall $InstallDir
+}
+else {
 	# Install the tarball and post scripts
 	Install-Tarball $InstallDir $Version
 }
