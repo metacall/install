@@ -358,7 +358,7 @@ function Uninstall([string]$InstallDir) {
 
 	Print-Debug "MetaCall files removed from: $InstallRoot"
 
- 	Print-Info "Removing MetaCall from PATH."
+	Print-Info "Removing MetaCall from PATH."
 
 	# Call the Path-Uninstall function to remove from PATH
 	Path-Uninstall $InstallRoot
