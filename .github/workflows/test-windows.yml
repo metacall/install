@@ -41,6 +41,15 @@ jobs:
           metacall faas --version | findstr /R "^v.*\..*\..*"
           IF %ERRORLEVEL% NEQ 0 exit /B 1
 
+      - name: Uninstall Test
+        shell: cmd
+        env:
+          METACALL_INSTALL_DEBUG: 1
+        run: |
+          powershell -NoProfile -ExecutionPolicy unrestricted ./install.ps1 -Uninstall
+          WHERE metacall.bat > NUL 2>&1
+          IF %ERRORLEVEL% EQU 0 exit /B 1
+
   install-from-path:
     name: Install MetaCall via Path Installation
     runs-on: windows-latest
@@ -90,6 +99,8 @@ jobs:
           METACALL_INSTALL_DEBUG: 1
         run: |
           powershell -NoProfile -ExecutionPolicy unrestricted ./install.ps1 -Uninstall
+          WHERE metacall.bat > NUL 2>&1
+          IF %ERRORLEVEL% EQU 0 exit /B 1
 
   install-path-with-whitespaces:
     name: Install MetaCall via Path With Whitespaces
@@ -141,3 +152,5 @@ jobs:
           METACALL_INSTALL_DEBUG: 1
         run: |
           powershell -NoProfile -ExecutionPolicy unrestricted ./install.ps1 -Uninstall
+          WHERE metacall.bat > NUL 2>&1
+          IF %ERRORLEVEL% EQU 0 exit /B 1
