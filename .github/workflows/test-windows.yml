@@ -52,8 +52,9 @@ jobs:
         shell: cmd
         run: |
           ECHO "%LocalAppData%\MetaCall"
-          WHERE metacall.bat > NUL 2>&1
-          IF %ERRORLEVEL% EQU 0 exit /B 1
+          IF EXIST "%LocalAppData%\MetaCall" exit /B 1
+          WHERE metacall > NUL 2>&1
+          IF %ERRORLEVEL% EQU 0 exit /B 2
 
   install-from-path:
     name: Install MetaCall via Path Installation
@@ -109,8 +110,9 @@ jobs:
         shell: cmd
         run: |
           ECHO "%LocalAppData%\MetaCall"
-          WHERE metacall.bat > NUL 2>&1
-          IF %ERRORLEVEL% EQU 0 exit /B 1
+          IF EXIST "%LocalAppData%\MetaCall" exit /B 1
+          WHERE metacall > NUL 2>&1
+          IF %ERRORLEVEL% EQU 0 exit /B 2
 
   install-path-with-whitespaces:
     name: Install MetaCall via Path With Whitespaces
@@ -167,5 +169,6 @@ jobs:
         shell: cmd
         run: |
           ECHO "%cd%\install folder with spaces"
-          WHERE metacall.bat > NUL 2>&1
-          IF %ERRORLEVEL% EQU 0 exit /B 1
+          IF EXIST "%cd%\install folder with spaces" exit /B 1
+          WHERE metacall > NUL 2>&1
+          IF %ERRORLEVEL% EQU 0 exit /B 2
