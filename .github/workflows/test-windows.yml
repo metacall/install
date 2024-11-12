@@ -41,12 +41,16 @@ jobs:
           metacall faas --version | findstr /R "^v.*\..*\..*"
           IF %ERRORLEVEL% NEQ 0 exit /B 1
 
-      - name: Uninstall Test
+      - name: Uninstall MetaCall
         shell: cmd
         env:
           METACALL_INSTALL_DEBUG: 1
         run: |
           powershell -NoProfile -ExecutionPolicy unrestricted ./install.ps1 -Uninstall
+
+      - name: Uninstall Test
+        shell: cmd
+        run: |
           WHERE metacall.bat > NUL 2>&1
           IF %ERRORLEVEL% EQU 0 exit /B 1
 
@@ -93,12 +97,16 @@ jobs:
           metacall faas --version | findstr /R "^v.*\..*\..*"
           IF %ERRORLEVEL% NEQ 0 exit /B 1
 
-      - name: Uninstall Test
+      - name: Uninstall MetaCall
         shell: cmd
         env:
           METACALL_INSTALL_DEBUG: 1
         run: |
           powershell -NoProfile -ExecutionPolicy unrestricted ./install.ps1 -Uninstall
+
+      - name: Uninstall Test
+        shell: cmd
+        run: |
           WHERE metacall.bat > NUL 2>&1
           IF %ERRORLEVEL% EQU 0 exit /B 1
 
@@ -146,11 +154,15 @@ jobs:
           metacall faas --version | findstr /R "^v.*\..*\..*"
           IF %ERRORLEVEL% NEQ 0 exit /B 1
 
-      - name: Uninstall Test
+      - name: Uninstall MetaCall
         shell: cmd
         env:
           METACALL_INSTALL_DEBUG: 1
         run: |
           powershell -NoProfile -ExecutionPolicy unrestricted ./install.ps1 -Uninstall
+
+      - name: Uninstall Test
+        shell: cmd
+        run: |
           WHERE metacall.bat > NUL 2>&1
           IF %ERRORLEVEL% EQU 0 exit /B 1
