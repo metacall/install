@@ -356,7 +356,9 @@ function Uninstall([string]$InstallDir) {
 	# Delete MetaCall files from the install directory
 	Remove-Item -Recurse -Force $InstallRoot
 
-	Print-Debug "MetaCall files removed from: $InstallRoot"
+	if (-not (Test-Path $InstallRoot)) {
+		Print-Debug "MetaCall files removed from: $InstallRoot successfully"
+	}
 
 	Print-Info "Removing MetaCall from PATH."
 
