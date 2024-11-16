@@ -49,12 +49,20 @@ jobs:
           powershell -NoProfile -ExecutionPolicy unrestricted ./install.ps1 -Uninstall
 
       - name: Uninstall Test
-        shell: cmd
+        shell: pwsh
         run: |
-          ECHO "%LocalAppData%\MetaCall"
-          IF EXIST "%LocalAppData%\MetaCall" exit /B 1
-          WHERE metacall > NUL 2>&1
-          IF %ERRORLEVEL% EQU 0 exit /B 2
+          $MetaCallPath = "$env:LocalAppData\MetaCall"
+          Write-Output "Checking MetaCall installation directory: $MetaCallPath"
+          If (Test-Path $MetaCallPath) {
+              Write-Error "MetaCall installation directory still exists"
+              exit 1
+          }
+          $MetaCallBinary = (Get-Command metacall -ErrorAction SilentlyContinue)
+          If ($MetaCallBinary) {
+              Write-Error "MetaCall binary is still available"
+              exit 2
+          }
+          Write-Output "Uninstall verification passed."
 
   install-from-path:
     name: Install MetaCall via Path Installation
@@ -107,12 +115,20 @@ jobs:
           powershell -NoProfile -ExecutionPolicy unrestricted ./install.ps1 -Uninstall
 
       - name: Uninstall Test
-        shell: cmd
+        shell: pwsh
         run: |
-          ECHO "%LocalAppData%\MetaCall"
-          IF EXIST "%LocalAppData%\MetaCall" exit /B 1
-          WHERE metacall > NUL 2>&1
-          IF %ERRORLEVEL% EQU 0 exit /B 2
+          $MetaCallPath = "$env:LocalAppData\MetaCall"
+          Write-Output "Checking MetaCall installation directory: $MetaCallPath"
+          If (Test-Path $MetaCallPath) {
+              Write-Error "MetaCall installation directory still exists"
+              exit 1
+          }
+          $MetaCallBinary = (Get-Command metacall -ErrorAction SilentlyContinue)
+          If ($MetaCallBinary) {
+              Write-Error "MetaCall binary is still available"
+              exit 2
+          }
+          Write-Output "Uninstall verification passed."
 
   install-path-with-whitespaces:
     name: Install MetaCall via Path With Whitespaces
@@ -166,9 +182,17 @@ jobs:
           powershell -NoProfile -ExecutionPolicy unrestricted ./install.ps1 -Uninstall -InstallDir '%cd%\install folder with spaces'
 
       - name: Uninstall Test
-        shell: cmd
+        shell: pwsh
         run: |
-          ECHO "%cd%\install folder with spaces"
-          IF EXIST "%cd%\install folder with spaces" exit /B 1
-          WHERE metacall > NUL 2>&1
-          IF %ERRORLEVEL% EQU 0 exit /B 2
+          $MetaCallPath = "$env:LocalAppData\MetaCall"
+          Write-Output "Checking MetaCall installation directory: $MetaCallPath"
+          If (Test-Path $MetaCallPath) {
+              Write-Error "MetaCall installation directory still exists"
+              exit 1
+          }
+          $MetaCallBinary = (Get-Command metacall -ErrorAction SilentlyContinue)
+          If ($MetaCallBinary) {
+              Write-Error "MetaCall binary is still available"
+              exit 2
+          }
+          Write-Output "Uninstall verification passed."
