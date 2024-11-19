@@ -184,7 +184,7 @@ jobs:
       - name: Uninstall Test
         shell: pwsh
         run: |
-          $MetaCallPath = "$env:LocalAppData\MetaCall"
+          $MetaCallPath = Join-Path (Get-Location) "install folder with spaces"
           Write-Output "Checking MetaCall installation directory: $MetaCallPath"
           If (Test-Path $MetaCallPath) {
               Write-Error "MetaCall installation directory still exists"
