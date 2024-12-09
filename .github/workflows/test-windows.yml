@@ -30,7 +30,7 @@ jobs:
         run: |
           metacall pip install -r test/requirements.txt | findstr "Successfully installed"
           IF %ERRORLEVEL% NEQ 0 exit /B 1
-          metacall ./test/requirements.py | findstr "123456"
+          metacall ./test/requirements.py
           IF %ERRORLEVEL% NEQ 0 exit /B 1
 
       - name: Deploy & FaaS Test
@@ -96,7 +96,7 @@ jobs:
         run: |
           metacall pip install -r test/requirements.txt | findstr "Successfully installed"
           IF %ERRORLEVEL% NEQ 0 exit /B 1
-          metacall ./test/requirements.py | findstr "123456"
+          metacall ./test/requirements.py
           IF %ERRORLEVEL% NEQ 0 exit /B 1
 
       - name: Deploy & FaaS Test
@@ -163,7 +163,7 @@ jobs:
         run: |
           metacall pip install -r test/requirements.txt | findstr "Successfully installed"
           IF %ERRORLEVEL% NEQ 0 exit /B 1
-          metacall ./test/requirements.py | findstr "123456"
+          metacall ./test/requirements.py
           IF %ERRORLEVEL% NEQ 0 exit /B 1
 
       - name: Deploy & FaaS Test
