@@ -1,1 +1,2 @@
 certifi==2024.7.4
+opencv-python==4.10.0.84
