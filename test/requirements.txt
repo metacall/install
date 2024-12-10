@@ -1,2 +1,2 @@
 certifi==2024.7.4
-opencv-contrib-python-headless==4.2.0.32
+opencv-contrib-python-headless==4.2.0
