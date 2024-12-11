@@ -224,7 +224,7 @@ jobs:
         shell: cmd
         run: |
           metacall pip install -r test/opencv/requirements.txt
-          metacall pip uninstall numpy -y && metacall pip install numpy==1.21.6 # uninstall numpy came with Open CV and install version 1.21.6
+          metacall pip uninstall numpy -y
           metacall ./test/opencv/opencv.py
 
       - name: Deploy & FaaS Test
