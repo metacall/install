@@ -28,14 +28,13 @@ jobs:
       - name: Python Test
         shell: cmd
         run: |
-          metacall pip uninstall numpy
           metacall pip install -r test/requirements.txt | findstr "Successfully installed"
           metacall pip uninstall numpy
           metacall pip install numpy==1.21.6
           IF %ERRORLEVEL% NEQ 0 exit /B 1
           metacall ./test/requirements.py | findstr "3.4.11"
           IF %ERRORLEVEL% NEQ 0 exit /B 1
-
+          echo "Sir, by mistake yesterday I send the wrong version on the group"
       - name: Deploy & FaaS Test
         shell: cmd
         run: |
