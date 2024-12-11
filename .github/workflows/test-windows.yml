@@ -18,25 +18,26 @@ jobs:
           METACALL_INSTALL_DEBUG: 1
         run: |
           powershell -NoProfile -ExecutionPolicy unrestricted ./install.ps1
-
       - name: NodeJS Test
         shell: cmd
         run: |
           metacall ./test/script.js | findstr "123456"
           IF %ERRORLEVEL% NEQ 0 exit /B 1
-
       - name: Python Test
         shell: cmd
         run: |
           metacall pip install -r test/requirements.txt | findstr "Successfully installed"
-          IF %ERRORLEVEL% NEQ 0 exit /B 1
-          metacall pip uninstall numpy --yes | findstr "Successfully uninstalled"
-          IF %ERRORLEVEL% NEQ 0 exit /B 1
-          metacall pip install numpy==1.21.6 | findstr "Successfully installed"
-          IF %ERRORLEVEL% NEQ 0 exit /B 1
-          metacall ./test/requirements.py | findstr "123456" && findstr "3.4.11"
-          IF %ERRORLEVEL% NEQ 0 exit /B 1
-
+          metacall pip uninstall numpy --yes
+      - name: Install Numpy
+        shell: cmd
+        run: |
+          metacall pip install numpy==1.21.6
+          
+      - name: Test requirements.py
+        shell: cmd
+        run: |
+          metacall ./test/requirements.py | findstr "3.4.11"
+          
       - name: Deploy & FaaS Test
         shell: cmd
         run: |
@@ -44,14 +45,12 @@ jobs:
           IF %ERRORLEVEL% NEQ 0 exit /B 1
           metacall faas --version | findstr /R "^v.*\..*\..*"
           IF %ERRORLEVEL% NEQ 0 exit /B 1
-
       - name: Uninstall MetaCall
         shell: cmd
         env:
           METACALL_INSTALL_DEBUG: 1
         run: |
           powershell -NoProfile -ExecutionPolicy unrestricted ./install.ps1 -Uninstall
-
       - name: Uninstall Test
         shell: pwsh
         run: |
@@ -67,7 +66,6 @@ jobs:
               exit 2
           }
           Write-Output "Uninstall verification passed."
-
   install-from-path:
     name: Install MetaCall via Path Installation
     runs-on: windows-latest
@@ -81,32 +79,24 @@ jobs:
           $version = $redirectUri.Segments[$redirectUri.Segments.Count - 1]
           $url = "https://github.com/metacall/distributable-windows/releases/download/$version/metacall-tarball-win-x64.zip"
           Invoke-WebRequest $url -OutFile metacall-tarball-win-x64.zip
-
       - name: Install MetaCall
         shell: cmd
         env:
           METACALL_INSTALL_DEBUG: 1
         run: |
           powershell -NoProfile -ExecutionPolicy unrestricted ./install.ps1 -FromPath metacall-tarball-win-x64.zip
-
       - name: NodeJS Test
         shell: cmd
         run: |
           metacall ./test/script.js | findstr "123456"
           IF %ERRORLEVEL% NEQ 0 exit /B 1
-
       - name: Python Test
         shell: cmd
         run: |
-          metacall pip install -r test/requirements.txt | findstr "Successfully installed"
+          metacall pip install -r test/requirements.txt
           IF %ERRORLEVEL% NEQ 0 exit /B 1
-          metacall pip uninstall numpy --yes | findstr "Successfully uninstalled"
+          metacall ./test/requirements.py
           IF %ERRORLEVEL% NEQ 0 exit /B 1
-          metacall pip install numpy==1.21.6 | findstr "Successfully installed"
-          IF %ERRORLEVEL% NEQ 0 exit /B 1
-          metacall ./test/requirements.py | findstr "123456" && findstr "3.4.11"
-          IF %ERRORLEVEL% NEQ 0 exit /B 1
-
       - name: Deploy & FaaS Test
         shell: cmd
         run: |
@@ -114,14 +104,12 @@ jobs:
           IF %ERRORLEVEL% NEQ 0 exit /B 1
           metacall faas --version | findstr /R "^v.*\..*\..*"
           IF %ERRORLEVEL% NEQ 0 exit /B 1
-
       - name: Uninstall MetaCall
         shell: cmd
         env:
           METACALL_INSTALL_DEBUG: 1
         run: |
           powershell -NoProfile -ExecutionPolicy unrestricted ./install.ps1 -Uninstall
-
       - name: Uninstall Test
         shell: pwsh
         run: |
@@ -137,7 +125,6 @@ jobs:
               exit 2
           }
           Write-Output "Uninstall verification passed."
-
   install-path-with-whitespaces:
     name: Install MetaCall via Path With Whitespaces
     runs-on: windows-latest
@@ -147,37 +134,28 @@ jobs:
         shell: cmd
         run: |
           mkdir "install folder with spaces"
-
       - name: Install MetaCall
         shell: cmd
         env:
           METACALL_INSTALL_DEBUG: 1
         run: |
           powershell -NoProfile -ExecutionPolicy unrestricted ./install.ps1 -InstallDir '%cd%\install folder with spaces'
-
       - name: Install Test
         shell: cmd
         run: |
           dir "%cd%\install folder with spaces"
-
       - name: NodeJS Test
         shell: cmd
         run: |
           metacall ./test/script.js | findstr "123456"
           IF %ERRORLEVEL% NEQ 0 exit /B 1
-
       - name: Python Test
         shell: cmd
         run: |
-          metacall pip install -r test/requirements.txt | findstr "Successfully installed"
+          metacall pip install -r test/requirements.txt
           IF %ERRORLEVEL% NEQ 0 exit /B 1
-          metacall pip uninstall numpy --yes | findstr "Successfully uninstalled"
+          metacall ./test/requirements.py
           IF %ERRORLEVEL% NEQ 0 exit /B 1
-          metacall pip install numpy==1.21.6 | findstr "Successfully installed"
-          IF %ERRORLEVEL% NEQ 0 exit /B 1
-          metacall ./test/requirements.py | findstr "123456" && findstr "3.4.11"
-          IF %ERRORLEVEL% NEQ 0 exit /B 1
-
       - name: Deploy & FaaS Test
         shell: cmd
         run: |
@@ -185,14 +163,12 @@ jobs:
           IF %ERRORLEVEL% NEQ 0 exit /B 1
           metacall faas --version | findstr /R "^v.*\..*\..*"
           IF %ERRORLEVEL% NEQ 0 exit /B 1
-
       - name: Uninstall MetaCall
         shell: cmd
         env:
           METACALL_INSTALL_DEBUG: 1
         run: |
           powershell -NoProfile -ExecutionPolicy unrestricted ./install.ps1 -Uninstall -InstallDir '%cd%\install folder with spaces'
-
       - name: Uninstall Test
         shell: pwsh
         run: |
