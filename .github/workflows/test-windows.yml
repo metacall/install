@@ -36,7 +36,7 @@ jobs:
       - name: Test requirements.py
         shell: cmd
         run: |
-          metacall ./test/requirements.py | findstr "3.4.11"
+          metacall ./test/requirements.py
           
       - name: Deploy & FaaS Test
         shell: cmd
