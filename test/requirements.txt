@@ -1,2 +1,2 @@
 certifi==2024.7.4
-opencv-contrib-python==3.3.0.9
+opencv-contrib-python==3.4.11.45
