@@ -29,18 +29,14 @@ jobs:
         shell: cmd
         run: |
           metacall pip install -r test/requirements.txt | findstr "Successfully installed"
-          metacall pip uninstall numpy --yes
+          IF %ERRORLEVEL% NEQ 0 exit /B 1
+          metacall pip uninstall numpy --yes | findstr "Successfully uninstalled"
+          IF %ERRORLEVEL% NEQ 0 exit /B 1
+          metacall pip install numpy==1.21.6 | findstr "Successfully installed"
+          IF %ERRORLEVEL% NEQ 0 exit /B 1
+          metacall ./test/requirements.py | findstr "123456" && findstr "3.4.11"
+          IF %ERRORLEVEL% NEQ 0 exit /B 1
 
-      - name: Install Numpy
-        shell: cmd
-        run: |
-          metacall pip install numpy==1.21.6
-          
-      - name: Test requirements.py
-        shell: cmd
-        run: |
-          metacall ./test/requirements.py | findstr "3.4.11"
-          
       - name: Deploy & FaaS Test
         shell: cmd
         run: |
@@ -102,9 +98,13 @@ jobs:
       - name: Python Test
         shell: cmd
         run: |
-          metacall pip install -r test/requirements.txt
+          metacall pip install -r test/requirements.txt | findstr "Successfully installed"
           IF %ERRORLEVEL% NEQ 0 exit /B 1
-          metacall ./test/requirements.py
+          metacall pip uninstall numpy --yes | findstr "Successfully uninstalled"
+          IF %ERRORLEVEL% NEQ 0 exit /B 1
+          metacall pip install numpy==1.21.6 | findstr "Successfully installed"
+          IF %ERRORLEVEL% NEQ 0 exit /B 1
+          metacall ./test/requirements.py | findstr "123456" && findstr "3.4.11"
           IF %ERRORLEVEL% NEQ 0 exit /B 1
 
       - name: Deploy & FaaS Test
@@ -169,9 +169,13 @@ jobs:
       - name: Python Test
         shell: cmd
         run: |
-          metacall pip install -r test/requirements.txt
+          metacall pip install -r test/requirements.txt | findstr "Successfully installed"
           IF %ERRORLEVEL% NEQ 0 exit /B 1
-          metacall ./test/requirements.py
+          metacall pip uninstall numpy --yes | findstr "Successfully uninstalled"
+          IF %ERRORLEVEL% NEQ 0 exit /B 1
+          metacall pip install numpy==1.21.6 | findstr "Successfully installed"
+          IF %ERRORLEVEL% NEQ 0 exit /B 1
+          metacall ./test/requirements.py | findstr "123456" && findstr "3.4.11"
           IF %ERRORLEVEL% NEQ 0 exit /B 1
 
       - name: Deploy & FaaS Test
