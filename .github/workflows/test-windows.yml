@@ -30,7 +30,15 @@ jobs:
         run: |
           metacall pip install -r test/requirements.txt | findstr "Successfully installed"
           metacall pip uninstall numpy --yes
+
+      - name: Install Numpy
+        shell: cmd
+        run: |
           metacall pip install numpy==1.21.6
+          
+      - name: Test requirements.py
+        shell: cmd
+        run: |
           metacall ./test/requirements.py | findstr "3.4.11"
           
       - name: Deploy & FaaS Test
