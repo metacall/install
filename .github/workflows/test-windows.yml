@@ -203,6 +203,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - name: Install MetaCall
+        run: |
           powershell -NoProfile -ExecutionPolicy unrestricted ./install.ps1 -Version 0.1.7
 
       - name: NodeJS Test
@@ -232,7 +233,6 @@ jobs:
           IF %ERRORLEVEL% NEQ 0 exit /B 1
           metacall faas --version | findstr /R "^v.*\..*\..*"
           IF %ERRORLEVEL% NEQ 0 exit /B 1
-
 
       - name: Uninstall MetaCall
         shell: cmd
