@@ -220,25 +220,22 @@ jobs:
           metacall ./test/requirements.py | findstr "123456"
           IF %ERRORLEVEL% NEQ 0 exit /B 1
 
-      - name: Python OpenCV Test (install OpenCV)
+      - name: Python OpenCV Test (Install OpenCV)
         shell: cmd
         run: |
-          metacall pip install -r test/opencv/requirements.txt
+          metacall pip install -r test/opencv/requirements.txt | findstr "Successfully installed"
 
-      - name: Python OpenCV Test (Uninstall Numpy came with OpenCV)
+      # For some reason, OpenCV fails if you do not reinstall numpy
+      - name: Python OpenCV Test (Reinstall Numpy for OpenCV)
         shell: cmd
         run: |
           metacall pip uninstall numpy --yes
-
-      - name: Python OpenCV Test (install Numpy==1.21.6)
-        shell: cmd
-        run: |
           metacall pip install numpy==1.21.6
         
-      - name: Python OpenCV Test (Test opencv.py)
+      - name: Python OpenCV Test (Test OpenCV)
         shell: cmd
         run: |
-          metacall ./test/opencv/opencv.py
+          metacall ./test/opencv/opencv.py | findstr "OpenCV Version: 3.4.11"
 
       - name: Deploy & FaaS Test
         shell: cmd
