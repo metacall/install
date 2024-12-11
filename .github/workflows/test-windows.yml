@@ -28,9 +28,12 @@ jobs:
       - name: Python Test
         shell: cmd
         run: |
+          metacall pip uninstall numpy
           metacall pip install -r test/requirements.txt | findstr "Successfully installed"
+          metacall pip uninstall numpy
+          metacall pip install numpy==1.21.6
           IF %ERRORLEVEL% NEQ 0 exit /B 1
-          metacall ./test/requirements.py | findstr "4.10.0.84"
+          metacall ./test/requirements.py | findstr "3.4.11"
           IF %ERRORLEVEL% NEQ 0 exit /B 1
 
       - name: Deploy & FaaS Test
