@@ -228,7 +228,7 @@ jobs:
       - name: Python OpenCV Test (Uninstall Numpy came with OpenCV)
         shell: cmd
         run: |
-          metacall pip uninstall numpy -yes
+          metacall pip uninstall numpy --yes
 
       - name: Python OpenCV Test (install Numpy==1.21.6)
         shell: cmd
