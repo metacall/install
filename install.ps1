@@ -33,13 +33,17 @@
 .PARAMETER FromPath
 	Default: $null
 	Path to the tarball to be installed. If specified, this parameter will override the Version parameter.
+.PARAMETER Uninstall
+    Removes MetaCall from the specified installation directory and clears its entry from the PATH environment variable.
+    If this parameter is specified, the script will perform an uninstallation rather than an installation.
 #>
 
 [cmdletbinding()]
 param(
 	[string]$InstallDir="<auto>",
 	[string]$Version="latest",
-	[string]$FromPath=$null
+	[string]$FromPath=$null,
+	[switch]$Uninstall=$false
 )
 
 Set-StrictMode -Version Latest
@@ -223,7 +227,6 @@ function Path-Install([string]$InstallRoot) {
 	}
 }
 
-# TODO: Use this for implementing uninstall
 function Path-Uninstall([string]$Path) {
 	$PersistedPaths = [Environment]::GetEnvironmentVariable('PATH', [EnvironmentVariableTarget]::User) -split ';'
 	if ($PersistedPaths -contains $Path) {
@@ -300,7 +303,7 @@ function Set-NodePath {
 		[string]$FilePath
 	)
 
-	if (-not (Test-Path "$FilePath")) {
+	if (-not (Test-Path $FilePath)) {
 		Print-Error "Failed to set up an additional package, the file $FilePath does not exist."
 		return
 	}
@@ -338,5 +341,37 @@ function Install-Additional-Packages {
 	Print-Success "Package '$Component' has been installed."
 }
 
-# Install the tarball and post scripts
-Install-Tarball $InstallDir $Version
+function Uninstall([string]$InstallDir) {
+	Print-Title "MetaCall Uninstallation"
+
+	$InstallRoot = Resolve-Installation-Path $InstallDir
+
+	if (-not (Test-Path $InstallRoot)) {
+		Print-Error "Failed to uninstall MetaCall, the folder $InstallRoot does not exist."
+		return
+	}
+
+	Print-Info "Removing MetaCall files."
+
+	# Delete MetaCall files from the install directory
+	Remove-Item -Recurse -Force $InstallRoot
+
+	if (-not (Test-Path $InstallRoot)) {
+		Print-Debug "MetaCall files removed from: $InstallRoot successfully"
+	}
+
+	Print-Info "Removing MetaCall from PATH."
+
+	# Call the Path-Uninstall function to remove from PATH
+	Path-Uninstall $InstallRoot
+
+	Print-Success "MetaCall uninstallation completed."
+}
+
+if ($Uninstall) {
+	# Uninstall the metacall and remove path
+	Uninstall $InstallDir
+} else {
+	# Install the tarball and post scripts
+	Install-Tarball $InstallDir $Version
+}

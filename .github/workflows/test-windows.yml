@@ -147,7 +147,7 @@ jobs:
         run: |
           powershell -NoProfile -ExecutionPolicy unrestricted ./install.ps1 -InstallDir '%cd%\install folder with spaces'
 
-      - name: Check MetaCall is installed
+      - name: Install Test
         shell: cmd
         run: |
           dir "%cd%\install folder with spaces"
