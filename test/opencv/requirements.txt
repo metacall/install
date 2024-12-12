@@ -1,1 +1,1 @@
-opencv-contrib-python==3.4.11.45
+opencv-contrib-python==4.8.1.78
