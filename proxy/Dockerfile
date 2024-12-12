@@ -34,7 +34,8 @@ RUN apk add openssl \
 	&& openssl req -x509 -nodes -days 365 -subj "/C=CA/ST=QC/O=Company, Inc./CN=raw.githubusercontent.com" \
 	-addext "subjectAltName=DNS:raw.githubusercontent.com" -newkey rsa:2048 \
 	-keyout /etc/ssl/private/nginx-selfsigned.key \
-	-out /etc/ssl/certs/nginx-selfsigned.crt
+	-out /etc/ssl/certs/nginx-selfsigned.crt \
+	&& cat /etc/ssl/certs/nginx-selfsigned.crt >> /etc/ssl/certs/ca-certificates.crt
 
 USER root
 

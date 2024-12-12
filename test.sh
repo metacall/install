@@ -17,7 +17,7 @@
 #	See the License for the specific language governing permissions and
 #	limitations under the License.
 
-set -xuo pipefail
+set -exuo pipefail
 
 # Run with Buildkit
 export DOCKER_BUILDKIT=1
@@ -36,7 +36,7 @@ METACALL_INSTALL_CERTS="${METACALL_INSTALL_CERTS:-certificates_local}"
 docker build -t metacall/install_nginx -f proxy/Dockerfile .
 
 # Stop the container if it is already running
-if [ $(docker ps -f "name=metacall_install_nginx" --format '{{.Names}}') = "metacall_install_nginx" ]; then
+if [ "$(docker ps -f "name=metacall_install_nginx" --format '{{.Names}}')" = "metacall_install_nginx" ]; then
 	docker stop metacall_install_nginx
 fi
 
@@ -54,6 +54,9 @@ if [ "${METACALL_INSTALL_CERTS}" = "certificates_local" ]; then
 else
 	METACALL_INSTALL_DNS=
 fi
+
+# Disable exit on error for printing the test fails
+set +e
 
 # Run tests
 for test in ${TEST_LIST}; do
