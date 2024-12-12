@@ -196,3 +196,83 @@ jobs:
               exit 2
           }
           Write-Output "Uninstall verification passed."
+
+  install-version-opencv:
+    name: Install MetaCall with Specific Version
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install MetaCall
+        run: |
+          powershell -NoProfile -ExecutionPolicy unrestricted ./install.ps1 -Version 0.1.7
+
+      - name: NodeJS Test
+        shell: cmd
+        run: |
+          metacall ./test/script.js | findstr "123456"
+          IF %ERRORLEVEL% NEQ 0 exit /B 1
+
+      - name: Python Test
+        shell: cmd
+        run: |
+          metacall pip install -r test/requirements.txt | findstr "Successfully installed"
+          IF %ERRORLEVEL% NEQ 0 exit /B 1
+          metacall ./test/requirements.py | findstr "123456"
+          IF %ERRORLEVEL% NEQ 0 exit /B 1
+
+      - name: Python OpenCV Test (Install OpenCV)
+        shell: cmd
+        run: |
+          metacall pip install -r test/opencv/requirements.txt | findstr "Successfully installed"
+          IF %ERRORLEVEL% NEQ 0 exit /B 1
+
+      # For some reason, OpenCV fails if you do not reinstall numpy
+      - name: Python OpenCV Test (Uninstall Numpy for OpenCV)
+        shell: cmd
+        run: |
+          metacall pip uninstall numpy --yes
+          IF %ERRORLEVEL% NEQ 0 exit /B 1
+
+      # For some reason, it needs to be split into two different steps in order to work
+      - name: Python OpenCV Test (Install Numpy for OpenCV)
+        shell: cmd
+        run: |
+          metacall pip install numpy==1.21.6
+          IF %ERRORLEVEL% NEQ 0 exit /B 1
+
+      - name: Python OpenCV Test (Test OpenCV)
+        shell: cmd
+        run: |
+          metacall ./test/opencv/opencv.py | findstr "OpenCV Version: 3.4.11"
+          IF %ERRORLEVEL% NEQ 0 exit /B 1
+
+      - name: Deploy & FaaS Test
+        shell: cmd
+        run: |
+          metacall deploy --version | findstr /R "^v.*\..*\..*"
+          IF %ERRORLEVEL% NEQ 0 exit /B 1
+          metacall faas --version | findstr /R "^v.*\..*\..*"
+          IF %ERRORLEVEL% NEQ 0 exit /B 1
+
+      - name: Uninstall MetaCall
+        shell: cmd
+        env:
+          METACALL_INSTALL_DEBUG: 1
+        run: |
+          powershell -NoProfile -ExecutionPolicy unrestricted ./install.ps1 -Uninstall
+
+      - name: Uninstall Test
+        shell: pwsh
+        run: |
+          $MetaCallPath = "$env:LocalAppData\MetaCall"
+          Write-Output "Checking MetaCall installation directory: $MetaCallPath"
+          If (Test-Path $MetaCallPath) {
+              Write-Error "MetaCall installation directory still exists"
+              exit 1
+          }
+          $MetaCallBinary = (Get-Command metacall -ErrorAction SilentlyContinue)
+          If ($MetaCallBinary) {
+              Write-Error "MetaCall binary is still available"
+              exit 2
+          }
+          Write-Output "Uninstall verification passed."
