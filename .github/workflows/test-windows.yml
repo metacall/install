@@ -226,12 +226,16 @@ jobs:
           metacall pip install -r test/opencv/requirements.txt | findstr "Successfully installed"
 
       # For some reason, OpenCV fails if you do not reinstall numpy
-      - name: Python OpenCV Test (Reinstall Numpy for OpenCV)
+      - name: Python OpenCV Test (Uninstall Numpy for OpenCV)
         shell: cmd
         run: |
           metacall pip uninstall numpy --yes
+
+      - name: Python OpenCV Test (Install Numpy for OpenCV)
+        shell: cmd
+        run: |
           metacall pip install numpy==1.21.6
-        
+
       - name: Python OpenCV Test (Test OpenCV)
         shell: cmd
         run: |
