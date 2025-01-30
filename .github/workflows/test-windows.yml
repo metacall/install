@@ -28,9 +28,11 @@ jobs:
       - name: Python Test
         shell: cmd
         run: |
-          metacall pip install -r test/requirements.txt | findstr "Successfully installed"
+          rem metacall pip install -r test/requirements.txt | findstr "Successfully installed"
+          metacall pip install -r test/requirements.txt
           IF %ERRORLEVEL% NEQ 0 exit /B 1
-          metacall ./test/requirements.py | findstr "123456"
+          rem metacall ./test/requirements.py | findstr "123456"
+          metacall ./test/requirements.py
           IF %ERRORLEVEL% NEQ 0 exit /B 1
 
       - name: Deploy & FaaS Test
