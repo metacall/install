@@ -78,8 +78,19 @@ Example usage:
 
 # Testing
 
+### In linux or mac:
+1. Docker must be installed
+2. Clone the repo
+3. cd install and enter the command
 ```sh
-./test.sh
+./test.sh   # To be used for cli and Linux/Mac
+```
+
+### In Windows:
+1. Clone the repo
+2. cd install and enter the command
+```sh
+./install.ps1 # To be used in powershell 
 ```
 
 # Troubleshooting
