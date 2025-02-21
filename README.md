@@ -78,19 +78,24 @@ Example usage:
 
 # Testing
 
-### In linux or mac:
-1. Docker must be installed
-2. Clone the repo
-3. cd install and enter the command
+### Linux / MacOS
+
+Requires docker to be installed.
+
 ```sh
-./test.sh   # To be used for cli and Linux/Mac
+git clone https://github.com/metacall/install.git metacall-install
+cd metacall-install
+./test.sh
 ```
 
-### In Windows:
-1. Clone the repo
-2. cd install and enter the command
+### Windows
+
+Windows does not include a test script yet, but you can use `install.ps1` script for testing yourself on your computer.
+
 ```sh
-./install.ps1 # To be used in powershell 
+git clone https://github.com/metacall/install.git metacall-install
+cd metacall-install
+powershell -NoProfile -ExecutionPolicy unrestricted ./install.ps1
 ```
 
 # Troubleshooting
