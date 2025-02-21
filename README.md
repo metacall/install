@@ -78,8 +78,24 @@ Example usage:
 
 # Testing
 
+### Linux / MacOS
+
+Requires docker to be installed.
+
 ```sh
+git clone https://github.com/metacall/install.git metacall-install
+cd metacall-install
 ./test.sh
+```
+
+### Windows
+
+Windows does not include a test script yet, but you can use `install.ps1` script for testing yourself on your computer.
+
+```sh
+git clone https://github.com/metacall/install.git metacall-install
+cd metacall-install
+powershell -NoProfile -ExecutionPolicy unrestricted ./install.ps1
 ```
 
 # Troubleshooting
