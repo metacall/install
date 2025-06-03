@@ -206,7 +206,7 @@ COPY test/ /test/
 
 # Install dependencies and set up a sudo user without password
 RUN dnf update -y \
-	&& dnf install -y sudo curl wget ca-certificates findutils util-linux \
+	&& dnf install -y sudo curl wget ca-certificates findutils util-linux gawk \
 	&& dnf clean all \
 	&& printf "\nca_directory=/etc/ssl/certs" | tee -a /etc/wgetrc \
 	&& update-ca-trust extract \
