@@ -38,6 +38,7 @@ Additional parameters for the install script:
 - `--no-check-certificate`: When running binary installation (the default one), disables checking certificates when downloading the tarball. Useful for environments where there is not certificates, but insecure.
 - `--no-docker-fallback`: When running binary installation (the default one), disables Docker installation as fallback if the binary installation fails.
 - `--from-path <path>`: Installs MetaCall from specific path, the `<path>` points to a previously download tarball located in your file system.
+- `--version <version>`: Installs MetaCall from specific version, the list of versions are available here: [Linux](https://github.com/metacall/distributable-linux/releases), [MacOS](https://github.com/metacall/distributable-macos/releases).
 
 Example usage:
 
@@ -54,6 +55,11 @@ Example usage:
 - Install with `wget` from a existing tarball located at `/root/downloads/metacall-tarball-linux-amd64.tar.gz`:
   ```sh
   wget -O - https://raw.githubusercontent.com/metacall/install/master/install.sh | sh -s -- --from-path /root/downloads/metacall-tarball-linux-amd64.tar.gz
+  ```
+
+- Install with `wget` with the fixed version `v0.2.0` of Linux Distributable:
+  ```sh
+  wget -O - https://raw.githubusercontent.com/metacall/install/master/install.sh | sh -s -- --version 0.2.0
   ```
 
 - Install `metacall` in a BusyBox without certificates:

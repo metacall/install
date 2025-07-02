@@ -31,6 +31,7 @@ OPT_UPDATE=0
 OPT_UNINSTALL=0
 OPT_FROM_PATH=0
 OPT_FROM_PATH_TARGET=""
+OPT_VERSION="latest"
 
 # Program commands
 CMD_DOWNLOAD=""
@@ -65,6 +66,10 @@ do
 		OPT_FROM_PATH=1
 		shift
 		OPT_FROM_PATH_TARGET="$1"
+	fi
+	if [ "$1" = '--version' ]; then
+		shift
+		OPT_VERSION="tag/v$1"
 	fi
 	# Get the next argument
 	shift
@@ -309,7 +314,7 @@ download_url() {
 
 # Download tarball with cURL
 download_curl() {
-	local tag_url=$(${CMD_DOWNLOAD} --retry 10 -f -sL -o /dev/null -w %{url_effective} "https://github.com/metacall/distributable-${PLATFORM_OS}/releases/latest")
+	local tag_url=$(${CMD_DOWNLOAD} --retry 10 -f -sL -o /dev/null -w %{url_effective} "https://github.com/metacall/distributable-${PLATFORM_OS}/releases/${OPT_VERSION}")
 	local final_url=$(download_url "${tag_url}")
 
 	${CMD_DOWNLOAD} --retry 10 -f --create-dirs -L ${final_url} --output "/tmp/metacall-tarball.tar.gz" || echo "true"
@@ -317,7 +322,7 @@ download_curl() {
 
 # Download tarball with wget
 download_wget() {
-	local tag_url=$(${CMD_DOWNLOAD} --tries 10 -S -O /dev/null "https://github.com/metacall/distributable-${PLATFORM_OS}/releases/latest" 2>&1 | grep Location: | tail -n 1 | awk '{print $2}')
+	local tag_url=$(${CMD_DOWNLOAD} --tries 10 -S -O /dev/null "https://github.com/metacall/distributable-${PLATFORM_OS}/releases/${OPT_VERSION}" 2>&1 | grep Location: | tail -n 1 | awk '{print $2}')
 	local final_url=$(download_url "${tag_url}")
 
 	${CMD_DOWNLOAD} --tries 10 -O "/tmp/metacall-tarball.tar.gz" ${final_url} || echo "true"
