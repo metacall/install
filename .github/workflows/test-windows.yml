@@ -22,7 +22,6 @@ jobs:
       - name: NodeJS Test
         shell: cmd
         run: |
-          metacall ./test/script.js
           metacall ./test/script.js | findstr "123456"
           IF %ERRORLEVEL% NEQ 0 exit /B 1
 
@@ -91,7 +90,6 @@ jobs:
       - name: NodeJS Test
         shell: cmd
         run: |
-          metacall ./test/script.js
           metacall ./test/script.js | findstr "123456"
           IF %ERRORLEVEL% NEQ 0 exit /B 1
 
@@ -159,7 +157,6 @@ jobs:
       - name: NodeJS Test
         shell: cmd
         run: |
-          metacall ./test/script.js
           metacall ./test/script.js | findstr "123456"
           IF %ERRORLEVEL% NEQ 0 exit /B 1
 
@@ -214,7 +211,6 @@ jobs:
       - name: NodeJS Test
         shell: cmd
         run: |
-          metacall ./test/script.js
           metacall ./test/script.js | findstr "123456"
           IF %ERRORLEVEL% NEQ 0 exit /B 1
 
