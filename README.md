@@ -1,108 +1,153 @@
 <div align="center">
-  <a href="https://metacall.io" target="_blank"><img src="https://raw.githubusercontent.com/metacall/core/develop/deploy/images/logo.png" alt="METACALL" style="max-width:100%; margin: 0 auto;" width="80" height="80">
-  <p><b>MetaCall Polyglot Runtime</b></p></a>
+  <a href="https://metacall.io" target="_blank">
+    <img src="https://raw.githubusercontent.com/metacall/core/develop/deploy/images/logo.png" alt="METACALL" width="80" height="80" style="max-width:100%;" />
+    <p><strong>MetaCall Polyglot Runtime</strong></p>
+  </a>
 </div>
 
-# Abstract
 
-Cross-platform set of scripts to install MetaCall Core infrastructure. For advanced install information, [check the documentation](https://github.com/metacall/core/blob/develop/docs/README.md#41-installation).
+## 🚀 Introduction
 
-# Install
+MetaCall is a polyglot runtime that lets you call functions across multiple languages as if they were native. This README covers the one-line installer scripts and how to customize your installation.
 
-The following scripts are provided in order to install MetaCall:
-- [install.sh](https://raw.githubusercontent.com/metacall/install/master/install.sh) `bash or zsh | Linux or MacOS`
+**Quick Links:**
 
-- [install.ps1](https://raw.githubusercontent.com/metacall/install/master/install.ps1) `PowerShell | Windows`
+* [Official Docs](https://github.com/metacall/core/blob/develop/docs/README.md#41-installation)
+* [Releases (Linux)](https://github.com/metacall/distributable-linux/releases)
+* [Releases (macOS)](https://github.com/metacall/distributable-macos/releases)
+* [Releases (Windows)](https://github.com/metacall/distributable-windows/releases)
 
-In order to install MetaCall in one line, curl or wget or powershell can be used:
-- `curl`:
+---
+
+## ⚙️ Prerequisites
+
+* **curl** or **wget** (for Linux/macOS)
+* **PowerShell** v5+ (for Windows)
+* Internet access (unless installing from a local tarball)
+
+---
+
+## 🎯 Quick Install
+
+> **One-line installer:**
+
+* **Linux / macOS** (bash/zsh):
+
   ```sh
   curl -sL https://raw.githubusercontent.com/metacall/install/master/install.sh | sh
-  ```
-- `wget`:
-  ```sh
+  # or
   wget -O - https://raw.githubusercontent.com/metacall/install/master/install.sh | sh
   ```
-- `powershell`:
+
+* **Windows** (PowerShell):
+
   ```powershell
-  powershell -NoProfile -ExecutionPolicy unrestricted -Command "[Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12; &([scriptblock]::Create((Invoke-WebRequest -UseBasicParsing 'https://raw.githubusercontent.com/metacall/install/master/install.ps1')))"
+  powershell -NoProfile -ExecutionPolicy Unrestricted -Command \
+    "[Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12; \
+    &([scriptblock]::Create((Invoke-WebRequest -UseBasicParsing 'https://raw.githubusercontent.com/metacall/install/master/install.ps1')))"
   ```
 
-## Install Linux or MacOS
+*By default, these scripts fetch the latest release.*
 
-Additional parameters for the install script:
+---
 
-- `--update`: Updates automatically MetaCall if it is already installed without asking to the user.
-- `--uninstall`: Uninstalls MetaCall if it is already installed without asking to the user. Overwrites the update command.
-- `--docker-install`: Runs Docker installation overwriting Docker fallback option over binary installation.
-- `--no-check-certificate`: When running binary installation (the default one), disables checking certificates when downloading the tarball. Useful for environments where there is not certificates, but insecure.
-- `--no-docker-fallback`: When running binary installation (the default one), disables Docker installation as fallback if the binary installation fails.
-- `--from-path <path>`: Installs MetaCall from specific path, the `<path>` points to a previously download tarball located in your file system.
-- `--version <version>`: Installs MetaCall from specific version, the list of versions are available here: [Linux](https://github.com/metacall/distributable-linux/releases), [MacOS](https://github.com/metacall/distributable-macos/releases).
+## 🛠️ Advanced Install Options
 
-Example usage:
+### Linux / macOS
 
-- Install with `curl` without checking certificates and without docker fallback:
+| Flag                     | Description                                               |
+| ------------------------ | --------------------------------------------------------- |
+| `--update`               | Update existing MetaCall installation without prompts.    |
+| `--uninstall`            | Uninstall MetaCall (overrides `--update`).                |
+| `--docker-install`       | Force Docker-based install instead of binary.             |
+| `--no-check-certificate` | Skip SSL cert checks when downloading tarball (insecure). |
+| `--no-docker-fallback`   | Disable Docker fallback if binary install fails.          |
+| `--from-path <path>`     | Install from a local tarball (`<path>` to `.tar.gz`).     |
+| `--version <version>`    | Install a specific version (e.g. `0.2.0`).                |
+
+**Examples:**
+
+* Update in-place without prompts:
+
   ```sh
-  curl --insecure -sL https://raw.githubusercontent.com/metacall/install/master/install.sh | sh -s -- --no-check-certificate --no-docker-fallback
+  curl -sL https://raw.githubusercontent.com/metacall/install/master/install.sh | sh -s -- --update
   ```
 
-- Install with `wget` using Docker installer:
+* Install v0.2.0 without Docker fallback:
+
   ```sh
-  wget -O - https://raw.githubusercontent.com/metacall/install/master/install.sh | sh -s -- --docker-install
+  wget -O - https://raw.githubusercontent.com/metacall/install/master/install.sh | sh -s -- --version 0.2.0 --no-docker-fallback
   ```
 
-- Install with `wget` from a existing tarball located at `/root/downloads/metacall-tarball-linux-amd64.tar.gz`:
+* Install from local tarball:
+
   ```sh
-  wget -O - https://raw.githubusercontent.com/metacall/install/master/install.sh | sh -s -- --from-path /root/downloads/metacall-tarball-linux-amd64.tar.gz
+  curl -sL https://raw.githubusercontent.com/metacall/install/master/install.sh | sh -s -- --from-path /path/to/metacall-linux-amd64.tar.gz
   ```
 
-- Install with `wget` with the fixed version `v0.2.0` of Linux Distributable:
-  ```sh
-  wget -O - https://raw.githubusercontent.com/metacall/install/master/install.sh | sh -s -- --version 0.2.0
-  ```
+### Windows
 
-- Install `metacall` in a BusyBox without certificates:
-  ```sh
-  wget --no-check-certificate -O - https://raw.githubusercontent.com/metacall/install/master/install.sh | sh -s -- --no-check-certificate
-  ```
+| Parameter                 | Description                                                  |
+| ------------------------- | ------------------------------------------------------------ |
+| `-InstallDir <directory>` | Custom install folder (default: `%LocalAppData%\MetaCall`).  |
+| `-Version <version>`      | Specific release version to install (default: latest).       |
+| `-FromPath <path>`        | Path to a local distributable tarball (`.zip` or `.tar.gz`). |
 
-## Install Windows
+**Example:**
 
-Additional parameters for the install script:
+```powershell
+# Install v0.1.0 into D:\MetaCall
+powershell -NoProfile -ExecutionPolicy Unrestricted -Command \
+  "[Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12; \
+  &([scriptblock]::Create((Invoke-WebRequest -UseBasicParsing 'https://raw.githubusercontent.com/metacall/install/master/install.ps1'))) \
+  -InstallDir 'D:\MetaCall' -Version '0.1.0'"
+```
 
-- `-InstallDir <directory>`: Defines a custom folder in order to install MetaCall in, otherwise it uses `%LocalAppData%\MetaCall` by default.
-- `-Version <version>`: Version of the tarball to be downloaded. Versions are available [here](https://github.com/metacall/distributable-windows/releases). Uses latest version by default.
-- `-FromPath <path>`: Install MetaCall from an existing distributable tarball, path must point to a tarball downloaded from [releases](https://github.com/metacall/distributable-windows/releases).
+---
 
-Example usage:
+## 🔍 Testing
 
-- Install tarball version `v0.1.0` into `D:\metacall`:
-  ```powershell
-  powershell -NoProfile -ExecutionPolicy unrestricted -Command "[Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12; &([scriptblock]::Create((Invoke-WebRequest -UseBasicParsing 'https://raw.githubusercontent.com/metacall/install/master/install.ps1'))) -InstallDir 'D:\metacall' -Version '0.1.0'"
-  ```
+After installation, verify your setup:
 
-# Testing
-
-### Linux / MacOS
-
-Requires docker to be installed.
+### Linux / macOS
 
 ```sh
+# Clone installer and run tests
 git clone https://github.com/metacall/install.git metacall-install
 cd metacall-install
-./test.sh
+env INSTALL_SCRIPT=./install.sh ./test.sh
 ```
 
 ### Windows
 
-Windows does not include a test script yet, but you can use `install.ps1` script for testing yourself on your computer.
-
-```sh
+```powershell
 git clone https://github.com/metacall/install.git metacall-install
 cd metacall-install
-powershell -NoProfile -ExecutionPolicy unrestricted ./install.ps1
+powershell -NoProfile -ExecutionPolicy Unrestricted .\install.ps1
+# (no built-in test harness yet)
 ```
 
-# Troubleshooting
-Sometimes the domain _raw.githubusercontent.com_ maybe blocked by your ISP. Due to this, you may not be able to install metacall directly from previous commands. In that case, you may clone this repo and directly run [install.sh](https://github.com/metacall/install/blob/master/install.sh) for Linux and run [install.ps1](https://github.com/metacall/install/blob/master/install.ps1) for Windows.
+---
+
+## 🛠️ Troubleshooting
+
+* **Blocked `raw.githubusercontent.com`**: Clone the repo and run scripts locally:
+
+  ```sh
+  git clone https://github.com/metacall/install.git
+  cd install
+  ./install.sh      # or .\install.ps1 on Windows
+  ```
+
+* **Permission issues**: Ensure your user has execution rights:
+
+  ```sh
+  chmod +x install.sh
+  ```
+
+* **Proxy environments**: Set `HTTP_PROXY` / `HTTPS_PROXY` before running scripts.
+
+---
+
+© 2025 MetaCall Contributors
+
