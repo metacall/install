@@ -125,7 +125,7 @@ MetaCall is a polyglot runtime that lets you call functions across multiple lang
 
 ---
 
-## 🔍 Testing
+## 💻 Development & Testing
 
 ### Linux / MacOS
 
