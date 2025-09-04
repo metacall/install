@@ -33,9 +33,13 @@ MetaCall is a polyglot runtime that lets you call functions across multiple lang
 
 * **Linux / macOS** (bash/zsh):
 
+  > **curl**
   ```sh
   curl -sL https://raw.githubusercontent.com/metacall/install/master/install.sh | sh
-  # or
+  ```
+
+  > **wget**
+  ```sh
   wget -O - https://raw.githubusercontent.com/metacall/install/master/install.sh | sh
   ```
 
