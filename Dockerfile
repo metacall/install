@@ -140,6 +140,17 @@ RUN sudo mkdir -p /gnu \
 	&& [ ! -f "/usr/local/bin/metacall" ] \
 	&& [ -d /gnu ]
 
+# Test install debug Debian without root and curl
+FROM debian_user AS test_debian_user_curl_debug
+
+RUN curl -sL https://raw.githubusercontent.com/metacall/install/master/install.sh | bash -s -- --debug \
+	&& metacall /test/script.js | grep '123456' \
+	&& metacall deploy --version | grep -e '^v.*\..*\..*' \
+	&& metacall faas --version | grep -e '^v.*\..*\..*' \
+	&& printf "load mock test.mock\ninspect\nexit" \
+		| metacall \
+		| grep -e 'function three_str(a_str, b_str, c_str)'
+
 # TODO:
 # When implementing timestamp support:
 #

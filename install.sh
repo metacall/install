@@ -32,6 +32,7 @@ OPT_UNINSTALL=0
 OPT_FROM_PATH=0
 OPT_FROM_PATH_TARGET=""
 OPT_VERSION="latest"
+OPT_DEBUG=""
 
 # Program commands
 CMD_DOWNLOAD=""
@@ -70,6 +71,9 @@ do
 	if [ "$1" = '--version' ]; then
 		shift
 		OPT_VERSION="tag/v$1"
+	fi
+	if [ "$1" = '--debug' ]; then
+		OPT_DEBUG="-dbg"
 	fi
 	# Get the next argument
 	shift
@@ -309,7 +313,7 @@ platform() {
 # Get download url from tag
 download_url() {
 	local version=$(printf "$1" | rev | cut -d '/' -f1 | rev)
-	printf "https://github.com/metacall/distributable-${PLATFORM_OS}/releases/download/${version}/metacall-tarball-${PLATFORM_OS}-${PLATFORM_ARCH}.tar.gz"
+	printf "https://github.com/metacall/distributable-${PLATFORM_OS}/releases/download/${version}/metacall-tarball-${PLATFORM_OS}-${PLATFORM_ARCH}${OPT_DEBUG}.tar.gz"
 }
 
 # Download tarball with cURL
@@ -346,7 +350,7 @@ download() {
 
 	if [ "${fail}" = "true" ]; then
 		${CMD_SUDO} rm -rf "/tmp/metacall-tarball.tar.gz"
-		err "The tarball metacall-tarball-${PLATFORM_OS}-${PLATFORM_ARCH}.tar.gz could not be downloaded." \
+		err "The tarball metacall-tarball-${PLATFORM_OS}-${PLATFORM_ARCH}${OPT_DEBUG}.tar.gz could not be downloaded." \
 			"  Please, refer to https://github.com/metacall/install/issues and create a new issue." \
 			"  Aborting installation."
 		exit 1

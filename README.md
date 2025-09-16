@@ -68,6 +68,7 @@ MetaCall is a polyglot runtime that lets you call functions across multiple lang
 | `--no-docker-fallback`   | Disable Docker fallback if binary install fails.          |
 | `--from-path <path>`     | Install from a local tarball (`<path>` to `.tar.gz`).     |
 | `--version <version>`    | Install a specific version (e.g. `0.2.0`). [1]            |
+| `--debug`                | Install with debug symbols and sanitizers if possible.    |
 
 [1]: The list of versions are available here: [Linux](https://github.com/metacall/distributable-linux/releases), [MacOS](https://github.com/metacall/distributable-macos/releases).
 
