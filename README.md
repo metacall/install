@@ -46,9 +46,7 @@ MetaCall is a polyglot runtime that lets you call functions across multiple lang
 * **Windows** (PowerShell):
 
   ```powershell
-  powershell -NoProfile -ExecutionPolicy Unrestricted -Command \
-    "[Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12; \
-    &([scriptblock]::Create((Invoke-WebRequest -UseBasicParsing 'https://raw.githubusercontent.com/metacall/install/master/install.ps1')))"
+  powershell -NoProfile -ExecutionPolicy Unrestricted -Command "[Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12; &([scriptblock]::Create((Invoke-WebRequest -UseBasicParsing 'https://raw.githubusercontent.com/metacall/install/master/install.ps1')))"
   ```
 
 *By default, these scripts fetch the latest release.*
