@@ -58,7 +58,8 @@ jobs:
       fail-fast: false
       matrix:
         triplet: [
-          {os: macos-13, arch: amd64},
+          {os: macos-15-intel, arch: amd64},
+          {os: macos-15, arch: arm64},
           {os: macos-14, arch: arm64}
         ]
         package: [tar.gz] # [tar.gz, pkg] # TODO: pkg
