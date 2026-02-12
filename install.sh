@@ -280,14 +280,34 @@ operative_system() {
 architecture() {
 	local arch=$(uname -m)
 
-	# TODO: Implement other architectures in metacall/distributable-linux (armv7l, aarch64, ...)
 	case ${arch} in
-		x86_64)
-			PLATFORM_ARCH="amd64"
+		x86_64 | amd64)
+			if [ "$(getconf LONG_BIT)" = "32" ]; then
+				# 32-bit userspace on 64-bit kernel
+				PLATFORM_ARCH="386"
+			else
+				PLATFORM_ARCH="amd64"
+			fi
 			return
 			;;
-		arm64)
+		i386 | i486 | i586 | i686 | x86)
+			PLATFORM_ARCH="386"
+			return
+			;;
+		aarch64 | arm64)
 			PLATFORM_ARCH="arm64"
+			return
+			;;
+		arm | armv7l)
+			PLATFORM_ARCH="armv7"
+			return
+			;;
+		ppc64le | powerpc64le)
+			PLATFORM_ARCH="ppc64le"
+			return
+			;;
+		riscv64)
+			PLATFORM_ARCH="riscv64"
 			return
 			;;
 	esac
