@@ -105,7 +105,7 @@ docker run --rm \
 	-v /var/run/docker.sock:/var/run/docker.sock \
 	-v ${DOCKER_HOST_PATH}:/metacall/source \
 	${DOCKER_ADDITIONAL_VOLUME} \
-	-t docker:19.03.13-dind \
+	-t docker:dind \
 	sh -c "${DOCKER_INSTALL_CMD} --docker-install \
 		&& mkdir -p ${DOCKER_HOST_PATH} \
 		&& cd ${DOCKER_HOST_PATH} \
@@ -124,7 +124,7 @@ docker run --rm \
 	-v /var/run/docker.sock:/var/run/docker.sock \
 	-v ${DOCKER_HOST_PATH}:/metacall/source \
 	${DOCKER_ADDITIONAL_VOLUME} \
-	-t docker:19.03.13-dind \
+	-t docker:dind \
 	sh -c "${DOCKER_FALLBACK_CMD} \
 		&& rm -rf /usr/bin/wget \
 		&& sh /bin/install.sh \
